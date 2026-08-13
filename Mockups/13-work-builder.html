@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Конструктор работы — FS-LMS 2.0</title>
+<link rel="stylesheet" href="_shared.css">
+<script src="_icons.js"></script>
+<script src="_tip.js"></script>
+<style>
+  .work{flex:1;display:flex;min-height:0}
+
+  /* слева — состав работы, справа — настройки: то и другое правится одновременно */
+  .list{flex:1;min-width:0;overflow:auto;padding:var(--sp-16) var(--sp-20) var(--user-h)}
+  .props{width:360px;flex:none;background:#fff;border-left:1px solid var(--gray2);overflow:auto;
+    padding:var(--sp-16) var(--sp-20) var(--user-h)}
+  .card{background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);box-shadow:var(--sh);margin-bottom:var(--sp-12)}
+
+  /* режим — вендорский список, от него зависит вся правая колонка */
+  .modes{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-8);margin-bottom:var(--sp-16)}
+  .mode{border:1px solid var(--gray2);background:#fff;border-radius:var(--r-8);padding:var(--sp-12);
+    text-align:left;cursor:pointer}
+  .mode:hover{border-color:var(--blue)}
+  .mode.on{border-color:var(--blue);background:var(--blue-l)}
+  .mode b{display:block;font-size:var(--fs-14);margin-bottom:2px}
+  .mode span{font-size:var(--fs-12);color:var(--gray6);line-height:1.4;display:block}
+  .mode.on span{color:var(--gray7)}
+  .mode.mod{border-style:dashed}
+
+  .sec-h{display:flex;align-items:center;gap:var(--sp-12);padding:var(--sp-12) var(--sp-16);
+    border-bottom:1px solid var(--gray2);flex-wrap:wrap}
+  .sec-h h3{margin:0;font-size:var(--fs-14)}
+  .sec-h .cnt{font-size:var(--fs-12);font-weight:700;background:var(--gray1);color:var(--gray6);
+    border-radius:var(--r-8);padding:var(--sp-4) var(--sp-8)}
+
+  /* задания работы */
+  .q{display:flex;gap:var(--sp-12);padding:var(--sp-12) var(--sp-16);border-top:1px solid var(--gray1);align-items:flex-start}
+  .q:first-of-type{border-top:0}
+  .q:hover{background:var(--gray0)}
+  .q .grip{color:var(--gray5);cursor:grab;padding-top:2px}
+  .q .n{width:26px;height:26px;border-radius:var(--r-6);background:var(--gray1);color:var(--gray6);
+    display:grid;place-items:center;font-size:var(--fs-12);font-weight:700;flex:none}
+  .q .txt{flex:1;min-width:0}
+  .q .txt b{font-size:var(--fs-14);font-weight:600;display:block}
+  .q .txt .sub{font-size:var(--fs-12);color:var(--gray6);margin-top:2px;display:flex;gap:var(--sp-8);flex-wrap:wrap;align-items:center}
+  .tag{display:inline-block;font-size:var(--fs-12);padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4);
+    background:var(--gray1);color:var(--gray6)}
+  .tag.man{background:var(--violet-l);color:#5f3dc4}
+  .tag.auto{background:var(--green-l);color:#2b8a3e}
+  .q .w{display:flex;align-items:center;gap:var(--sp-6);flex:none;font-size:var(--fs-12);color:var(--gray6)}
+  .q .w input{width:56px;border:1px solid var(--gray3);border-radius:var(--r-6);padding:var(--sp-4) var(--sp-6);
+    font:inherit;text-align:center;font-size:var(--fs-14)}
+  .q .del{border:0;background:none;color:var(--gray5);font-size:var(--fs-14);padding:var(--sp-4)}
+  .q .del:hover{color:var(--red)}
+  .addrow{padding:var(--sp-12) var(--sp-16);border-top:1px solid var(--gray2);display:flex;gap:var(--sp-8);flex-wrap:wrap}
+
+  /* критерии задания ручной проверки */
+  .crit{padding:var(--sp-8) var(--sp-16) var(--sp-12) 64px;border-top:1px dashed var(--gray2);background:var(--gray0)}
+  .crit .row{display:flex;gap:var(--sp-8);align-items:center;margin-bottom:var(--sp-6);font-size:var(--fs-12)}
+  .crit input.nm{flex:1;border:1px solid var(--gray3);border-radius:var(--r-6);padding:var(--sp-4) var(--sp-8);font:inherit;font-size:var(--fs-12)}
+  .crit input.pt{width:52px;border:1px solid var(--gray3);border-radius:var(--r-6);padding:var(--sp-4);font:inherit;text-align:center;font-size:var(--fs-12)}
+
+  /* правая колонка */
+  .fld{margin-bottom:var(--sp-16)}
+  .fld label{display:block;font-size:var(--fs-12);color:var(--gray6);font-weight:600;margin-bottom:var(--sp-6)}
+  .fld input[type=text], .fld input[type=number], .fld select{width:100%;border:1px solid var(--gray3);
+    border-radius:var(--r-8);padding:var(--sp-8) var(--sp-12);font:inherit;font-size:var(--fs-14)}
+  .fld .hint{font-size:var(--fs-12);color:var(--gray6);margin-top:var(--sp-6);line-height:1.45}
+  .fld.locked{opacity:.55}
+  .sw{display:flex;gap:var(--sp-8);align-items:flex-start;font-size:var(--fs-14);margin-bottom:var(--sp-12)}
+  .sw .t{flex:1}
+  .sw .t .hint{font-size:var(--fs-12);color:var(--gray6);margin-top:2px}
+  .group{border-top:1px solid var(--gray2);margin-top:var(--sp-16);padding-top:var(--sp-16)}
+  .group h4{margin:0 0 var(--sp-12);font-size:var(--fs-12);color:var(--gray6);text-transform:uppercase;letter-spacing:.05em}
+  .badge-mode{display:inline-flex;align-items:center;gap:var(--sp-6);font-size:var(--fs-12);font-weight:600;
+    background:var(--blue-l);color:var(--blue);padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4)}
+
+  .total{display:flex;align-items:baseline;gap:var(--sp-8);padding:var(--sp-12) var(--sp-16);
+    border-top:1px solid var(--gray2);background:var(--gray0);border-radius:0 0 var(--r-12) var(--r-12)}
+  .total b{font-size:var(--fs-22);font-weight:700}
+  .total span{font-size:var(--fs-12);color:var(--gray6)}
+  .warnbox{background:var(--orange-l);border:1px solid #ffd8a8;color:#d9480f;border-radius:var(--r-8);
+    padding:var(--sp-8) var(--sp-12);font-size:var(--fs-12);margin-bottom:var(--sp-12)}
+  /* конструктор задачи открывается дровером — тот же экран, что в банке (§4.9) */
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:min(860px, 92vw);background:var(--gray0);
+    box-shadow:-12px 0 40px rgba(0,0,0,.18);z-index:60;display:flex;flex-direction:column;
+    transform:translateX(100%);transition:transform .18s ease}
+  .drawer.on{transform:none}
+  .dr-h{background:#fff;border-bottom:1px solid var(--gray2);padding:var(--sp-12) var(--sp-20);
+    display:flex;align-items:center;gap:var(--sp-12);flex:none;min-height:var(--head-h)}
+  .dr-h h2{margin:0;font-size:var(--fs-16)}
+  .dr-h .sub{font-size:var(--fs-12);color:var(--gray6)}
+  .dr-b{flex:1;overflow:auto;padding:var(--sp-16) var(--sp-20)}
+  .dr-f{background:#fff;border-top:1px solid var(--gray2);padding:var(--sp-12) var(--sp-20);
+    display:flex;gap:var(--sp-8);align-items:center;flex:none}
+  .dr-note{background:var(--blue-l);border:1px solid #a5d8ff;color:#1864ab;border-radius:var(--r-8);
+    padding:var(--sp-8) var(--sp-12);font-size:var(--fs-12);margin-bottom:var(--sp-12)}
+  .demo{display:flex;align-items:center;gap:var(--sp-6);font-size:var(--fs-12);color:var(--gray6)}
+  @media (max-width:1150px){ .work{flex-direction:column} .props{width:auto;border-left:0;border-top:1px solid var(--gray2)} }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-top">
+      <div class="logo">ШБ</div>
+      <div style="flex:1"><b>Шаг в будущее</b><small>Управление</small></div>
+      <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')">⟨</button>
+    </div>
+    <div class="switch"><button>Обучение</button><button class="on">Управление</button></div>
+    <nav class="nav">
+      <h4>Моя работа</h4>
+      <a href="10-home.html"><i class="ic">◱</i><span>Главная</span></a>
+      <a href="03-ktp.html"><i class="ic">▤</i><span>КТП и расписание</span></a>
+      <h4>Обучение</h4>
+      <a href="01-course-builder.html"><i class="ic">◈</i><span>Курсы</span></a>
+      <a href="#" class="on"><i class="ic">✎</i><span>Работы и экзамены</span></a>
+      <a href="#"><i class="ic">?</i><span>Банк задач</span></a>
+      <a href="#"><i class="ic">⚖</i><span>Шкалы оценивания</span></a>
+      <a href="#"><i class="ic">⚙</i><span>Типы работ</span></a>
+    </nav>
+    <div class="side-user">
+      <div class="ava">ММ</div>
+      <div style="flex:1"><b style="font-size:var(--fs-14);display:block">Методова М.</b><small style="font-size:var(--fs-12);color:var(--gray6)">Методист</small></div>
+      <span style="color:var(--gray5)">⚙</span>
+    </div>
+  </aside>
+
+  <div class="app">
+    <header class="head">
+      <div>
+        <div class="crumbs">Обучение · Работы и экзамены</div>
+        <h1 id="hTitle">СР «Системы уравнений»</h1>
+      </div>
+      <span class="badge b-warn" id="hMode">В плеере курса</span>
+      <div class="sp"></div>
+      <span class="muted" id="hSum">—</span>
+      <button class="btn" onclick="toast('Предпросмотр глазами ученика')">Предпросмотр</button>
+      <button class="btn btn-p" onclick="toast('Работа сохранена и доступна для вставки в шаг урока')">Сохранить</button>
+    </header>
+
+    <div class="work">
+      <div class="list">
+        <!-- режим определяет всё поведение: его список закрыт и приходит от вендора -->
+        <div class="modes" id="modes"></div>
+
+        <div class="card">
+          <div class="sec-h">
+            <h3>Задания</h3><span class="cnt" id="qCnt">—</span>
+            <div style="flex:1"></div>
+            <span class="muted" style="font-size:var(--fs-12)" id="qHint"></span>
+          </div>
+          <div id="qs"></div>
+          <div class="addrow">
+            <button class="btn btn-s" onclick="toast('Открыт банк задач: поиск по тегам, номерам ЕГЭ, сложности')">+ Из банка задач</button>
+            <button class="btn btn-s" onclick="openTask()">+ Создать задачу</button>
+          </div>
+          <div class="total"><b id="totalMax">—</b><span id="totalHint">—</span></div>
+        </div>
+      </div>
+
+      <div class="props">
+        <div class="fld">
+          <label>Название</label>
+          <input type="text" value="Системы уравнений" oninput="setTitle(this.value)">
+        </div>
+        <div class="fld">
+          <label>Тип работы — «тег» школы</label>
+          <select id="wtype" onchange="render()">
+            <option value="ДЗ">Домашняя работа (ДЗ)</option>
+            <option value="СР" selected>Самостоятельная работа (СР)</option>
+            <option value="ПР">Практическая работа (ПР)</option>
+            <option value="КР">Контрольная работа (КР) · итоговая</option>
+            <option value="ЭКЗ">Экзамен (ЭКЗ) · итоговая</option>
+            <option value="ЗАЧ">Зачёт (ЗАЧ) · итоговая</option>
+          </select>
+          <div class="hint">Метка в журнале и разрез в отчётности: «проверить все ДЗ», «сравнить успеваемость по СР». На поведение работы не влияет — его задаёт режим. Справочник ведёт школа.</div>
+        </div>
+        <div class="fld">
+          <label>Предмет</label>
+          <select><option>Математика</option><option>Информатика</option><option>Физика</option></select>
+        </div>
+
+        <div id="modeSettings"></div>
+
+        <div class="group">
+          <h4>Общее</h4>
+          <div class="fld">
+            <label>Срок сдачи</label>
+            <select><option>через 3 дня после занятия</option><option>фиксированная дата</option><option>без срока</option></select>
+            <div class="hint">Считается от занятия, к которому привязан урок: одна настройка работает во всех группах.</div>
+          </div>
+          <div class="fld">
+            <label>Показ результата</label>
+            <select id="visib" onchange="render()">
+              <option value="immediate">сразу после сдачи</option>
+              <option value="after">после проверки преподавателем</option>
+            </select>
+            <div class="hint" id="visibHint"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="scrim" id="drScrim" onclick="closeTask()"></div>
+<aside class="drawer" id="drawer">
+  <div class="dr-h">
+    <div style="flex:1">
+      <h2 id="drTitle">Новая задача</h2>
+      <div class="sub">Конструктор задачи · тот же экран, что в банке</div>
+    </div>
+    <a class="btn btn-s" href="15-task-editor.html" style="text-decoration:none">Открыть страницей</a>
+    <button class="btn btn-s" onclick="closeTask()">✕</button>
+  </div>
+  <div class="dr-b">
+    <div class="dr-note">Задача сохраняется <b>в банк</b> и вставляется в работу ссылкой — локальных задач «внутри работы» не бывает (01-product §5.4). Предмет и темы не подставляются из контекста: их выбирают руками.</div>
+    <div class="card">
+      <div class="sec-h"><h3>Условие</h3></div>
+      <div style="padding:var(--sp-16)">
+        <div style="display:flex;gap:var(--sp-4);margin-bottom:var(--sp-8);flex-wrap:wrap">
+          <button class="btn btn-s">Ж</button><button class="btn btn-s"><i>К</i></button>
+          <button class="btn btn-s">∑ формула</button><button class="btn btn-s">Изображение</button>
+        </div>
+        <div contenteditable="true" style="min-height:120px;border:1px solid var(--gray3);border-radius:var(--r-8);
+          padding:var(--sp-12) var(--sp-16);font-size:var(--fs-16);line-height:1.7">Условие новой задачи</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-h"><h3>Как отвечает ученик</h3></div>
+      <div style="padding:var(--sp-16)">
+        <div class="fld" style="max-width:420px">
+          <label>Тип ответа</label>
+          <select onchange="toast('Блок эталона перестроился под тип ответа')">
+            <optgroup label="Базовые">
+              <option>Число</option><option>Короткий ответ</option><option>Выбор одного</option>
+              <option>Выбор нескольких</option><option>Развёрнутый</option>
+            </optgroup>
+            <optgroup label="Из модулей">
+              <option>Код · Код</option><option>Соответствие · ЕГЭ</option><option>Последовательность · ЕГЭ</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="fld" style="max-width:420px"><label>Верный ответ</label><input type="text" placeholder="Эталон"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-h"><h3>Классификация</h3></div>
+      <div style="padding:var(--sp-16);display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-16)">
+        <div class="fld" style="margin:0"><label>Предмет</label>
+          <select><option>Математика</option><option>Информатика</option></select></div>
+        <div class="fld" style="margin:0"><label>Сложность</label>
+          <select><option>простая</option><option selected>средняя</option><option>сложная</option></select></div>
+        <div class="fld" style="margin:0;grid-column:1/-1"><label>Темы</label>
+          <button class="btn btn-s" onclick="toast('Открыт справочник тем предмета — тот же, что в конструкторе задачи')">+ Тема из справочника</button>
+          <div class="hint">Выбор из дерева предмета. Свободного ввода нет.</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="dr-f">
+    <span class="muted" style="flex:1;font-size:var(--fs-12)">После сохранения задача появится в банке и станет заданием <b id="drPos">7</b> этой работы</span>
+    <button class="btn" onclick="closeTask()">Отмена</button>
+    <button class="btn btn-p" onclick="saveTask()">Сохранить и вставить</button>
+  </div>
+</aside>
+<div class="toast" id="toast"></div>
+
+<script>
+/* Режимы — закрытый список вендора (01-product §5.2, 02-tech §6.3).
+   Школа их не заводит: за каждым стоит движок. */
+var MODES = [
+  {id:'inline', n:'В плеере курса', d:'Все задания на странице шага, оценка за работу целиком — «4 из 6»'},
+  {id:'timed',  n:'Отдельная страница с таймером', d:'Одна попытка, жёсткий таймер, задания по одному'},
+  {id:'ege',    n:'ЕГЭ', d:'То же плюс разметка по номерам экзамена и таблица перевода', mod:true}
+];
+var mode = 'inline';
+
+var TASKS = [
+  {t:'Найдите значение выражения: 2⁵ · 2⁻³', k:'auto', w:1, src:'банк'},
+  {t:'Решите уравнение: 3x − 7 = 14', k:'auto', w:1, src:'банк'},
+  {t:'Найдите корень уравнения √(x + 5) = 4', k:'auto', w:1, src:'своё'},
+  {t:'Методом сложения: 3x + 2y = 12, x − 2y = 4', k:'auto', w:2, src:'банк'},
+  {t:'Решите систему и опишите ход решения: x + y = 7, x·y = 12', k:'manual', w:3, src:'своё',
+   crit:[['Ход решения', 2], ['Верные корни', 1]]},
+  {t:'Катер: 21 км по течению и 15 км против за одно время', k:'manual', w:2, src:'своё',
+   crit:[['Система составлена', 1], ['Верный ответ', 1]]}
+];
+
+function maxScore(){ return TASKS.reduce(function(a, t){ return a + t.w; }, 0); }
+function manualCount(){ return TASKS.filter(function(t){ return t.k === 'manual'; }).length; }
+
+function setMode(m){
+  mode = m;
+  if(m !== 'inline') document.getElementById('visib').value = 'immediate';
+  render();
+  toast('Режим: ' + MODES.filter(function(x){ return x.id === m; })[0].n);
+}
+function setTitle(v){ document.getElementById('hTitle').textContent = document.getElementById('wtype').value + ' «' + v + '»'; }
+function addTask(k){
+  TASKS.push({t:'Новое задание — условие ещё не заполнено', k:k, w:1, src:'своё',
+    crit:k === 'manual' ? [['Выполнение', 1]] : null});
+  render();
+  toast(k === 'manual' ? 'Задание с ручной проверкой добавлено — задайте критерии' : 'Задание добавлено');
+}
+function del(i){ TASKS.splice(i, 1); render(); }
+function setW(i, v){ TASKS[i].w = Math.max(1, +v || 1); render(); }
+
+function render(){
+  /* режимы */
+  document.getElementById('modes').innerHTML = MODES.map(function(m){
+    return '<button class="mode '+(m.id===mode?'on ':'')+(m.mod?'mod':'')+'" onclick="setMode(\''+m.id+'\')">' +
+      '<b>'+m.n+(m.mod?' <span style="font-weight:400;color:var(--gray5)">· модуль</span>':'')+'</b>' +
+      '<span>'+m.d+'</span></button>';
+  }).join('');
+
+  var timed = mode !== 'inline';
+  document.getElementById('hMode').textContent = MODES.filter(function(m){ return m.id === mode; })[0].n;
+  document.getElementById('hMode').className = 'badge ' + (timed ? 'b-err' : 'b-warn');
+
+  /* задания */
+  document.getElementById('qCnt').textContent = TASKS.length;
+  document.getElementById('qHint').textContent = timed
+    ? 'на экзамене задания показываются по одному, порядок свободный'
+    : 'в плеере все задания открываются одной страницей';
+  document.getElementById('qs').innerHTML = TASKS.map(function(t, i){
+    var crit = (t.k === 'manual' && t.crit) ? '<div class="crit">' +
+      t.crit.map(function(c){
+        return '<div class="row"><input class="nm" value="'+c[0]+'"><input class="pt" value="'+c[1]+'">' +
+          '<span class="muted">баллов</span><button class="del" onclick="toast(\'Критерий удалён\')">✕</button></div>';
+      }).join('') +
+      '<button class="btn btn-s" onclick="toast(\'Критерий добавлен\')">+ Критерий</button></div>' : '';
+    return '<div class="q"><span class="grip">⠿</span><span class="n">'+(i+1)+'</span>' +
+      '<span class="txt"><b>'+t.t+'</b><span class="sub">' +
+        '<span class="tag '+(t.k==='manual'?'man':'auto')+'">'+(t.k==='manual'?'ручная проверка':'автопроверка')+'</span>' +
+        '<span class="tag">'+t.src+'</span>' +
+        (t.k==='manual' ? '<span>критериев: '+(t.crit?t.crit.length:0)+'</span>' : '<span>ответ сверяется с эталоном</span>') +
+      '</span></span>' +
+      '<span class="w"><input value="'+t.w+'" onchange="setW('+i+',this.value)"> балл'+(t.w>1?'а':'')+'</span>' +
+      '<button class="del" onclick="del('+i+')">✕</button></div>' + crit;
+  }).join('');
+
+  document.getElementById('totalMax').textContent = maxScore() + ' баллов';
+  document.getElementById('totalHint').innerHTML = 'максимум за работу · ' + TASKS.length + ' заданий' +
+    (manualCount() ? ' · <b>' + manualCount() + '</b> с ручной проверкой' : ' · все автопроверяемые');
+  document.getElementById('hSum').textContent = TASKS.length + ' заданий · максимум ' + maxScore();
+
+  /* настройки режима */
+  var s = '';
+  if(timed){
+    s += '<div class="group"><h4>Проведение · режим с таймером</h4>' +
+      '<div class="warnbox">Одна попытка и жёсткий таймер — свойства режима, отключить их нельзя. Пересдачу выдаёт преподаватель вручную, старая попытка аннулируется с записью в журнал событий.</div>' +
+      '<div class="fld"><label>Время на выполнение</label>' +
+        '<input type="number" value="60"><div class="hint">Обязательно. Отсчёт от старта попытки, считает сервер: закрытая вкладка и обрыв связи время не останавливают.</div></div>' +
+      '<div class="fld locked"><label>Число попыток</label><input type="text" value="1" disabled>' +
+        '<div class="hint">Зафиксировано режимом.</div></div>' +
+      '<div class="fld"><label>Шкала оценивания</label>' +
+        '<select><option>ЕГЭ · профильная математика</option><option>Простая: вес задания = его баллы</option><option>Создать новую…</option></select>' +
+        '<div class="hint">Карта «задание → баллы». Веса заданий слева берутся из неё; без шкалы каждое задание стоит 1 балл.</div></div>' +
+      '<div class="sw"><input type="checkbox" checked><span class="t">Фиксировать переключения вкладок' +
+        '<div class="hint">Уходы со страницы попадут в журнал попытки и будут видны преподавателю. Автоматических санкций нет — только факт.</div></span></div>' +
+      '</div>';
+    if(mode === 'ege'){
+      s += '<div class="group"><h4>ЕГЭ</h4>' +
+        '<div class="fld"><label>Разметка по номерам</label>' +
+          '<select><option>Профильная математика · 19 номеров</option><option>Информатика · 27 номеров</option></select>' +
+          '<div class="hint">Задания привязываются к номерам экзамена — отсюда статистика ученика в разрезе номеров.</div></div>' +
+        '<div class="fld"><label>Таблица перевода</label>' +
+          '<select><option>Первичные → тестовые, 2026</option></select></div></div>';
+    }
+  } else {
+    s += '<div class="group"><h4>Проведение · в плеере курса</h4>' +
+      '<div class="fld"><label>Число попыток</label>' +
+        '<select><option>без ограничения</option><option>1</option><option>2</option><option>3</option></select>' +
+        '<div class="hint">В журнал идёт последняя завершённая попытка; история видна преподавателю.</div></div>' +
+      '<div class="fld"><label>Время на выполнение</label>' +
+        '<select><option>без ограничения</option><option>30 минут</option><option>45 минут</option><option>60 минут</option></select>' +
+        '<div class="hint">Необязательно. Работа не блокирует навигацию по курсу — ученик может выйти и вернуться.</div></div>' +
+      '</div>';
+  }
+  document.getElementById('modeSettings').innerHTML = s;
+
+  var vis = document.getElementById('visib').value;
+  document.getElementById('visibHint').textContent = manualCount()
+    ? (vis === 'immediate'
+        ? 'Баллы за автопроверяемые задания придут сразу, за ' + manualCount() + ' с ручной проверкой — после преподавателя.'
+        : 'Ученик не увидит ничего, пока преподаватель не проверит работу целиком.')
+    : 'Все задания автопроверяемые — результат в любом случае считается сразу.';
+}
+
+/* создание задачи не уводит со страницы: тот же конструктор, но дровером */
+function openTask(){
+  document.getElementById('drPos').textContent = TASKS.length + 1;
+  document.getElementById('drScrim').classList.add('on');
+  document.getElementById('drawer').classList.add('on');
+}
+function closeTask(){
+  document.getElementById('drScrim').classList.remove('on');
+  document.getElementById('drawer').classList.remove('on');
+}
+function saveTask(){
+  TASKS.push({t:'Новая задача — условие из дровера', k:'auto', w:1, src:'банк'});
+  closeTask(); render();
+  toast('Задача сохранена в банк и вставлена в работу ссылкой');
+}
+var tt;
+function toast(m){ var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3200); }
+render();
+</script>
+</body>
+</html>

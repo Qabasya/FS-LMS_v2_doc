@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>КТП и расписание — FS-LMS 2.0</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .legend{background:#fff;border-bottom:1px solid var(--gray2);padding:var(--sp-8) var(--sp-20);display:flex;gap:var(--sp-16);font-size:var(--fs-12);
+    color:var(--gray6);align-items:center;flex:none;flex-wrap:wrap}
+  .legend i{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:middle}
+  .l-plan{background:var(--blue)} .l-now{background:var(--green)} .l-free{background:var(--gray3)}
+  .l-holi{background:var(--red)} .l-vac{background:var(--orange)} .l-extra{background:var(--violet)}
+
+  .movebar{background:var(--blue-l);border-bottom:1px solid #a5d8ff;color:#1864ab;padding:var(--sp-8) var(--sp-20);font-size:var(--fs-14);
+    display:none;align-items:center;gap:var(--sp-12);flex:none}
+  .movebar.on{display:flex}
+
+  .body{flex:1;display:flex;min-height:0}
+  .themes{width:326px;flex:none;background:#fff;border-right:1px solid var(--gray2);display:flex;flex-direction:column}
+  .themes-h{padding:var(--sp-12) var(--sp-16);border-bottom:1px solid var(--gray2)}
+  .themes-h .row{display:flex;justify-content:space-between;align-items:center}
+  .themes-h b{font-size:var(--fs-14)}
+  .progline{height:5px;background:var(--gray2);border-radius:var(--r-4);margin-top:8px;overflow:hidden}
+  .progline i{display:block;height:100%;background:var(--blue)}
+  .filter{display:flex;gap:var(--sp-6);margin-top:9px}
+  .filter button{flex:1;border:1px solid var(--gray3);background:#fff;border-radius:var(--r-6);padding:var(--sp-4);font-size:var(--fs-12);color:var(--gray6)}
+  .filter button.on{background:var(--gray1);color:var(--gray9);font-weight:600}
+  .themes-b{flex:1;overflow:auto;padding:var(--sp-12)}
+  .th{border:1px solid var(--gray2);border-radius:var(--r-8);padding:var(--sp-12) var(--sp-12);margin-bottom:8px;background:#fff;cursor:grab;font-size:var(--fs-14)}
+  .th:hover{border-color:var(--blue);box-shadow:var(--sh)}
+  .th.sel{border-color:var(--blue);background:var(--blue-l)}
+  .th .top{display:flex;gap:var(--sp-8);align-items:center}
+  .th .num{font-size:var(--fs-12);color:var(--gray5);font-weight:600;min-width:16px}
+  .th .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .th .acts{margin-top:7px;display:flex;gap:var(--sp-6)}
+  .mini-badge{font-size:var(--fs-12);padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4);font-weight:600;white-space:nowrap}
+  .mb-now{background:var(--green-l);color:#2b8a3e}
+  .mb-none{background:var(--gray1);color:var(--gray6)}
+  .mb-set{background:var(--blue-l);color:#1864ab}
+  .empty{color:var(--gray5);font-size:var(--fs-14);text-align:center;padding:var(--sp-24) var(--sp-12)}
+
+  .cal{flex:1;overflow:auto;padding:var(--sp-16) var(--sp-20) var(--user-h);min-width:0}
+  .cal-h{display:flex;align-items:center;gap:var(--sp-12);margin-bottom:12px}
+  .cal-h b{font-size:var(--fs-16);min-width:150px;text-align:center}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:var(--sp-8);min-width:840px}
+  .dow{font-size:var(--fs-12);letter-spacing:.05em;text-transform:uppercase;color:var(--gray5);font-weight:600;text-align:center;padding-bottom:2px}
+  .day{background:#fff;border:1px solid var(--gray2);border-radius:var(--r-8);min-height:106px;padding:var(--sp-8);position:relative}
+  .day.out{background:var(--gray0);border-style:dashed;opacity:.55}
+  .day.holi{background:var(--red-l);border-color:#ffc9c9}
+  .day.vac{background:var(--orange-l);border-color:#ffd8a8}
+  .day .d{font-size:var(--fs-12);color:var(--gray6);font-weight:600}
+  .day .mark{font-size:var(--fs-12);color:#c92a2a;margin-top:3px}
+  .day.vac .mark{color:#d9480f}
+  .day.drop{outline:2px dashed var(--blue);outline-offset:-3px;background:var(--blue-l)}
+  .day.movetarget{outline:2px dashed var(--blue);outline-offset:-3px;cursor:copy}
+  .addbtn{position:absolute;right:6px;top:6px;width:20px;height:20px;border-radius:var(--r-4);border:1px solid var(--gray3);
+    background:#fff;color:var(--gray6);font-size:var(--fs-12);line-height:1;display:none;place-items:center;padding:0}
+  .day:hover .addbtn{display:grid}
+  .addbtn:hover{border-color:var(--blue);color:var(--blue)}
+  .ses{margin-top:6px;border-radius:var(--r-8);padding:var(--sp-8) var(--sp-8);font-size:var(--fs-12);cursor:pointer;border-left:3px solid}
+  .ses.free{background:var(--gray1);border-color:var(--gray3);color:var(--gray6)}
+  .ses.set{background:var(--blue-l);border-color:var(--blue)}
+  .ses.extra{border-color:var(--violet)}
+  .ses.cancelled{opacity:.5;text-decoration:line-through}
+  .ses .t{font-size:var(--fs-12);color:var(--gray6);display:flex;justify-content:space-between;gap:var(--sp-6)}
+  .ses .nm{font-weight:600;margin-top:2px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ses .rm{font-size:var(--fs-12);color:var(--gray6);margin-top:2px}
+  .ses.set .nm{color:#1864ab}
+
+  .dr-h{padding:var(--sp-16) var(--sp-20);border-bottom:1px solid var(--gray2);display:flex;align-items:center;gap:var(--sp-12)}
+  .dr-b{flex:1;overflow:auto;padding:var(--sp-16) var(--sp-20)}
+  .dr-f{border-top:1px solid var(--gray2);padding:var(--sp-12) var(--sp-20);display:flex;gap:var(--sp-8);flex-wrap:wrap}
+  .warn{background:var(--yellow-l);border:1px solid #ffe8a1;color:#a37200;border-radius:var(--r);padding:var(--sp-12) var(--sp-12);font-size:var(--fs-14);margin-bottom:14px}
+  .sum{background:var(--gray0);border-radius:var(--r);padding:var(--sp-12) var(--sp-16);margin:var(--sp-12) 0}
+  .sum div{display:flex;justify-content:space-between;padding:var(--sp-4) 0}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-12)}
+
+  @media (max-width:1100px){ .themes{width:280px} .cal{padding:var(--sp-12)} }
+  @media (max-width:820px){ .themes{display:none} }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-top">
+      <div class="logo">ШБ</div>
+      <div style="flex:1"><b>Шаг в будущее</b><small>Управление</small></div>
+      <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')">⟨</button>
+    </div>
+    <div class="switch"><button>Обучение</button><button class="on">Управление</button></div>
+    <nav class="nav">
+      <h4>Моя работа</h4>
+      <a href="#"><i class="ic">◱</i><span>Главная</span></a>
+      <a href="04-journal.html"><i class="ic">▦</i><span>Журнал</span></a>
+      <a href="#" class="on"><i class="ic">▤</i><span>КТП и расписание</span></a>
+      <a href="07-student.html#pick"><i class="ic">◉</i><span>Группы</span></a>
+      <a href="08-lesson.html#pick"><i class="ic">▤</i><span>Уроки</span></a>
+      <a href="09-work.html#pick"><i class="ic">✎</i><span>Работы</span></a>
+      <a href="05-review.html"><i class="ic">✓</i><span>Проверка</span></a>
+      <a href="06-individual.html"><i class="ic">◷</i><span>Индивидуальные занятия</span></a>
+      <h4>Обучение</h4>
+      <a href="01-course-builder.html"><i class="ic">◈</i><span>Курсы</span></a>
+      <a href="#"><i class="ic">?</i><span>Банк задач</span></a>
+      <h4>Настройки</h4>
+      <a href="#"><i class="ic">⚙</i><span>Учебные периоды</span></a>
+    </nav>
+    <div class="side-user">
+      <div class="ava">КМ</div>
+      <div style="flex:1"><b style="font-size:var(--fs-14);display:block">Кэбс М.</b><small style="font-size:var(--fs-12);color:var(--gray6)">Методист</small></div>
+      <span style="color:var(--gray5)">⚙</span>
+    </div>
+  </aside>
+
+  <div class="app">
+    <header class="head">
+      <div>
+        <div class="crumbs">Период: 1 сентября — 31 октября 2026 · Регулярность: вт, пт 17:00–18:30, каб. 315</div>
+        <h1>КТП и расписание</h1>
+      </div>
+      <div class="fld" style="margin:0"><div class="v" style="display:flex;gap:var(--sp-12);align-items:center;padding:var(--sp-8) var(--sp-12)">
+        <span style="width:26px;height:26px;border-radius:var(--r-6);background:var(--violet);color:#fff;font-size:var(--fs-12);display:grid;place-items:center;font-weight:700">МЕГЭ</span>
+        МЕГЭ-1 · Математика <span style="color:var(--gray5)">▾</span></div></div>
+      <span class="badge b-draft" id="schedStatus">Расписание в работе</span>
+      <div class="sp"></div>
+      <button class="btn" onclick="autoPlace()">Распределить</button>
+      <button class="btn btn-p" onclick="openPublish()">Опубликовать</button>
+    </header>
+
+    <div class="legend">
+      <span><i class="l-plan"></i>Урок запланирован</span>
+      <span><i class="l-now"></i>Открыт сразу</span>
+      <span><i class="l-free"></i>Свободный слот</span>
+      <span><i class="l-extra"></i>Доп. занятие</span>
+      <span><i class="l-holi"></i>Праздник</span>
+      <span><i class="l-vac"></i>Каникулы</span>
+      <span class="sp"></span>
+      <span>Сетка создана при создании группы · перетащите тему в слот или наведите на день для «+»</span>
+    </div>
+
+    <div class="movebar" id="movebar">
+      <b>Перенос занятия:</b> <span id="moveWhat"></span> — выберите новую дату в календаре.
+      <span class="sp"></span>
+      <button class="btn btn-s" onclick="cancelMove()">Отмена</button>
+    </div>
+
+    <div class="body">
+      <aside class="themes">
+        <div class="themes-h">
+          <div class="row"><b>Темы курса</b><span class="muted" id="themesCount">0 / 20</span></div>
+          <div class="progline"><i id="progline" style="width:0"></i></div>
+          <div class="filter">
+            <button class="on" id="fRest" onclick="setFilter('rest')">Нераспределённые</button>
+            <button id="fAll" onclick="setFilter('all')">Все темы</button>
+          </div>
+        </div>
+        <div class="themes-b" id="themesBox"></div>
+      </aside>
+
+      <div class="cal">
+        <div class="cal-h">
+          <button class="btn btn-s" onclick="shiftMonth(-1)">‹</button>
+          <b id="monthName">Сентябрь 2026</b>
+          <button class="btn btn-s" onclick="shiftMonth(1)">›</button>
+          <span class="muted" id="calMeta"></span>
+        </div>
+        <div class="grid" id="grid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" onclick="closeAll()"></div>
+
+<aside class="drawer" id="drawer">
+  <div class="dr-h"><b style="flex:1" id="drTitle">Занятие</b><button class="btn btn-s" onclick="closeAll()">✕</button></div>
+  <div class="dr-b">
+    <div class="warn" id="drWarn" style="display:none"></div>
+    <div class="fld"><label>Дата и время</label><div class="v" id="drWhen">—</div></div>
+    <div class="fld"><label>Урок</label><div class="v" id="drLesson">—</div></div>
+    <div class="fld"><label>Кабинет</label><div class="v" id="drRoom">315</div></div>
+    <div class="fld"><label>Преподаватель</label><div class="v" id="drTeacher">Училков И. П.</div></div>
+    <div class="fld"><label>Статус</label><div class="v" id="drStatus">Запланировано</div></div>
+  </div>
+  <div class="dr-f">
+    <button class="btn" onclick="detach()">Открепить урок</button>
+    <button class="btn" onclick="startMove()">Перенести</button>
+    <button class="btn btn-danger" onclick="cancelSession()">Отменить</button>
+  </div>
+</aside>
+
+<div class="modal" id="addModal">
+  <div class="mo-h">Добавить занятие</div>
+  <div class="mo-b">
+    <div class="fld"><label>Дата</label><div class="v" id="addDate">—</div></div>
+    <div class="row2">
+      <div class="fld"><label>Начало</label><select id="addFrom"></select></div>
+      <div class="fld"><label>Окончание</label><select id="addTo"></select></div>
+    </div>
+    <div class="fld"><label>Кабинет</label><select id="addRoom"><option>315</option><option>212</option><option>Онлайн</option></select></div>
+    <div class="fld"><label>Преподаватель</label><select id="addTeacher"><option>Училков И. П. (преподаватель группы)</option><option>Замещалов П. С.</option></select></div>
+    <div class="fld"><label>Урок (необязательно)</label><select id="addLesson"></select></div>
+  </div>
+  <div class="mo-f">
+    <button class="btn" onclick="closeAll()">Отмена</button>
+    <button class="btn btn-p" onclick="createSession()">Добавить занятие</button>
+  </div>
+</div>
+
+<div class="modal" id="pubModal">
+  <div class="mo-h">Опубликовать расписание</div>
+  <div class="mo-b">Проверьте сводку перед публикацией:
+    <div class="sum" id="sumBox"></div>
+    <span id="sumNote"></span>
+  </div>
+  <div class="mo-f">
+    <button class="btn" onclick="closeAll()">Отмена</button>
+    <button class="btn btn-p" onclick="publish()">Опубликовать</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var THEMES = ['Повторение: дроби','Проценты и пропорции','Линейные уравнения','Системы уравнений',
+  'Квадратные уравнения','Неравенства','Функции и графики','Степени и корни','Прогрессии',
+  'Тригонометрия: начало','Тригонометрические уравнения','Планиметрия: треугольники',
+  'Планиметрия: окружность','Векторы','Стереометрия: начало','Многогранники','Тела вращения',
+  'Теория вероятностей','Статистика','Итоговое повторение'];
+var themes = THEMES.map(function(t,i){ return {id:i, name:t, state:'none'}; });   /* none | now | 'YYYY-MM-DD' */
+var sessions = [], seq = 1;
+var VACATIONS = ['2026-09-28','2026-09-29','2026-09-30'];
+var HOLIDAYS  = ['2026-10-16'];
+var MONTHS = [{y:2026,m:8,label:'Сентябрь 2026'},{y:2026,m:9,label:'Октябрь 2026'}];
+var mi = 0, picked = null, filter = 'rest', moving = null, curId = null, addDate = null;
+var MN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+
+function iso(y,m,d){ return y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0'); }
+function fmt(s){ var a = s.split('-'); return (+a[2]) + ' ' + MN[(+a[1])-1]; }
+function toMin(t){ var a = t.split(':'); return (+a[0])*60 + (+a[1]); }
+function toTime(m){ var h = Math.floor(m/60), x = m%60; return (h<10?'0':'')+h+':'+(x<10?'0':'')+x; }
+
+/* сетка материализуется при создании группы (01-product §5.1) */
+function genGrid(){
+  MONTHS.forEach(function(M){
+    var last = new Date(M.y, M.m+1, 0).getDate();
+    for(var d=1; d<=last; d++){
+      var s = iso(M.y, M.m, d), dow = (new Date(M.y, M.m, d).getDay()+6)%7;
+      if(dow!==1 && dow!==4) continue;
+      if(VACATIONS.indexOf(s)>=0 || HOLIDAYS.indexOf(s)>=0) continue;
+      sessions.push({id:seq++, date:s, from:'17:00', to:'18:30', room:'315', themeId:null,
+                     cancelled:false, extra:false, teacher:'Училков И. П.'});
+    }
+  });
+  sessions.sort(function(a,b){ return a.date.localeCompare(b.date); });
+}
+function autoPlace(){
+  var free = sessions.filter(function(s){ return !s.cancelled && s.themeId===null; });
+  var rest = themes.filter(function(t){ return t.state==='none'; });
+  var n = 0;
+  free.forEach(function(s){ var t = rest.shift(); if(t){ s.themeId = t.id; t.state = s.date; n++; } });
+  render();
+  var left = themes.filter(function(t){ return t.state==='none'; }).length;
+  toast(n ? 'Распределено уроков: ' + n + (left ? '. Не хватило слотов для ' + left + ' тем — добавьте занятия или откройте их сразу' : '')
+          : 'Свободных слотов нет');
+}
+
+function render(){
+  var list = filter==='rest'
+    ? themes.filter(function(t){ return t.state==='none' || t.state==='now'; })
+    : themes;
+  var html = list.length ? list.map(function(t){
+    var placed = t.state.indexOf && t.state.indexOf('-') > 0;
+    var badge = placed ? '<span class="mini-badge mb-set">'+fmt(t.state)+'</span>'
+      : t.state==='now' ? '<span class="mini-badge mb-now">Открыт сразу</span>'
+      : '<span class="mini-badge mb-none">Не запланирован</span>';
+    var act = placed ? '<button class="btn btn-s" onclick="event.stopPropagation();unplace('+t.id+')">Снять с даты</button>'
+      : t.state==='none' ? '<button class="btn btn-s" onclick="event.stopPropagation();setNow('+t.id+')">Открыть сразу</button>'
+      : '<button class="btn btn-s" onclick="event.stopPropagation();unsetNow('+t.id+')">Отменить «сразу»</button>';
+    return '<div class="th '+(picked===t.id?'sel':'')+'" '+(placed?'':'draggable="true"')+' ondragstart="drag(event,'+t.id+')" onclick="pickTheme('+t.id+')">' +
+      '<div class="top"><span class="num">'+(t.id+1)+'</span><span class="nm">'+t.name+'</span>'+badge+'</div>' +
+      '<div class="acts">'+act+'</div></div>';
+  }).join('') : '<div class="empty">Все темы распределены по датам</div>';
+  document.getElementById('themesBox').innerHTML = html;
+
+  var placedN = themes.filter(function(t){ return t.state.indexOf && t.state.indexOf('-') > 0; }).length;
+  document.getElementById('themesCount').textContent = placedN + ' / ' + themes.length;
+  document.getElementById('progline').style.width = (placedN/themes.length*100) + '%';
+  document.getElementById('fRest').classList.toggle('on', filter==='rest');
+  document.getElementById('fAll').classList.toggle('on', filter==='all');
+
+  var M = MONTHS[mi];
+  document.getElementById('monthName').textContent = M.label;
+  var start = (new Date(M.y, M.m, 1).getDay()+6)%7, last = new Date(M.y, M.m+1, 0).getDate();
+  var g = ['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'].map(function(d){ return '<div class="dow">'+d+'</div>'; }).join('');
+  for(var i=0;i<start;i++) g += '<div class="day out"></div>';
+  for(var d=1; d<=last; d++){
+    var s = iso(M.y, M.m, d), vac = VACATIONS.indexOf(s)>=0, holi = HOLIDAYS.indexOf(s)>=0;
+    var inner = '<div class="d">'+d+'</div>' +
+      '<button class="addbtn" onclick="event.stopPropagation();openAdd(\''+s+'\')" title="Добавить занятие">+</button>';
+    if(vac) inner += '<div class="mark">Каникулы</div>';
+    if(holi) inner += '<div class="mark">Праздник</div>';
+    sessions.filter(function(x){ return x.date===s; }).forEach(function(x){
+      var t = x.themeId!==null ? themes[x.themeId] : null;
+      inner += '<div class="ses '+(t?'set':'free')+' '+(x.extra?'extra':'')+' '+(x.cancelled?'cancelled':'')+'" ' +
+        'onclick="event.stopPropagation();openSession('+x.id+')">' +
+        '<div class="t"><span>'+x.from+'–'+x.to+'</span><span>каб. '+x.room+'</span></div>' +
+        '<div class="nm">'+(t ? t.name : 'Свободный слот')+'</div>' +
+        (x.extra?'<div class="rm">доп. занятие</div>':'') + (x.cancelled?'<div class="rm">отменено</div>':'') + '</div>';
+    });
+    g += '<div class="day '+(vac?'vac':'')+' '+(holi?'holi':'')+' '+(moving?'movetarget':'')+'" ' +
+      'ondragover="over(event)" ondragleave="leave(event)" ondrop="drop(event,\''+s+'\')" onclick="dayClick(\''+s+'\')">' + inner + '</div>';
+  }
+  document.getElementById('grid').innerHTML = g;
+  var pref = M.y + '-' + String(M.m+1).padStart(2,'0');
+  var inMonth = sessions.filter(function(x){ return x.date.indexOf(pref)===0; }).length;
+  document.getElementById('calMeta').textContent = inMonth + ' занятий в месяце · всего ' + sessions.length;
+}
+
+function shiftMonth(d){ mi = Math.max(0, Math.min(MONTHS.length-1, mi+d)); render(); }
+function setFilter(f){ filter = f; render(); }
+function pickTheme(id){ if(themes[id].state.indexOf && themes[id].state.indexOf('-')>0) return;
+  picked = picked===id ? null : id; render(); }
+function setNow(id){ themes[id].state='now'; render(); toast('Урок открыт сразу — доступен без привязки к занятию'); }
+function unsetNow(id){ themes[id].state='none'; render(); }
+function unplace(id){
+  var s = sessions.filter(function(x){ return x.themeId===id; })[0];
+  if(s) s.themeId = null;
+  themes[id].state='none'; render(); toast('Тема снята с даты');
+}
+function place(themeId, date){
+  var free = sessions.filter(function(x){ return x.date===date && !x.cancelled && x.themeId===null; })[0];
+  var any  = sessions.filter(function(x){ return x.date===date && !x.cancelled; })[0];
+  var slot = free || any;
+  if(!slot){ toast('В этот день нет занятия — наведите на день и нажмите «+»'); return; }
+  if(slot.themeId!==null) themes[slot.themeId].state='none';
+  slot.themeId = themeId; themes[themeId].state = date; picked = null; render();
+}
+function dayClick(date){ if(moving){ doMove(date); return; } if(picked!==null) place(picked, date); }
+function drag(e,id){ e.dataTransfer.setData('id', id); }
+function over(e){ e.preventDefault(); e.currentTarget.classList.add('drop'); }
+function leave(e){ e.currentTarget.classList.remove('drop'); }
+function drop(e,date){ e.preventDefault(); e.currentTarget.classList.remove('drop'); place(+e.dataTransfer.getData('id'), date); }
+
+function fillTimes(sel, value){
+  var html = '';
+  for(var m = 8*60; m <= 21*60; m += 5)
+    html += '<option value="'+toTime(m)+'"'+(toTime(m)===value?' selected':'')+'>'+toTime(m)+'</option>';
+  sel.innerHTML = html;
+}
+function openAdd(date){
+  addDate = date;
+  document.getElementById('addDate').textContent = fmt(date) + ' 2026';
+  fillTimes(document.getElementById('addFrom'), '19:00');
+  fillTimes(document.getElementById('addTo'), '20:30');
+  var rest = themes.filter(function(t){ return t.state==='none'; });
+  document.getElementById('addLesson').innerHTML = '<option value="">— не прикреплять —</option>' +
+    rest.map(function(t){ return '<option value="'+t.id+'">'+(t.id+1)+'. '+t.name+'</option>'; }).join('');
+  document.getElementById('addModal').classList.add('on');
+  document.getElementById('scrim').classList.add('on');
+}
+function createSession(){
+  var v = document.getElementById('addLesson').value;
+  var s = {id:seq++, date:addDate, from:document.getElementById('addFrom').value,
+           to:document.getElementById('addTo').value, room:document.getElementById('addRoom').value,
+           themeId:null, cancelled:false, extra:true, teacher:document.getElementById('addTeacher').value};
+  if(v!==''){ s.themeId = +v; themes[+v].state = addDate; }
+  sessions.push(s); sessions.sort(function(a,b){ return a.date.localeCompare(b.date); });
+  render(); closeAll();
+  toast('Занятие добавлено вне регулярности — для отработки, консультации или переноса');
+}
+
+function openSession(id){
+  curId = id;
+  var x = sessions.filter(function(s){ return s.id===id; })[0];
+  var t = x.themeId!==null ? themes[x.themeId] : null;
+  document.getElementById('drTitle').textContent = 'Занятие ' + fmt(x.date);
+  document.getElementById('drWhen').textContent = fmt(x.date) + ' 2026, ' + x.from + '–' + x.to;
+  document.getElementById('drLesson').textContent = t ? t.name : 'Урок не прикреплён';
+  document.getElementById('drRoom').textContent = x.room;
+  document.getElementById('drTeacher').textContent = x.teacher;
+  document.getElementById('drStatus').textContent = x.cancelled ? 'Отменено' : (x.extra ? 'Запланировано (доп. занятие)' : 'Запланировано');
+  var w = document.getElementById('drWarn');
+  if(x.date === '2026-09-11'){ w.style.display='block';
+    w.innerHTML = '⚠ Кабинет 315 занят в это время группой «ИНФ-2». Постановка разрешена — это предупреждение, не запрет.'; }
+  else if(x.extra){ w.style.display='block';
+    w.innerHTML = '⚠ Занятие вне регулярности. В поурочной схеме оплаты оно породит отдельное начисление.'; }
+  else w.style.display='none';
+  document.getElementById('drawer').classList.add('on');
+  document.getElementById('scrim').classList.add('on');
+}
+function detach(){
+  var x = sessions.filter(function(s){ return s.id===curId; })[0];
+  if(x.themeId!==null){ themes[x.themeId].state='none'; x.themeId=null; }
+  render(); closeAll(); toast('Урок откреплён — занятие стало свободным слотом');
+}
+function startMove(){
+  moving = curId;
+  var x = sessions.filter(function(s){ return s.id===curId; })[0];
+  var t = x.themeId!==null ? themes[x.themeId].name : 'свободный слот';
+  document.getElementById('moveWhat').textContent = fmt(x.date) + ', ' + t;
+  document.getElementById('movebar').classList.add('on');
+  closeAll(); render();
+}
+function cancelMove(){ moving = null; document.getElementById('movebar').classList.remove('on'); render(); }
+function doMove(date){
+  var x = sessions.filter(function(s){ return s.id===moving; })[0], old = x.date;
+  x.date = date;
+  if(x.themeId!==null) themes[x.themeId].state = date;
+  sessions.sort(function(a,b){ return a.date.localeCompare(b.date); });
+  cancelMove();
+  toast('Занятие перенесено с ' + fmt(old) + ' на ' + fmt(date) + '. Группа уведомлена; начисление сохранено за перенесённым занятием, дедлайны сдвинуты');
+}
+function cancelSession(){
+  var x = sessions.filter(function(s){ return s.id===curId; })[0];
+  x.cancelled = true;
+  if(x.themeId!==null){ themes[x.themeId].state='none'; x.themeId=null; }
+  render(); closeAll(); toast('Занятие отменено: начисление аннулировано, урок вернулся в нераспределённые');
+}
+function openPublish(){
+  var planned = themes.filter(function(t){ return t.state.indexOf && t.state.indexOf('-')>0; }).length;
+  var now = themes.filter(function(t){ return t.state==='now'; }).length;
+  var none = themes.filter(function(t){ return t.state==='none'; }).length;
+  var free = sessions.filter(function(s){ return !s.cancelled && s.themeId===null; }).length;
+  document.getElementById('sumBox').innerHTML =
+    '<div><span>Запланировано по занятиям</span><b>'+planned+'</b></div>' +
+    '<div><span>Открыты сразу</span><b>'+now+'</b></div>' +
+    '<div><span>Не запланированы</span><b style="color:'+(none?'var(--red)':'inherit')+'">'+none+'</b></div>' +
+    '<div><span>Свободных слотов</span><b>'+free+'</b></div>';
+  document.getElementById('sumNote').innerHTML = none
+    ? '<span style="color:#c92a2a">На уровнях с кампусом незапланированные уроки — ошибка планирования: опубликовать можно, но для учеников они останутся закрыты.</span>'
+    : 'Все уроки распределены.';
+  document.getElementById('pubModal').classList.add('on');
+  document.getElementById('scrim').classList.add('on');
+}
+function publish(){
+  var b = document.getElementById('schedStatus');
+  b.textContent = 'Расписание утверждено'; b.className = 'badge b-ok';
+  closeAll();
+  toast('Расписание опубликовано. Переносы и правки остаются доступными — повторное утверждение не требуется');
+}
+function closeAll(){
+  document.getElementById('drawer').classList.remove('on');
+  document.getElementById('addModal').classList.remove('on');
+  document.getElementById('pubModal').classList.remove('on');
+  document.getElementById('scrim').classList.remove('on');
+}
+var tt;
+function toast(m){ var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 4200); }
+
+genGrid(); render();
+</script>
+</body>
+</html>

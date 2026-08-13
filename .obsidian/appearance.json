@@ -1,0 +1,10 @@
+{
+  "accentColor": "#1f39ff",
+  "baseFontSize": 18,
+  "baseFontSizeAction": true,
+  "translucency": true,
+  "cssTheme": "Obsidian Nord",
+  "enabledCssSnippets": [
+    "line"
+  ]
+}

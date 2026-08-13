@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Плеер курса — FS-LMS 2.0</title>
+<link rel="stylesheet" href="_shared.css">
+<script src="_icons.js"></script>
+<style>
+  /* плеер живёт в своей рамке — сайдбара приложения нет (§2.2) */
+  .app{height:100vh}
+  .phead{background:#fff;border-bottom:1px solid var(--gray2);padding:var(--sp-12) var(--sp-20);display:flex;align-items:center;gap:var(--sp-16);
+    flex:none;min-height:var(--head-h);z-index:20}
+  .back{border:0;background:none;color:var(--gray7);display:flex;gap:var(--sp-8);align-items:center;font-size:var(--fs-14);padding:var(--sp-6) var(--sp-8);border-radius:var(--r-6)}
+  .back:hover{background:var(--gray1)}
+  .phead h1{margin:0;font-size:var(--fs-16)}
+  .prog{display:flex;gap:var(--sp-12);align-items:center;font-size:var(--fs-14);color:var(--gray7);background:var(--gray1);padding:var(--sp-6) var(--sp-12);border-radius:var(--r-pill)}
+  .bar{width:92px;height:6px;background:var(--gray3);border-radius:var(--r-4);overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--green);border-radius:var(--r-4)}
+
+  .banner{padding:var(--sp-12) var(--sp-20);font-size:var(--fs-14);display:none;align-items:center;gap:var(--sp-12);border-bottom:1px solid;flex:none}
+  .banner.show{display:flex}
+  .b-preview{background:var(--yellow-l);border-color:#ffe8a1;color:#a37200}
+  .b-teacher{background:var(--violet-l);border-color:#e0d7ff;color:#5f3dc4}
+
+  .body{flex:1;display:flex;min-height:0;position:relative}
+
+  /* дерево курса: свёрнуто, раскрывается при наведении (§4.2) */
+  .tree{width:52px;flex:none;position:relative}
+  .tree-inner{position:absolute;left:0;top:0;bottom:0;width:52px;background:#fff;border-right:1px solid var(--gray2);
+    overflow:hidden;transition:width .16s ease;z-index:22;padding:var(--sp-12) var(--sp-8)}
+  .tree:hover .tree-inner{width:274px;overflow-y:auto;box-shadow:8px 0 28px rgba(0,0,0,.10);padding:var(--sp-12) var(--sp-12)}
+  .tree.pinned{width:274px}
+  .tree.pinned .tree-inner{width:274px;overflow-y:auto;box-shadow:none;padding:var(--sp-12) var(--sp-12)}
+  .tree .full{display:none;white-space:nowrap}
+  .tree:hover .full,.tree.pinned .full{display:block}
+  .tree .mini{display:flex;flex-direction:column;gap:var(--sp-6);align-items:center}
+  .tree:hover .mini,.tree.pinned .mini{display:none}
+  .mini .m{width:34px;height:30px;border-radius:var(--r-6);background:var(--gray1);color:var(--gray6);font-size:var(--fs-12);
+    display:grid;place-items:center;font-weight:600;cursor:pointer}
+  .mini .m.on{background:var(--blue-l);color:var(--blue)}
+  .mini .m.done{background:var(--green-l);color:#2b8a3e}
+  .mini .m.lock{color:var(--gray5);font-size:var(--fs-12)}
+  .mini .sep{width:20px;height:1px;background:var(--gray2);margin:var(--sp-4) 0}
+  .pin{position:absolute;right:8px;top:10px;border:1px solid var(--gray3);background:#fff;border-radius:var(--r-6);
+    width:24px;height:24px;font-size:var(--fs-12);color:var(--gray6);display:none;place-items:center;padding:0}
+  .tree:hover .pin,.tree.pinned .pin{display:grid}
+  .tree.pinned .pin{color:var(--blue);border-color:var(--blue)}
+  .tree h4{font-size:var(--fs-14);margin:var(--sp-4) var(--sp-8) var(--sp-12)}
+  .tree .sec{font-size:var(--fs-12);letter-spacing:.05em;text-transform:uppercase;color:var(--gray5);font-weight:600;margin:var(--sp-16) var(--sp-8) var(--sp-6)}
+  .tree .les{padding:var(--sp-8) var(--sp-12);border-radius:var(--r-6);font-size:var(--fs-14);color:var(--gray7);cursor:pointer;display:flex;gap:var(--sp-8);align-items:center}
+  .tree .les:hover{background:var(--gray1)}
+  .tree .les.on{background:var(--blue-l);color:var(--blue);font-weight:600}
+  .tree .les.lock{color:var(--gray5)}
+
+  .canvas{flex:1;overflow:auto;position:relative}
+  .readbar{position:sticky;top:0;height:3px;z-index:15}
+  .readbar i{display:block;height:100%;background:var(--blue);width:0}
+  .wrap{max-width:1180px;margin:0 auto;padding:var(--sp-20) var(--sp-24) var(--user-h);display:flex;gap:var(--sp-24)}
+  .col{flex:1;min-width:0}
+
+  .steps{display:flex;flex-wrap:nowrap;gap:var(--sp-6);overflow-x:auto;padding-bottom:8px}
+  .step{width:62px;flex:none;border:0;background:none;padding:0;text-align:center;position:relative}
+  .step .box{width:52px;height:52px;margin:0 auto;border-radius:var(--r-12);display:grid;place-items:center;position:relative;color:#fff}
+  .step .n{position:absolute;top:3px;left:6px;font-size:var(--fs-12);opacity:.8;font-weight:700}
+  .step .cap{display:block;margin-top:5px;font-size:var(--fs-12);color:var(--gray7);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .step.on .box{outline:3px solid var(--blue);outline-offset:2px}
+  .step.on .cap{color:var(--blue);font-weight:600}
+  .step.locked .box{background:var(--gray2)!important;color:var(--gray5)}
+  .step.locked .cap{color:var(--gray5)}
+  .step .tick{position:absolute;top:-3px;right:6px;width:18px;height:18px;border-radius:50%;background:var(--green);color:#fff;
+    font-size:var(--fs-12);display:grid;place-items:center;border:2px solid #fff}
+  .t-text{background:var(--blue)} .t-video{background:var(--violet)} .t-task{background:var(--green)}
+  .t-work{background:var(--orange)} .t-exam{background:var(--red)} .t-live{background:var(--teal)}
+
+  .navrow{display:flex;align-items:center;gap:var(--sp-12);margin:var(--sp-16) 0 var(--sp-16)}
+  .navrow .mid{flex:1;text-align:center;font-size:var(--fs-14);color:var(--gray6)}
+  .btn-p:disabled{background:var(--gray3);border-color:var(--gray3);color:var(--gray6);cursor:not-allowed;transform:none}
+
+  .card{background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);padding:var(--sp-24) var(--sp-32);box-shadow:var(--sh)}
+  .kind{display:inline-block;background:var(--blue-l);color:var(--blue);font-size:var(--fs-12);font-weight:700;letter-spacing:.05em;
+    text-transform:uppercase;padding:var(--sp-4) var(--sp-12);border-radius:var(--r-4);margin-bottom:10px}
+  .card h2{margin:0 0 var(--sp-16);font-size:var(--fs-22)}
+  .card p{font-size:var(--fs-16);line-height:1.75;color:#2b2b2b;margin:0 0 var(--sp-16)}
+  .card h3{font-size:var(--fs-16);margin:var(--sp-32) 0 var(--sp-12);scroll-margin-top:80px}
+  .lead{color:var(--gray7)}
+
+  /* липкое оглавление лонгрида (§4.2) */
+  .toc{width:216px;flex:none;position:sticky;top:18px;align-self:flex-start;font-size:var(--fs-14);display:none}
+  .toc.show{display:block}
+  .toc b{display:block;font-size:var(--fs-12);letter-spacing:.06em;text-transform:uppercase;color:var(--gray5);margin:0 0 var(--sp-12) var(--sp-12)}
+  .toc a{display:block;padding:var(--sp-6) var(--sp-12);border-left:2px solid var(--gray2);color:var(--gray6);text-decoration:none;line-height:1.35}
+  .toc a:hover{color:var(--gray9);background:var(--gray1)}
+  .toc a.on{border-left-color:var(--blue);color:var(--blue);font-weight:600}
+  .toc .up{margin-top:12px;width:100%}
+
+  .answer{display:flex;gap:var(--sp-12);margin-top:6px;flex-wrap:wrap}
+  .answer input{flex:1;min-width:200px;border:1px solid var(--gray3);border-radius:var(--r);padding:var(--sp-12) var(--sp-16);font:inherit}
+  .verdict{margin-top:12px;padding:var(--sp-12) var(--sp-16);border-radius:var(--r);font-size:var(--fs-14);display:none}
+  .verdict.ok{display:block;background:var(--green-l);color:#2b8a3e}
+  .verdict.no{display:block;background:var(--red-l);color:#c92a2a}
+  .tries{font-size:var(--fs-14);color:var(--gray6);margin-top:9px}
+  .reveal{background:var(--violet-l);border:1px solid #e0d7ff;color:#5f3dc4;border-radius:var(--r);padding:var(--sp-12) var(--sp-16);margin-top:12px;font-size:var(--fs-14);display:none}
+  .reveal.show{display:block}
+
+  .tasknav{position:sticky;top:8px;background:#fff;border:1px solid var(--gray2);border-radius:var(--r-8);padding:var(--sp-12) var(--sp-12);
+    display:flex;gap:var(--sp-6);flex-wrap:wrap;align-items:center;z-index:10;margin-bottom:14px}
+  .tn{width:30px;height:30px;border-radius:var(--r-6);border:1px solid var(--gray3);background:#fff;font-size:var(--fs-14);color:var(--gray7)}
+  .tn.filled{background:var(--green-l);border-color:#8ce99a;color:#2b8a3e;font-weight:600}
+  .tn.cur{outline:2px solid var(--blue);outline-offset:1px}
+  .qbox{border-top:1px solid var(--gray2);padding-top:16px;margin-top:16px}
+  .qnum{font-size:var(--fs-12);color:var(--gray6);font-weight:600;margin-bottom:6px}
+  .deadline{display:inline-flex;gap:var(--sp-8);align-items:center;background:var(--yellow-l);color:#a37200;border-radius:var(--r-pill);
+    padding:var(--sp-4) var(--sp-12);font-size:var(--fs-14);margin-bottom:12px}
+
+  @media (max-width:1150px){ .toc{display:none!important} }
+  @media (max-width:900px){ .wrap{padding:var(--sp-16) var(--sp-16) var(--user-h)} .card{padding:var(--sp-20) var(--sp-20)} .prog{display:none} }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="phead">
+    <button class="back" onclick="togglePin()">☰</button>
+    <button class="back">↩ Вернуться</button>
+    <div>
+      <div class="crumbs">Мои курсы · Информатика ЕГЭ · Введение</div>
+      <h1>Урок 1.1 — Системы счисления</h1>
+    </div>
+    <div class="sp"></div>
+    <div class="prog"><span id="progText">2 из 6</span><span class="bar"><i id="progBar" style="width:33%"></i></span></div>
+    <div class="modes">
+      <button class="on" onclick="setMode('student',this)">Ученик</button>
+      <button onclick="setMode('preview',this)">Предпросмотр</button>
+      <button onclick="setMode('teacher',this)">Педагог</button>
+    </div>
+  </header>
+
+  <div class="banner b-preview" id="bnPreview">👁 <b>Предпросмотр курса</b> — ответы не сохраняются, прогресс не создаётся.</div>
+  <div class="banner b-teacher" id="bnTeacher">🎓 <b>Режим педагога</b> — снимок курса вашей группы. Эталонные ответы скрыты, доступна кнопка «Показать ответ».</div>
+
+  <div class="body">
+    <aside class="tree" id="tree">
+      <div class="tree-inner">
+        <button class="pin" onclick="togglePin()" title="Закрепить панель">📌</button>
+        <div class="mini">
+          <span class="m on" title="Урок 1.1 · Системы счисления">1.1</span>
+          <span class="m" title="Урок 1.2 · Кодирование информации">1.2</span>
+          <span class="m lock" title="Урок 1.3 · Логика — откроется 12 сентября">🔒</span>
+          <span class="sep"></span>
+          <span class="m lock" title="Урок 2.1 · Основы алгоритмов — откроется 19 сентября">🔒</span>
+          <span class="m lock" title="Урок 2.2 · Циклы — откроется 26 сентября">🔒</span>
+        </div>
+        <div class="full">
+          <h4>Информатика ЕГЭ — базовый</h4>
+          <div class="sec">1. Введение</div>
+          <div class="les on">Урок 1.1 · Системы счисления</div>
+          <div class="les">Урок 1.2 · Кодирование информации</div>
+          <div class="les lock">Урок 1.3 · Логика 🔒</div>
+          <div class="sec">2. Алгоритмизация</div>
+          <div class="les lock">Урок 2.1 · Основы алгоритмов 🔒</div>
+          <div class="les lock">Урок 2.2 · Циклы 🔒</div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="canvas" id="canvas">
+      <div class="readbar"><i id="readbar"></i></div>
+      <div class="wrap">
+        <div class="col">
+          <div class="steps" id="steps"></div>
+          <div class="navrow">
+            <button class="btn" onclick="go(-1)">‹ Назад</button>
+            <div class="mid" id="stepMeta">Шаг 1 из 6</div>
+            <button class="btn btn-p" id="nextBtn" onclick="go(1)">Далее ›</button>
+          </div>
+          <div id="content"></div>
+        </div>
+        <aside class="toc" id="toc">
+          <b>Содержание</b>
+          <div id="tocList"></div>
+          <button class="btn btn-s up" onclick="document.getElementById('canvas').scrollTo({top:0,behavior:'smooth'})">↑ Наверх</button>
+        </aside>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var mode = 'student';
+var steps = [
+  {type:'text',  cap:'Лекция',      name:'Позиционные системы счисления', done:true},
+  {type:'video', cap:'Видео',       name:'Разбор на примерах',            done:true},
+  {type:'task',  cap:'Задача',      name:'Перевод в двоичную систему',    required:true, done:false},
+  {type:'task',  cap:'Задача',      name:'Обратный перевод',              done:false},
+  {type:'work',  cap:'Практика',    name:'Практическая работа',           done:false},
+  {type:'exam',  cap:'Проверочная', name:'Проверочная работа',            done:false}
+];
+var cur = 0;
+
+function firstBlocker(){
+  for(var i=0;i<steps.length;i++) if(steps[i].required && !steps[i].done) return i;
+  return steps.length;
+}
+function renderSteps(){
+  var blk = firstBlocker(), html = '';
+  steps.forEach(function(s,i){
+    var locked = i > blk;
+    html += '<button class="step '+(i===cur?'on':'')+' '+(locked?'locked':'')+'" onclick="pick('+i+')" ' +
+      'title="'+(locked ? 'Сначала выполните обязательный шаг '+(blk+1) : s.name)+'">' +
+      '<span class="box" style="background:'+(locked ? 'var(--gray2)' : stepColor(s.type))+'">' +
+      '<span class="n">'+(i+1)+'</span>' +
+      (locked ? '<span style="font-size:var(--fs-16)">🔒</span>' : stepIcon(s.type, 26, true)) + '</span>' +
+      (s.done?'<span class="tick">✓</span>':'') +
+      '<span class="cap">'+s.cap+'</span></button>';
+  });
+  document.getElementById('steps').innerHTML = html;
+  var done = steps.filter(function(s){ return s.done; }).length;
+  document.getElementById('progText').textContent = done + ' из ' + steps.length;
+  document.getElementById('progBar').style.width = (done/steps.length*100) + '%';
+}
+function pick(i){ if(i > firstBlocker()) return; cur = i; render(); }
+function go(d){ pick(Math.max(0, Math.min(steps.length-1, cur+d))); }
+
+function render(){
+  var s = steps[cur];
+  document.getElementById('stepMeta').textContent = 'Шаг ' + (cur+1) + ' из ' + steps.length + ' · ' + stepName(s.type) + ' · ' + s.name;
+  document.getElementById('nextBtn').disabled = cur >= firstBlocker();
+  document.getElementById('toc').classList.toggle('show', s.type==='text');
+  var render_fn = {text:lecture, video:video, task:task, work:work, exam:exam}[s.type];
+  document.getElementById('content').innerHTML = render_fn();
+  renderSteps();
+  if(s.type==='text') buildToc();
+  document.getElementById('canvas').scrollTo({top:0});
+}
+
+function lecture(){
+  return '<div class="card"><span class="kind">Текст</span>' +
+    '<h2>Позиционные системы счисления</h2>' +
+    '<p class="lead">Лонгрид не ограничен по высоте: длинный материал читается сплошным текстом, справа собирается оглавление по заголовкам — липкое, с подсветкой текущего раздела. Сверху идёт полоска прогресса чтения.</p>' +
+    '<h3 id="h1">Что такое основание системы</h3>' +
+    '<p>В позиционной системе значение цифры зависит от её места в записи числа. Основание показывает, сколько различных цифр используется: в десятичной системе их десять, в двоичной — две, в шестнадцатеричной — шестнадцать.</p>' +
+    '<p>Запись 1011 в двоичной системе означает 1·2³ + 0·2² + 1·2¹ + 1·2⁰, то есть одиннадцать в привычной десятичной записи.</p>' +
+    '<h3 id="h2">Перевод в десятичную систему</h3>' +
+    '<p>Чтобы перевести число в десятичную систему, каждую цифру умножают на основание в степени, равной её позиции, и складывают результаты. Позиции нумеруются справа налево, начиная с нуля.</p>' +
+    '<p>Способ работает для любого основания: и для восьмеричной, и для шестнадцатеричной системы — меняется только число, в степень которого возводят.</p>' +
+    '<h3 id="h3">Перевод из десятичной системы</h3>' +
+    '<p>Обратный перевод выполняется делением с остатком: число последовательно делят на основание, а остатки записывают снизу вверх. Деление продолжается, пока частное не станет нулём.</p>' +
+    '<p>На экзамене этот приём встречается почти в каждом варианте, поэтому его стоит довести до автоматизма.</p>' +
+    '<h3 id="h4">Шестнадцатеричная система</h3>' +
+    '<p>Здесь после девятки идут буквы от A до F. Шестнадцатеричная запись компактна и удобна для представления байтов: один байт — ровно две шестнадцатеричные цифры.</p>' +
+    '<h3 id="h5">Что запомнить</h3>' +
+    '<p>Основание задаёт количество цифр; позиция задаёт вес; перевод туда — умножение на степени, обратно — деление с остатком. Всё остальное — практика.</p></div>';
+}
+function video(){
+  return '<div class="card"><span class="kind" style="background:var(--violet-l);color:var(--violet)">Видео</span>' +
+    '<h2>Разбор на примерах</h2>' +
+    '<div style="aspect-ratio:16/9;background:var(--gray9);border-radius:var(--r-8);display:grid;place-items:center;color:#fff;font-size:var(--fs-32)">▶</div>' +
+    '<p style="margin-top:16px" class="lead">Шаг засчитывается по факту открытия — сети и видеохостинги ненадёжны, требовать досмотра нельзя (01-product §5.2).</p></div>';
+}
+function task(){
+  var s = steps[cur];
+  return '<div class="card"><span class="kind" style="background:var(--green-l);color:#2b8a3e">Задача</span>' +
+    (s.required?'<span class="kind" style="background:var(--gray1);color:var(--gray7);margin-left:6px">Обязательный шаг</span>':'') +
+    '<h2>'+s.name+'</h2>' +
+    '<p>Переведите число <b>10</b> из десятичной системы в двоичную. Ответ запишите без пробелов.</p>' +
+    '<div class="answer"><input id="ans" placeholder="Введите ответ…">' +
+    '<button class="btn btn-p" onclick="check()">Ответить</button>' +
+    (mode==='teacher' ? '<button class="btn" onclick="showAnswer()">Показать ответ</button>' : '') + '</div>' +
+    '<div class="verdict" id="verdict"></div>' +
+    '<div class="reveal" id="rev">Эталонный ответ: <b>1010</b>. В режиме педагога поле ввода рабочее — можно проверить, как принимается ответ.</div>' +
+    '<div class="tries">Попытка 1 из 3 · ' + (mode==='preview' ? 'предпросмотр — ответ не сохраняется' : 'ответ сохраняется автоматически') + '</div></div>';
+}
+function work(){
+  var qs = '';
+  for(var i=1;i<=6;i++)
+    qs += '<div class="qbox" id="q'+i+'"><div class="qnum">Задание '+i+'</div>' +
+      '<p>Условие задания '+i+': вычислите значение выражения и запишите ответ числом.</p>' +
+      '<div class="answer"><input class="wans" data-i="'+i+'" oninput="markFilled('+i+')" placeholder="Ответ…"></div></div>';
+  var nav = '';
+  for(var k=1;k<=6;k++) nav += '<button class="tn '+(k===1?'cur':'')+'" id="tn'+k+'" onclick="jump('+k+')">'+k+'</button>';
+  return '<div class="card"><span class="kind" style="background:var(--orange-l);color:#d9480f">Работа</span>' +
+    '<h2>Практическая работа</h2>' +
+    '<span class="deadline">⏱ Сдать до 14 сентября, 23:59</span>' +
+    '<div class="tasknav"><b class="muted">Задания:</b>' + nav +
+    '<span class="sp"></span><button class="btn btn-s" onclick="nextEmpty()">К следующему без ответа</button>' +
+    '<button class="btn btn-s btn-p" onclick="toast(\'Работа отправлена на проверку\')">Завершить работу</button></div>' +
+    qs +
+    '<p class="lead" style="margin-top:18px">Панель заданий липкая: видно, что уже заполнено, и можно прыгать между заданиями. Работа не блокирует навигацию по курсу — в отличие от экзамена.</p></div>';
+}
+function exam(){
+  return '<div class="card" style="text-align:center;padding:var(--sp-40) var(--sp-32)">' +
+    '<span class="kind" style="background:var(--red-l);color:#c92a2a">Экзамен</span>' +
+    '<h2>Проверочная работа</h2>' +
+    '<p class="lead" style="max-width:520px;margin:0 auto var(--sp-20)">Экзамен открывается на отдельной полноэкранной странице: одна попытка, жёсткий таймер с момента старта, навигация по курсу заблокирована — сервер её тоже не отдаёт. Ответы сохраняются автоматически: при обрыве связи вы продолжите с того же места.</p>' +
+    '<p class="muted">Время на выполнение: 45 минут · 12 заданий</p>' +
+    '<button class="btn btn-p" style="padding:var(--sp-12) var(--sp-24);font-size:var(--fs-16)" onclick="toast(\'Переход на страницу экзамена\')">Начать экзамен</button></div>';
+}
+
+function showAnswer(){ document.getElementById('rev').classList.add('show'); }
+function check(){
+  var v = document.getElementById('ans').value.trim(), box = document.getElementById('verdict');
+  if(v === '1010'){
+    box.className = 'verdict ok';
+    box.textContent = mode==='preview' ? 'Верно — но в предпросмотре результат не сохраняется.' : 'Верно! Шаг засчитан.';
+    if(mode !== 'preview'){ steps[cur].done = true; renderSteps(); document.getElementById('nextBtn').disabled = false; }
+  } else { box.className = 'verdict no'; box.textContent = 'Неверно. Попробуйте ещё раз.'; }
+}
+function markFilled(i){
+  var inp = document.querySelector('.wans[data-i="'+i+'"]');
+  document.getElementById('tn'+i).classList.toggle('filled', inp.value.trim().length > 0);
+}
+function jump(i){
+  var all = document.querySelectorAll('.tn');
+  for(var k=0;k<all.length;k++) all[k].classList.remove('cur');
+  document.getElementById('tn'+i).classList.add('cur');
+  document.getElementById('q'+i).scrollIntoView({behavior:'smooth', block:'center'});
+}
+function nextEmpty(){
+  for(var i=1;i<=6;i++){
+    var inp = document.querySelector('.wans[data-i="'+i+'"]');
+    if(!inp.value.trim()){ jump(i); inp.focus(); return; }
+  }
+  toast('Все задания заполнены');
+}
+function buildToc(){
+  var hs = document.querySelectorAll('.card h3'), html = '';
+  for(var i=0;i<hs.length;i++)
+    html += '<a href="#" onclick="tocGo(event,\''+hs[i].id+'\')" data-h="'+hs[i].id+'">'+hs[i].textContent+'</a>';
+  document.getElementById('tocList').innerHTML = html;
+}
+function tocGo(e,id){ e.preventDefault(); document.getElementById(id).scrollIntoView({behavior:'smooth'}); }
+document.getElementById('canvas').addEventListener('scroll', function(e){
+  var el = e.target, max = el.scrollHeight - el.clientHeight;
+  document.getElementById('readbar').style.width = max > 0 ? (el.scrollTop/max*100) + '%' : '0';
+  var hs = document.querySelectorAll('.card h3'), act = null;
+  for(var i=0;i<hs.length;i++) if(hs[i].getBoundingClientRect().top < 140) act = hs[i].id;
+  var links = document.querySelectorAll('.toc a');
+  for(var k=0;k<links.length;k++) links[k].classList.toggle('on', links[k].dataset.h === act);
+});
+function setMode(m, btn){
+  mode = m;
+  var all = btn.parentElement.querySelectorAll('button');
+  for(var i=0;i<all.length;i++) all[i].classList.remove('on');
+  btn.classList.add('on');
+  document.getElementById('bnPreview').classList.toggle('show', m==='preview');
+  document.getElementById('bnTeacher').classList.toggle('show', m==='teacher');
+  render();
+}
+function togglePin(){ document.getElementById('tree').classList.toggle('pinned'); }
+var tt;
+function toast(m){ var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3400); }
+render();
+</script>
+</body>
+</html>

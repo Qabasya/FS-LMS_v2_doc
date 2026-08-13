@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Индивидуальные занятия и Расписание — FS-LMS 2.0</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+  :root{ --slot-min:22px; }   /* минимальная высота получасового слота */
+  .navd{display:flex;align-items:center;gap:var(--sp-12);font-weight:600;font-size:var(--fs-16)}
+  .filters{padding:var(--sp-12) var(--sp-20);display:flex;gap:var(--sp-12);flex:none;flex-wrap:wrap;align-items:center;
+    border-bottom:1px solid var(--gray2);background:#fff}
+  .wrap{flex:1;min-height:0;overflow:auto;padding:var(--sp-16) var(--sp-20) var(--user-h);display:flex;flex-direction:column}
+  .wrap.week-mode{overflow:hidden}
+  .legend{display:flex;gap:var(--sp-20);font-size:var(--fs-12);color:var(--gray6);margin-bottom:12px;flex-wrap:wrap}
+  .legend i{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:6px}
+
+  /* недельная сетка: слоты по 30 минут, события — по фактическому времени (§4.10) */
+  .week{display:grid;grid-template-columns:64px repeat(7,1fr);grid-template-rows:auto 1fr;
+    min-width:900px;background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);overflow:auto;flex:1;min-height:0}
+  .wh{padding:var(--sp-12) var(--sp-6);text-align:center;font-size:var(--fs-12);color:var(--gray6);border-bottom:1px solid var(--gray2);
+    background:var(--gray0);border-left:1px solid var(--gray2)}
+  .wh:first-child{border-left:0}
+  .wh b{display:block;font-size:var(--fs-14);color:var(--gray9)}
+  .wh.today b{color:var(--blue)}
+  .timecol{background:var(--gray0);border-right:1px solid var(--gray2);display:flex;flex-direction:column;min-height:0}
+  .tlabel{flex:1;min-height:var(--slot-min);font-size:var(--fs-12);color:var(--gray5);text-align:right;padding-right:7px;
+    border-bottom:1px solid var(--gray1);display:flex;align-items:center;justify-content:flex-end}
+  .tlabel.half{color:transparent}
+  .daycol{position:relative;border-left:1px solid var(--gray2);display:flex;flex-direction:column;min-height:0}
+  .slot{flex:1;min-height:var(--slot-min);border-bottom:1px solid var(--gray1);cursor:pointer}
+  .slot.half{border-bottom-style:dashed}
+  .slot:hover{background:var(--blue-l)}
+  .ev-wrap{position:absolute;left:3px;right:3px;z-index:2}
+  .ev{position:absolute;left:0;right:0;top:0;bottom:0;border-radius:var(--r-6);padding:var(--sp-4) var(--sp-8);font-size:var(--fs-12);cursor:pointer;
+    border-left:3px solid var(--violet);background:var(--violet-l);overflow:hidden;transition:right .12s}
+  .ev:hover{filter:brightness(.97)}
+  .ev.makeup{border-left-color:var(--teal);background:var(--teal-l)}
+  .ev.group{border-left-color:var(--blue);background:var(--blue-l)}
+  .ev .t{font-size:var(--fs-12);color:var(--gray6)}
+  .ev .nm{font-weight:600;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ev .sub{font-size:var(--fs-12);color:var(--gray6);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ev-add{position:absolute;right:0;top:0;bottom:0;width:28px;border:0;border-radius:var(--r-6);background:var(--gray2);
+    color:var(--gray6);font-size:var(--fs-16);line-height:1;display:none;place-items:center;padding:0}
+  .ev-wrap.has-add:hover .ev{right:32px}
+  .ev-wrap.has-add:hover .ev-add{display:grid}
+  .ev-add:hover{background:var(--gray3);color:var(--gray9)}
+
+  table{border-collapse:separate;border-spacing:0;width:100%;background:#fff;font-size:var(--fs-14);
+    border:1px solid var(--gray2);border-radius:var(--r-12);overflow:hidden}
+  th{text-align:left;font-size:var(--fs-12);letter-spacing:.05em;text-transform:uppercase;color:var(--gray5);font-weight:600;
+     padding:var(--sp-12) var(--sp-16);border-bottom:1px solid var(--gray2);background:var(--gray0)}
+  td{padding:var(--sp-12) var(--sp-16);border-bottom:1px solid var(--gray1)}
+  tr.row{cursor:pointer} tr.row:hover td{background:var(--gray0)}
+  .who{display:flex;gap:var(--sp-12);align-items:center}
+  .av{width:28px;height:28px;border-radius:50%;background:var(--violet-l);color:var(--violet);display:grid;
+    place-items:center;font-size:var(--fs-12);font-weight:700;flex:none}
+  .tag{display:inline-block;font-size:var(--fs-12);font-weight:700;padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4)}
+  .tag-mk{background:var(--teal-l);color:#0b7285}
+  .tag-in{background:var(--violet-l);color:#5f3dc4}
+  .tag-gr{background:var(--blue-l);color:#1864ab}
+
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-12)}
+  .hint{background:var(--blue-l);border:1px solid #a5d8ff;color:#1864ab;border-radius:var(--r);padding:var(--sp-12) var(--sp-12);font-size:var(--fs-14);margin-bottom:14px}
+  .warn{background:var(--orange-l);border:1px solid #ffd8a8;color:#d9480f;border-radius:var(--r);padding:var(--sp-12) var(--sp-12);font-size:var(--fs-14);margin-bottom:14px}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-top">
+      <div class="logo">ШБ</div>
+      <div style="flex:1"><b>Шаг в будущее</b><small>Управление</small></div>
+      <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')">⟨</button>
+    </div>
+    <div class="switch"><button>Обучение</button><button class="on">Управление</button></div>
+    <nav class="nav" id="navMenu"></nav>
+    <div class="side-user">
+      <div class="ava" id="roleIni">КМ</div>
+      <div style="flex:1"><b style="font-size:var(--fs-14);display:block" id="roleName">Кэбс М.</b>
+        <small style="font-size:var(--fs-12);color:var(--gray6)" id="roleTitle">Методист</small></div>
+      <span style="color:var(--gray5)">⚙</span>
+    </div>
+  </aside>
+  <div class="app" id="app"></div>
+</div>
+
+<div class="scrim" id="scrim" onclick="closeAll()"></div>
+
+<div class="modal" id="addModal">
+  <div class="mo-h" id="addTitle">Добавить индивидуальное занятие</div>
+  <div class="mo-b">
+    <div class="fld"><label>Ученик</label>
+      <select id="fStudent" onchange="onStudent()">
+        <option value="">— выберите ученика —</option>
+        <option>Абрамов Кирилл · Математика</option>
+        <option>Белова Мария · Математика</option>
+        <option>Волков Артём · Информатика</option>
+        <option>Гусева Дарья · Математика</option>
+      </select></div>
+    <div class="hint" id="groupHint" style="display:none">
+      У ученика есть индивидуальная группа — занятие добавится в неё. Отдельную группу заводить не нужно.
+    </div>
+    <div class="row2">
+      <div class="fld"><label>Дата</label><input type="date" id="fDate"></div>
+      <div class="fld"><label>Кабинет</label><select id="fRoom"><option>315</option><option>212</option><option>Онлайн</option></select></div>
+    </div>
+    <div class="row2">
+      <div class="fld"><label>Начало</label><select id="fFrom" onchange="onFrom()"></select></div>
+      <div class="fld"><label>Окончание</label><select id="fTo" onchange="showDur()"></select>
+        <div class="muted" id="durNote"></div></div>
+    </div>
+    <div class="fld"><label>Преподаватель</label>
+      <select id="fTeacher"><option>Училков И. П.</option><option>Замещалов П. С.</option></select></div>
+    <div class="fld"><label>Урок</label>
+      <select id="fLesson" onchange="onLesson()">
+        <option value="">— без урока (встреча с преподавателем) —</option>
+        <optgroup label="Курс индивидуальной группы — откроет доступ">
+          <option>Материалы: разбор дробей</option>
+          <option>Материалы: тренировка на проценты</option>
+        </optgroup>
+        <optgroup label="Курсы ученика — только отметка темы, доступ уже есть">
+          <option>Математика ЕГЭ · Прогрессии</option>
+          <option>Математика ЕГЭ · Тригонометрия: начало</option>
+        </optgroup>
+      </select>
+      <div class="muted" id="lessonNote"></div></div>
+    <div class="warn">Схема оплаты ученика — поурочная: занятие создаст начисление на его лицевом счёте.</div>
+  </div>
+  <div class="mo-f">
+    <button class="btn" onclick="closeAll()">Отмена</button>
+    <button class="btn btn-p" onclick="createEvent()">Добавить занятие</button>
+  </div>
+</div>
+
+<div class="modal" id="infoModal">
+  <div class="mo-h" id="infoTitle">Занятие</div>
+  <div class="mo-b" id="infoBody"></div>
+  <div class="mo-f">
+    <button class="btn" onclick="closeAll()">Закрыть</button>
+    <button class="btn" onclick="act('Открыт выбор новой даты')">Перенести</button>
+    <button class="btn btn-danger" onclick="act('Занятие отменено, начисление аннулировано')">Отменить</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var DAYS  = ['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'];
+var DATES = ['14.09','15.09','16.09','17.09','18.09','19.09','20.09'];
+var ISO   = ['2026-09-14','2026-09-15','2026-09-16','2026-09-17','2026-09-18','2026-09-19','2026-09-20'];
+
+/* границы сетки — из настройки организации «Рабочее время» (01-product §4.4) */
+var DAY_START = 8*60, DAY_END = 20*60, STEP = 30, TIME_STEP = 5;
+var DAY_LEN = DAY_END - DAY_START;
+
+function toMin(t){ var a = t.split(':'); return (+a[0])*60 + (+a[1]); }
+function toTime(m){ var h = Math.floor(m/60), x = m%60; return (h<10?'0':'')+h+':'+(x<10?'0':'')+x; }
+
+var GROUP_EVENTS = [
+  {id:101, day:0, from:'17:00', to:'18:30', group:'МЕГЭ-1', subject:'Математика', lesson:'Системы уравнений', room:'315'},
+  {id:102, day:1, from:'15:00', to:'16:30', group:'ИНФ-2',  subject:'Информатика', lesson:'Циклы', room:'212'},
+  {id:103, day:3, from:'17:00', to:'18:30', group:'МЕГЭ-1', subject:'Математика', lesson:'Квадратные уравнения', room:'315'},
+  {id:104, day:4, from:'10:00', to:'11:30', group:'МЕГЭ-2', subject:'Математика', lesson:'Проценты', room:'315'},
+  {id:105, day:5, from:'13:00', to:'14:30', group:'ИНФ-2',  subject:'Информатика', lesson:'Функции', room:'212'}
+];
+var EVENTS = [
+  {id:1, day:0, from:'16:00', to:'17:00', student:'Абрамов Кирилл', subject:'Математика',
+   lesson:'Материалы: разбор дробей', src:'own', teacher:'Училков И. П.', room:'315', pay:'поурочная'},
+  {id:2, day:1, from:'18:00', to:'19:15', student:'Гусева Дарья', subject:'Математика',
+   lesson:'Математика ЕГЭ · Прогрессии', src:'makeup', teacher:'Училков И. П.', room:'Онлайн', pay:'поурочная'},
+  {id:3, day:2, from:'09:30', to:'10:30', student:'Волков Артём', subject:'Информатика',
+   lesson:'', src:'none', teacher:'Замещалов П. С.', room:'212', pay:'абонемент'},
+  {id:4, day:3, from:'17:00', to:'18:30', student:'Белова Мария', subject:'Математика',
+   lesson:'Материалы: тренировка на проценты', src:'own', teacher:'Училков И. П.', room:'315', pay:'поурочная'},
+  {id:5, day:4, from:'16:00', to:'16:45', student:'Абрамов Кирилл', subject:'Математика',
+   lesson:'Математика ЕГЭ · Тригонометрия: начало', src:'makeup', teacher:'Училков И. П.', room:'315', pay:'поурочная'},
+  {id:6, day:5, from:'11:00', to:'12:00', student:'Гусева Дарья', subject:'Математика',
+   lesson:'', src:'none', teacher:'Училков И. П.', room:'Онлайн', pay:'поурочная'}
+];
+var mode = 'week', role = 'methodist', addDate = null;
+
+function render(){
+  var teacher = role === 'teacher';
+  document.getElementById('navMenu').innerHTML = teacher
+    ? '<h4>Моя работа</h4>' +
+      '<a href="#"><i class="ic">◱</i><span>Главная</span></a>' +
+      '<a href="#" class="on"><i class="ic">◷</i><span>Расписание</span></a>' +
+      '<a href="04-journal.html"><i class="ic">▦</i><span>Журнал</span></a>' +
+      '<a href="05-review.html"><i class="ic">✓</i><span>Проверка</span></a>' +
+      '<h4>Обучение</h4><a href="02-player.html"><i class="ic">◈</i><span>Мои курсы</span></a>'
+    : '<h4>Моя работа</h4>' +
+      '<a href="#"><i class="ic">◱</i><span>Главная</span></a>' +
+      '<a href="03-ktp.html"><i class="ic">▤</i><span>КТП и расписание</span></a>' +
+      '<a href="#" class="on"><i class="ic">◷</i><span>Индивидуальные занятия</span></a>' +
+      '<a href="04-journal.html"><i class="ic">▦</i><span>Журнал</span></a>' +
+      '<h4>Обучение</h4><a href="01-course-builder.html"><i class="ic">◈</i><span>Курсы</span></a>' +
+      '<a href="#"><i class="ic">?</i><span>Банк задач</span></a>';
+  document.getElementById('roleName').textContent  = teacher ? 'Училков И.' : 'Кэбс М.';
+  document.getElementById('roleTitle').textContent = teacher ? 'Преподаватель' : 'Методист';
+  document.getElementById('roleIni').textContent   = teacher ? 'УИ' : 'КМ';
+
+  var body = mode === 'week' ? weekView() : listView();
+  document.getElementById('app').innerHTML =
+    '<header class="head"><h1>' + (teacher ? 'Расписание' : 'Индивидуальные занятия') + '</h1>' +
+      '<span class="muted">' + (teacher
+        ? GROUP_EVENTS.length + ' групповых · ' + EVENTS.length + ' индивидуальных на неделе'
+        : EVENTS.length + ' занятий на неделе · 4 ученика') + '</span>' +
+      '<div class="sp"></div>' +
+      '<span class="modes"><span class="muted" style="align-self:center;padding:0 var(--sp-6)">демо · роль:</span>' +
+        '<button class="'+(role==='methodist'?'on':'')+'" onclick="setRole(\'methodist\')">Методист</button>' +
+        '<button class="'+(role==='teacher'?'on':'')+'" onclick="setRole(\'teacher\')">Преподаватель</button></span>' +
+      '<span class="modes"><button class="'+(mode==='week'?'on':'')+'" onclick="setMode(\'week\')">Неделя</button>' +
+        '<button class="'+(mode==='list'?'on':'')+'" onclick="setMode(\'list\')">Список</button></span>' +
+      (teacher ? '' : '<button class="btn btn-p" onclick="openAdd()">+ Занятие</button>') + '</header>' +
+    '<div class="filters">' +
+      (teacher
+        ? '<select><option>Все мои занятия</option><option>Только групповые</option><option>Только индивидуальные</option></select>'
+        : '<select><option>Все ученики</option><option>Абрамов Кирилл</option><option>Гусева Дарья</option></select>' +
+          '<select><option>Все преподаватели</option><option>Училков И. П.</option><option>Замещалов П. С.</option></select>') +
+      '<select><option>Все предметы</option><option>Математика</option><option>Информатика</option></select>' +
+      '<span class="sp"></span>' +
+      '<span class="navd"><button class="btn btn-s">‹</button> 14–20 сентября 2026 <button class="btn btn-s">›</button></span>' +
+    '</div>' +
+    '<div class="wrap' + (mode==='week' ? ' week-mode' : '') + '">' +
+      '<div class="legend">' +
+        (teacher ? '<span><i style="background:var(--blue)"></i>Групповое занятие</span>' : '') +
+        '<span><i style="background:var(--violet)"></i>Индивидуальное: своя программа</span>' +
+        '<span><i style="background:var(--teal)"></i>Индивидуальное: отработка темы группы</span>' +
+        '<span class="sp"></span><span>' + (teacher
+          ? 'Только просмотр — планирование ведёт методист'
+          : 'Клик по слоту задаёт начало · сетка по рабочему времени (' + toTime(DAY_START) + '–' + toTime(DAY_END) + '), шаг 30 минут') +
+      '</span></div>' + body + '</div>';
+}
+function setRole(r){ role = r; render(); }
+function setMode(m){ mode = m; render(); }
+
+function weekView(){
+  var slots = DAY_LEN / STEP;
+  var html = '<div class="week"><div class="wh"></div>';
+  for(var d=0; d<7; d++) html += '<div class="wh'+(d===2?' today':'')+'">'+DAYS[d]+'<b>'+DATES[d]+'</b></div>';
+
+  html += '<div class="timecol">';
+  for(var s=0; s<slots; s++){
+    var m = DAY_START + s*STEP;
+    html += '<div class="tlabel'+((m%60)?' half':'')+'">'+toTime(m)+'</div>';
+  }
+  html += '</div>';
+
+  for(var d2=0; d2<7; d2++){
+    html += '<div class="daycol">';
+    for(var s2=0; s2<slots; s2++){
+      var mm = DAY_START + s2*STEP, hf = (mm % 60) !== 0;
+      html += role==='teacher'
+        ? '<div class="slot'+(hf?' half':'')+'" style="cursor:default"></div>'
+        : '<div class="slot'+(hf?' half':'')+'" onclick="openAdd('+d2+',\''+toTime(mm)+'\')"></div>';
+    }
+    if(role === 'teacher'){
+      html += GROUP_EVENTS.filter(function(g){ return g.day===d2; }).map(function(g){
+        var top = (toMin(g.from) - DAY_START) / DAY_LEN * 100;
+        var h = (toMin(g.to) - toMin(g.from)) / DAY_LEN * 100;
+        return '<div class="ev-wrap" style="top:'+top+'%;height:calc('+h+'% - 2px)">' +
+          '<div class="ev group" onclick="event.stopPropagation();toast(\'Переход в журнал группы '+g.group+'\')">' +
+          '<div class="nm">'+g.group+'</div><div class="t">'+g.from+'–'+g.to+' · каб. '+g.room+'</div>' +
+          '<div class="sub">'+g.lesson+'</div></div></div>';
+      }).join('');
+    }
+    html += EVENTS.filter(function(e){ return e.day===d2; }).map(function(e){
+      var top = (toMin(e.from) - DAY_START) / DAY_LEN * 100;
+      var h = (toMin(e.to) - toMin(e.from)) / DAY_LEN * 100;
+      var mins = toMin(e.to) - toMin(e.from), compact = mins < 60;
+      var cls = e.src==='makeup' ? 'ev makeup' : 'ev';
+      var inner = '<div class="'+cls+'" onclick="event.stopPropagation();openInfo('+e.id+')">' +
+        '<div class="nm">'+e.student.split(' ')[0]+' '+e.student.split(' ')[1][0]+'.' +
+        (compact ? ' <span class="t">'+e.from+'</span>' : '') + '</div>' +
+        (compact ? '' : '<div class="t">'+e.from+'–'+e.to+' · каб. '+e.room+'</div>' +
+                        '<div class="sub">'+(e.lesson || 'без урока')+'</div>') + '</div>';
+      var addBtn = role==='teacher' ? '' :
+        '<button class="ev-add" title="Добавить ещё одно занятие в это время" ' +
+        'onclick="event.stopPropagation();openAdd('+e.day+',\''+e.from+'\')">+</button>';
+      return '<div class="ev-wrap'+(addBtn?' has-add':'')+'" style="top:'+top+'%;height:calc('+h+'% - 2px)">' + inner + addBtn + '</div>';
+    }).join('');
+    html += '</div>';
+  }
+  return html + '</div>';
+}
+
+function listView(){
+  if(role === 'teacher'){
+    var all = GROUP_EVENTS.map(function(g){
+        return {day:g.day, from:g.from, to:g.to, who:g.group, sub:g.subject, lesson:g.lesson, room:g.room, kind:'group'}; })
+      .concat(EVENTS.map(function(e){
+        return {day:e.day, from:e.from, to:e.to, who:e.student, sub:e.subject, lesson:e.lesson, room:e.room,
+                kind: e.src==='makeup' ? 'makeup' : 'ind'}; }))
+      .sort(function(a,b){ return a.day-b.day || toMin(a.from)-toMin(b.from); });
+    return '<table><thead><tr><th>Когда</th><th>Кто</th><th>Урок / тема</th><th>Кабинет</th><th>Тип</th></tr></thead><tbody>' +
+      all.map(function(x){
+        var tag = x.kind==='group' ? '<span class="tag tag-gr">групповое</span>'
+          : x.kind==='makeup' ? '<span class="tag tag-mk">отработка</span>'
+          : '<span class="tag tag-in">индивидуальное</span>';
+        return '<tr class="row" onclick="toast(\'Переход к занятию\')">' +
+          '<td>'+DAYS[x.day]+', '+DATES[x.day]+'<div class="muted">'+x.from+'–'+x.to+'</div></td>' +
+          '<td>'+x.who+'<div class="muted">'+x.sub+'</div></td>' +
+          '<td>'+(x.lesson || '<span class="muted">без урока</span>')+'</td>' +
+          '<td>'+x.room+'</td><td>'+tag+'</td></tr>';
+      }).join('') + '</tbody></table>';
+  }
+  return '<table><thead><tr><th>Когда</th><th>Ученик</th><th>Урок / тема</th><th>Преподаватель</th><th>Кабинет</th><th>Оплата</th></tr></thead><tbody>' +
+    EVENTS.map(function(e){
+      var ini = e.student.split(' ').map(function(w){ return w[0]; }).join('');
+      var tag = e.src==='makeup' ? '<span class="tag tag-mk">отработка</span>'
+              : e.src==='own' ? '<span class="tag tag-in">инд. программа</span>' : '';
+      return '<tr class="row" onclick="openInfo('+e.id+')">' +
+        '<td>'+DAYS[e.day]+', '+DATES[e.day]+'<div class="muted">'+e.from+'–'+e.to+'</div></td>' +
+        '<td><div class="who"><span class="av">'+ini+'</span><div>'+e.student+'<div class="muted">'+e.subject+'</div></div></div></td>' +
+        '<td>'+(e.lesson || '<span class="muted">без урока — встреча с преподавателем</span>')+' '+tag+'</td>' +
+        '<td>'+e.teacher+'</td><td>'+e.room+'</td>' +
+        '<td>'+(e.pay==='поурочная' ? 'поурочно <span class="muted">· начисление</span>' : 'абонемент')+'</td></tr>';
+    }).join('') + '</tbody></table>';
+}
+
+function fillTimes(sel, value){
+  var html = '<option value="">—</option>';
+  for(var m = DAY_START; m <= DAY_END; m += TIME_STEP)
+    html += '<option value="'+toTime(m)+'"'+(toTime(m)===value?' selected':'')+'>'+toTime(m)+'</option>';
+  sel.innerHTML = html;
+}
+function onFrom(){
+  var f = document.getElementById('fFrom').value, t = document.getElementById('fTo');
+  if(f && (!t.value || toMin(t.value) <= toMin(f))) t.value = toTime(Math.min(DAY_END, toMin(f) + 60));
+  showDur();
+}
+function showDur(){
+  var f = document.getElementById('fFrom').value, t = document.getElementById('fTo').value;
+  var note = document.getElementById('durNote');
+  note.textContent = (f && t && toMin(t) > toMin(f)) ? 'длительность ' + (toMin(t) - toMin(f)) + ' мин' : '';
+}
+function openAdd(d, time){
+  var hasSlot = (d != null && time);
+  document.getElementById('fDate').value = hasSlot ? ISO[d] : '';
+  fillTimes(document.getElementById('fFrom'), hasSlot ? time : '');
+  fillTimes(document.getElementById('fTo'), hasSlot ? toTime(Math.min(DAY_END, toMin(time) + 60)) : '');
+  showDur();
+  document.getElementById('addTitle').textContent = hasSlot
+    ? 'Добавить занятие · ' + DAYS[d] + ', ' + DATES[d] + ', ' + time
+    : 'Добавить индивидуальное занятие';
+  document.getElementById('lessonNote').textContent = '';
+  document.getElementById('addModal').classList.add('on');
+  document.getElementById('scrim').classList.add('on');
+}
+function onStudent(){
+  document.getElementById('groupHint').style.display = document.getElementById('fStudent').value ? 'block' : 'none';
+}
+function onLesson(){
+  var sel = document.getElementById('fLesson');
+  var group = sel.selectedOptions[0] && sel.selectedOptions[0].parentElement.label || '';
+  var note = document.getElementById('lessonNote');
+  if(!sel.value) note.textContent = 'Занятие пройдёт без материалов — доступ ученика не изменится.';
+  else if(group.indexOf('Курсы ученика') === 0)
+    note.textContent = 'Тема отметится в КТП и журнале; доступ у ученика уже есть по его основной группе.';
+  else note.textContent = 'Урок откроется ученику в момент начала занятия.';
+}
+function createEvent(){
+  if(!document.getElementById('fStudent').value){ toast('Выберите ученика'); return; }
+  closeAll();
+  toast('Занятие добавлено в индивидуальную группу ученика · создано начисление по поурочной схеме');
+}
+function openInfo(id){
+  var e = null;
+  for(var i=0;i<EVENTS.length;i++) if(EVENTS[i].id === id) e = EVENTS[i];
+  if(role === 'teacher'){   /* преподаватель не планирует — клик ведёт к работе с учеником */
+    toast('Переход к сводке по ученику: ' + e.student);
+    return;
+  }
+  document.getElementById('infoTitle').textContent = e.student + ' · ' + DAYS[e.day] + ', ' + DATES[e.day];
+  var srcNote = e.src==='makeup'
+    ? '<div class="hint">Урок из курса основной группы — это <b>отметка темы</b>: доступ у ученика уже есть по его записи.</div>'
+    : e.src==='own'
+    ? '<div class="hint">Урок из курса индивидуальной группы — прикрепление <b>открывает доступ</b> в момент начала занятия.</div>' : '';
+  document.getElementById('infoBody').innerHTML = srcNote +
+    '<div class="fld"><label>Время</label><div class="v">'+e.from+'–'+e.to+', каб. '+e.room+'</div></div>' +
+    '<div class="fld"><label>Урок / тема</label><div class="v">'+(e.lesson || 'без урока — встреча с преподавателем')+'</div></div>' +
+    '<div class="fld"><label>Преподаватель</label><div class="v">'+e.teacher+'</div></div>' +
+    '<div class="fld"><label>Оплата</label><div class="v">'+(e.pay==='поурочная'
+      ? 'поурочная схема — за занятие создано начисление' : 'абонемент — отдельного начисления нет')+'</div></div>';
+  document.getElementById('infoModal').classList.add('on');
+  document.getElementById('scrim').classList.add('on');
+}
+function act(m){ closeAll(); toast(m); }
+function closeAll(){
+  document.getElementById('addModal').classList.remove('on');
+  document.getElementById('infoModal').classList.remove('on');
+  document.getElementById('scrim').classList.remove('on');
+}
+var tt;
+function toast(m){ var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3600); }
+render();
+</script>
+</body>
+</html>

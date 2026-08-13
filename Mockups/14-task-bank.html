@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Банк задач — FS-LMS 2.0</title>
+<link rel="stylesheet" href="_shared.css">
+<script src="_tip.js"></script>
+<style>
+  .filters{background:#fff;border-bottom:1px solid var(--gray2);padding:var(--sp-12) var(--sp-20);
+    display:flex;gap:var(--sp-8);align-items:center;flex-wrap:wrap;flex:none}
+  .filters select, .filters input{border:1px solid var(--gray3);border-radius:var(--r-8);
+    padding:var(--sp-6) var(--sp-12);font:inherit;font-size:var(--fs-14)}
+  .filters input.search{min-width:260px}
+  .chipf{display:inline-flex;align-items:center;gap:var(--sp-6);border:1px solid var(--gray3);background:#fff;
+    border-radius:var(--r-pill);padding:var(--sp-4) var(--sp-12);font-size:var(--fs-12);color:var(--gray7);cursor:pointer}
+  .chipf.on{border-color:var(--blue);background:var(--blue-l);color:var(--blue);font-weight:600}
+  .chipf .x{color:var(--gray5)}
+
+  .wrap{flex:1;overflow:auto;padding:var(--sp-16) var(--sp-20) var(--user-h)}
+  .card{background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);box-shadow:var(--sh)}
+
+  .bar{display:flex;align-items:center;gap:var(--sp-12);padding:var(--sp-12) var(--sp-16);
+    border-bottom:1px solid var(--gray2);flex-wrap:wrap}
+  .bar .cnt{font-size:var(--fs-12);color:var(--gray6)}
+  .bar.sel{background:var(--blue-l);border-bottom-color:#a5d8ff}
+  .bar.sel b{color:var(--blue)}
+
+  .t{display:flex;gap:var(--sp-12);padding:var(--sp-12) var(--sp-16);border-top:1px solid var(--gray1);align-items:flex-start}
+  .t:first-of-type{border-top:0}
+  .t:hover{background:var(--gray0)}
+  .t.on{background:var(--blue-l)}
+  .t input[type=checkbox]{margin-top:var(--sp-4)}
+  .t .body{flex:1;min-width:0;cursor:pointer}
+  .t .q{font-size:var(--fs-14);line-height:1.5;color:var(--gray9);display:block}
+  .t .q:hover{color:var(--blue)}
+  .t .meta{display:flex;gap:var(--sp-8);flex-wrap:wrap;align-items:center;margin-top:var(--sp-6)}
+  .tag{font-size:var(--fs-12);padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4);background:var(--gray1);color:var(--gray6)}
+  .tag.man{background:var(--violet-l);color:#5f3dc4}
+  .tag.auto{background:var(--green-l);color:#2b8a3e}
+  .tag.ege{background:var(--blue-l);color:#1864ab}
+  .tag.draft{background:var(--orange-l);color:#d9480f}
+  .t .used{width:var(--col-160);flex:none;font-size:var(--fs-12);color:var(--gray6);text-align:right}
+  .t .used b{display:block;color:var(--gray9);font-size:var(--fs-14)}
+  .t .diff{width:var(--col-92);flex:none;font-size:var(--fs-12);color:var(--gray6);text-align:center}
+  .dots{display:inline-flex;gap:3px}
+  .dots i{width:6px;height:6px;border-radius:50%;background:var(--gray3);display:inline-block}
+  .dots i.on{background:var(--orange)}
+
+  .empty{padding:var(--sp-48) var(--sp-16);text-align:center;color:var(--gray6);font-size:var(--fs-14)}
+  .empty b{display:block;color:var(--gray9);margin-bottom:var(--sp-4)}
+  .demo{display:flex;align-items:center;gap:var(--sp-6);font-size:var(--fs-12);color:var(--gray6)}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-top">
+      <div class="logo">ШБ</div>
+      <div style="flex:1"><b>Шаг в будущее</b><small>Управление</small></div>
+      <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')">⟨</button>
+    </div>
+    <div class="switch"><button>Обучение</button><button class="on">Управление</button></div>
+    <nav class="nav">
+      <h4>Моя работа</h4>
+      <a href="10-home.html"><i class="ic">◱</i><span>Главная</span></a>
+      <a href="03-ktp.html"><i class="ic">▤</i><span>КТП и расписание</span></a>
+      <h4>Обучение</h4>
+      <a href="01-course-builder.html"><i class="ic">◈</i><span>Курсы</span></a>
+      <a href="13-work-builder.html"><i class="ic">✎</i><span>Работы и экзамены</span></a>
+      <a href="#" class="on"><i class="ic">?</i><span>Банк задач</span></a>
+      <a href="#"><i class="ic">⚖</i><span>Шкалы оценивания</span></a>
+      <a href="#"><i class="ic">⚙</i><span>Типы работ</span></a>
+    </nav>
+    <div class="side-user">
+      <div class="ava">ММ</div>
+      <div style="flex:1"><b style="font-size:var(--fs-14);display:block">Методова М.</b><small style="font-size:var(--fs-12);color:var(--gray6)">Методист</small></div>
+      <span style="color:var(--gray5)">⚙</span>
+    </div>
+  </aside>
+
+  <div class="app">
+    <header class="head">
+      <div>
+        <div class="crumbs">Обучение</div>
+        <h1>Банк задач</h1>
+
+      </div>
+      <a class="btn btn-p" href="15-task-editor.html" style="text-decoration:none">+ Задача</a>
+      <div class="sp"></div>
+      <span class="muted" id="hSum">—</span>
+      <label class="demo"><input type="checkbox" id="ege" onchange="render()"> модуль ЕГЭ <i>(демо)</i></label>
+      <button class="btn" onclick="toast('Импорт из xlsx или csv: шаблон, построчная валидация, отчёт об ошибках, дубли по условию — пропускаются')">Импорт</button>
+      <button class="btn" onclick="exportTasks()">Экспорт</button>
+
+    </header>
+
+    <div class="filters">
+      <input class="search" type="text" placeholder="Поиск по условию и тегам" oninput="setQ(this.value)">
+      <select onchange="setF('subject', this.value)">
+        <option value="">Все предметы</option><option>Математика</option><option>Информатика</option>
+      </select>
+      <select onchange="setF('kind', this.value)">
+        <option value="">Любая проверка</option>
+        <option value="auto">автопроверяемые</option>
+        <option value="manual">с ручной проверкой</option>
+      </select>
+      <select onchange="setF('diff', this.value)">
+        <option value="">Любая сложность</option><option value="1">простые</option>
+        <option value="2">средние</option><option value="3">сложные</option>
+      </select>
+      <select id="egeNum" onchange="setF('ege', this.value)" style="display:none">
+        <option value="">Любой номер ЕГЭ</option>
+        <option value="1">№ 1</option><option value="7">№ 7</option><option value="13">№ 13</option>
+      </select>
+      <select onchange="setF('author', this.value)">
+        <option value="">Любой автор</option><option>Методова М.</option><option>Училков И.</option><option>Петрова А.</option>
+      </select>
+      <select onchange="setF('status', this.value)">
+        <option value="">Активные</option><option value="draft">Черновики</option><option value="all">Все, включая архив</option>
+      </select>
+      <span class="sp" style="flex:1"></span>
+      <span class="muted" style="font-size:var(--fs-12)" id="fSum"></span>
+    </div>
+
+    <div class="wrap">
+      <div class="card">
+        <div class="bar" id="bar"></div>
+        <div id="list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* Задача живёт только здесь (01-product §5.4): в работы и шаги уходит ссылкой.
+   Поэтому у каждой видно, где она используется — правка отразится везде. */
+var TASKS = [
+  {q:'Найдите значение выражения: 2⁵ · 2⁻³', subj:'Математика', kind:'auto', ans:'короткий ответ',
+   tags:['степени','вычисления'], diff:1, ege:7, used:{w:3, s:2}, author:'Методова М.', date:'02.08'},
+  {q:'Решите уравнение: 3x − 7 = 14. В ответ запишите значение x.', subj:'Математика', kind:'auto', ans:'число',
+   tags:['уравнения'], diff:1, ege:1, used:{w:5, s:4}, author:'Методова М.', date:'02.08'},
+  {q:'Какое из чисел является иррациональным?', subj:'Математика', kind:'auto', ans:'выбор одного',
+   tags:['числа'], diff:1, ege:0, used:{w:2, s:1}, author:'Училков И.', date:'28.07'},
+  {q:'Решите систему уравнений и опишите ход решения: x + y = 7, x·y = 12', subj:'Математика', kind:'manual', ans:'развёрнутый',
+   tags:['системы','ход решения'], diff:2, ege:13, used:{w:4, s:1}, author:'Методова М.', date:'05.08'},
+  {q:'Катер прошёл 21 км по течению и 15 км против течения за одно и то же время…', subj:'Математика', kind:'manual', ans:'развёрнутый',
+   tags:['текстовые задачи','движение'], diff:3, ege:0, used:{w:1, s:0}, author:'Методова М.', date:'09.08'},
+  {q:'Найдите площадь треугольника со сторонами 6 и 8 и углом 30° между ними', subj:'Математика', kind:'auto', ans:'число',
+   tags:['планиметрия'], diff:2, ege:0, used:{w:2, s:2}, author:'Училков И.', date:'30.07'},
+  {q:'Напишите функцию, возвращающую список простых чисел до N', subj:'Информатика', kind:'manual', ans:'код',
+   tags:['алгоритмы','python'], diff:3, ege:0, used:{w:2, s:1}, author:'Петрова А.', date:'01.08'},
+  {q:'Переведите число 1010₂ в десятичную систему', subj:'Информатика', kind:'auto', ans:'число',
+   tags:['системы счисления'], diff:1, ege:0, used:{w:6, s:5}, author:'Петрова А.', date:'25.07'},
+  {q:'Условие ещё не дописано — черновик после быстрого создания из работы', subj:'Математика', kind:'auto', ans:'короткий ответ',
+   tags:['без темы'], diff:1, ege:0, used:{w:1, s:0}, author:'Методова М.', date:'сегодня', draft:true},
+  {q:'Вероятность события A равна 0,3. Найдите вероятность противоположного события', subj:'Математика', kind:'auto', ans:'число',
+   tags:['вероятность'], diff:1, ege:4, used:{w:0, s:0}, author:'Методова М.', date:'11.08'}
+];
+var F = {subject:'', kind:'', diff:'', ege:'', status:'', author:''}, Q = '', sel = [];
+
+function setF(k, v){ F[k] = v; render(); }
+function setQ(v){ Q = v.toLowerCase(); render(); }
+
+function visible(){
+  return TASKS.filter(function(t){
+    if(F.subject && t.subj !== F.subject) return false;
+    if(F.kind && t.kind !== F.kind) return false;
+    if(F.diff && String(t.diff) !== F.diff) return false;
+    if(F.author && t.author !== F.author) return false;
+    if(F.ege && String(t.ege) !== F.ege) return false;
+    if(F.status === 'draft' && !t.draft) return false;
+    if(F.status !== 'draft' && F.status !== 'all' && t.draft) return false;
+    if(Q && (t.q + ' ' + t.tags.join(' ')).toLowerCase().indexOf(Q) < 0) return false;
+    return true;
+  });
+}
+function toggle(i){
+  var k = sel.indexOf(i);
+  if(k < 0) sel.push(i); else sel.splice(k, 1);
+  render();
+}
+
+function render(){
+  var ege = document.getElementById('ege').checked;
+  document.getElementById('egeNum').style.display = ege ? '' : 'none';
+  var list = visible();
+
+  document.getElementById('hSum').textContent = TASKS.length + ' задач в банке';
+  document.getElementById('fSum').textContent = 'показано ' + list.length + ' из ' + TASKS.length;
+
+  /* панель массовых действий появляется только при выделении */
+  document.getElementById('bar').className = 'bar' + (sel.length ? ' sel' : '');
+  document.getElementById('bar').innerHTML = sel.length
+    ? '<b>Выбрано ' + sel.length + '</b>' +
+      '<button class="btn btn-s btn-p" onclick="toast(\'Задачи добавлены в работу\')">Добавить в работу</button>' +
+      '<button class="btn btn-s" onclick="toast(\'Проставлена тема из справочника — сразу всем выбранным\')">Проставить тему</button>' +
+      '<button class="btn btn-s" onclick="exportTasks()">Экспорт выбранных</button>' +
+      '<button class="btn btn-s" onclick="toast(\'Задачи в архиве — из существующих работ они не исчезнут\')">В архив</button>' +
+      '<span style="flex:1"></span><button class="btn btn-s" onclick="sel=[];render()">Снять выделение</button>'
+    : '<span class="cnt">Задача попадает в работы и шаги <b>ссылкой</b> — правка отражается везде, где она используется</span>';
+
+  document.getElementById('list').innerHTML = list.length ? list.map(function(t){
+    var i = TASKS.indexOf(t), on = sel.indexOf(i) >= 0;
+    var dots = '<span class="dots">' + [1,2,3].map(function(d){
+      return '<i class="'+(d <= t.diff ? 'on' : '')+'"></i>'; }).join('') + '</span>';
+    return '<div class="t '+(on?'on':'')+'">' +
+      '<input type="checkbox" '+(on?'checked':'')+' onchange="toggle('+i+')">' +
+      '<span class="body" onclick="location.href=\'15-task-editor.html\'">' +
+        '<span class="q">'+t.q+'</span>' +
+        '<span class="meta">' +
+          '<span class="tag '+(t.kind==='manual'?'man':'auto')+'">'+(t.kind==='manual'?'ручная проверка':'автопроверка')+'</span>' +
+          '<span class="tag">'+t.ans+'</span>' +
+          (ege && t.ege ? '<span class="tag ege">ЕГЭ № '+t.ege+'</span>' : '') +
+          t.tags.map(function(g){ return '<span class="tag">'+g+'</span>'; }).join('') +
+          (t.draft ? '<span class="tag draft">черновик</span>' : '') +
+          '<span class="tag">'+t.author+' · '+t.date+'</span>' +
+        '</span>' +
+      '</span>' +
+      '<span class="diff">'+dots+'<div>сложность</div></span>' +
+      '<span class="used">' + (t.used.w + t.used.s
+        ? '<b>'+(t.used.w + t.used.s)+'</b>' + t.used.w + ' работ · ' + t.used.s + ' шагов'
+        : '<b>—</b>нигде не используется') + '</span>' +
+      '</div>';
+  }).join('') : '<div class="empty"><b>Ничего не найдено</b>Смягчите фильтры или создайте задачу</div>';
+}
+
+function exportTasks(){
+  var n = sel.length || visible().length;
+  toast(sel.length
+    ? 'Экспорт ' + n + ' выбранных задач: xlsx с условиями, ответами, темами и сложностью'
+    : 'Экспорт ' + n + ' задач по текущему фильтру — вместе с темами и номерами ЕГЭ');
+}
+var tt;
+function toast(m){ var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3200); }
+render();
+</script>
+</body>
+</html>

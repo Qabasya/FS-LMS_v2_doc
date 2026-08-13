@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Сводка по ученику — FS-LMS 2.0</title>
+<link rel="stylesheet" href="_shared.css">
+<script src="_icons.js"></script>
+<script src="_tip.js"></script>
+<style>
+  .body{flex:1;overflow:auto;padding:var(--sp-16) var(--sp-20) var(--user-h)}
+  .card{background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);box-shadow:var(--sh)}
+
+  /* ── верх: профиль лентой + показатели строкой ── */
+  .prof{padding:var(--sp-16) var(--sp-20);display:grid;grid-template-columns:250px 1fr 300px;gap:var(--sp-20);align-items:start;margin-bottom:14px}
+  .prof-h{display:flex;gap:var(--sp-12);align-items:center}
+  .prof-h .ava-l{width:52px;height:52px;border-radius:50%;background:var(--blue-l);color:var(--blue);
+    display:grid;place-items:center;font-size:var(--fs-16);font-weight:700;flex:none}
+  .prof-h b{font-size:var(--fs-16);display:block;line-height:1.25}
+  .prof-h small{color:var(--gray6);font-size:var(--fs-12)}
+  .chips{display:flex;flex-wrap:wrap;gap:var(--sp-6);margin-top:11px}
+  .chip{display:inline-flex;align-items:center;gap:var(--sp-6);border:1px solid var(--gray2);background:var(--gray0);
+    border-radius:var(--r-14);padding:var(--sp-4) var(--sp-12);font-size:var(--fs-12);color:var(--gray7)}
+  .chip i{width:7px;height:7px;border-radius:50%;background:var(--violet);flex:none;display:inline-block}
+  .chip.g i{background:var(--blue)}
+  .chip.alien{border-style:dashed;color:var(--gray6)}
+  .demo{display:flex;align-items:center;gap:var(--sp-8);font-size:var(--fs-12);color:var(--gray6)}
+  .enc{display:flex;align-items:center;gap:var(--sp-12);border:1px solid var(--gray3);border-radius:var(--r);
+    padding:var(--sp-8) var(--sp-12);font-size:var(--fs-14);color:var(--gray7);background:#fff}
+  .enc.sel{cursor:pointer} .enc.sel:hover{background:var(--gray0)}
+  .enc .code{width:24px;height:24px;border-radius:var(--r-6);color:#fff;font-size:var(--fs-12);display:grid;place-items:center;font-weight:700;flex:none}
+  .enc .only{font-size:var(--fs-12);color:var(--gray5)}
+  .encpop{position:fixed;background:#fff;border:1px solid var(--gray2);border-radius:var(--r-8);
+    box-shadow:0 10px 30px rgba(0,0,0,.16);padding:var(--sp-6);z-index:45;display:none;width:290px}
+  .encpop.on{display:block}
+  .encpop h5{margin:var(--sp-6) var(--sp-8);font-size:var(--fs-12);letter-spacing:.05em;text-transform:uppercase;color:var(--gray5)}
+  .encpop button{display:flex;gap:var(--sp-12);align-items:center;width:100%;border:0;background:none;text-align:left;
+    padding:var(--sp-8) var(--sp-12);border-radius:var(--r-6);font-size:var(--fs-14);color:var(--gray7)}
+  .encpop button:hover{background:var(--gray1)}
+  .encpop button.on{background:var(--blue-l);color:var(--blue);font-weight:600}
+  .encpop small{display:block;font-size:var(--fs-12);color:var(--gray5);font-weight:400}
+  .encpop .note{font-size:var(--fs-12);color:var(--gray5);padding:var(--sp-8) var(--sp-12);border-top:1px solid var(--gray1);margin-top:4px;line-height:1.45}
+  .rows{font-size:var(--fs-14);display:grid;grid-template-columns:1fr 1fr;gap:0 22px}
+  .rows .r{display:flex;gap:var(--sp-12);padding:var(--sp-6) 0;border-top:1px solid var(--gray1)}
+  .rows .r:nth-child(1),.rows .r:nth-child(2){border-top:0}
+  .rows .r span:first-child{color:var(--gray6);width:104px;flex:none;font-size:var(--fs-14)}
+  .rows .r span:last-child{flex:1;min-width:0;word-break:break-word}
+  .acc{background:var(--gray0);border:1px solid var(--gray2);border-radius:var(--r-8);padding:var(--sp-12) var(--sp-16)}
+  .acc h5{margin:0 0 var(--sp-8);font-size:var(--fs-12);letter-spacing:.05em;text-transform:uppercase;color:var(--gray5);font-weight:700}
+  .acc .r{display:flex;align-items:center;gap:var(--sp-8);padding:var(--sp-4) 0;font-size:var(--fs-14)}
+  .acc .r span:first-child{color:var(--gray6);width:72px;flex:none;font-size:var(--fs-14)}
+  .acc code{background:#fff;border:1px solid var(--gray3);border-radius:var(--r-4);padding:var(--sp-4) var(--sp-8);font-size:var(--fs-14);font-family:ui-monospace,Menlo,monospace}
+  .copy{border:0;background:none;color:var(--gray5);font-size:var(--fs-12);padding:var(--sp-4) var(--sp-4);border-radius:var(--r-4)}
+  .copy:hover{background:var(--gray2);color:var(--gray9)}
+  .acc .pwd-btn{display:block;width:100%;margin-top:9px;white-space:nowrap}
+  .acc .hint{font-size:var(--fs-12);color:var(--gray5);margin-top:9px;line-height:1.45}
+
+  /* ── плитки показателей ── */
+  .kpis{display:grid;grid-template-columns:repeat(6,1fr);grid-auto-rows:1fr;gap:var(--sp-16)}
+  .kpi{padding:var(--sp-16) var(--sp-16);display:flex;flex-direction:column}
+  .kpi .bar{margin-top:auto}
+  .kpi .lab{font-size:var(--fs-12);color:var(--gray6);font-weight:600;display:flex;align-items:center;gap:var(--sp-6)}
+  .kpi .big{font-size:var(--fs-26);font-weight:700;line-height:1.25;margin:var(--sp-6) 0 var(--sp-4)}
+  .kpi .sub{font-size:var(--fs-12);color:var(--gray6);line-height:1.45}
+  .bar{height:5px;border-radius:var(--r-4);background:var(--gray2);margin-top:9px;overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:var(--r-4);background:var(--blue)}
+  .bar i.g{background:var(--green)} .bar i.o{background:var(--orange)} .bar i.r{background:var(--red)}
+  .kpi .warn{color:var(--red)}
+
+  /* ── экран выбора: показывается, когда на страницу пришли из меню, без контекста ── */
+  /* на экране выбора контекст ещё не выбран — прячем всё, что о нём рассказывает */
+  body.picking .ctx{display:none}
+  .picker{flex:1;overflow:auto;padding:var(--sp-16) var(--sp-20) var(--user-h);display:none}
+  .picker.on{display:block}
+  .body.off{display:none}
+  .pk{padding:var(--sp-16) var(--sp-20)}
+  .pk h2{margin:0 0 var(--sp-4);font-size:var(--fs-16)}
+  .pk .lead{color:var(--gray6);font-size:var(--fs-14);margin:0 0 var(--sp-20)}
+  .pk-f{display:flex;gap:var(--sp-8);margin-bottom:var(--sp-16);flex-wrap:wrap}
+  .pk-list{border:1px solid var(--gray2);border-radius:var(--r-8);overflow:hidden}
+  .pk-row{display:flex;gap:var(--sp-12);align-items:center;padding:var(--sp-12) var(--sp-16);
+    border-top:1px solid var(--gray1);cursor:pointer;font-size:var(--fs-14);width:100%;background:#fff;border-left:0;border-right:0;border-bottom:0;text-align:left}
+  .pk-row:first-child{border-top:0}
+  .pk-row:hover{background:var(--gray0)}
+  .pk-row .av{width:30px;height:30px;border-radius:50%;background:var(--blue-l);color:var(--blue);
+    display:grid;place-items:center;font-size:var(--fs-12);font-weight:700;flex:none}
+  .pk-row .nm{flex:1;min-width:0}
+  .pk-row .sub{font-size:var(--fs-12);color:var(--gray6)}
+
+  /* группа: та же сводка, что была на главной, плюс раскрытие в список учеников */
+  .g-row{display:flex;gap:var(--sp-12);align-items:center;padding:var(--sp-12) var(--sp-16);
+    border-top:1px solid var(--gray2);cursor:pointer;background:#fff;width:100%;text-align:left;
+    border-left:0;border-right:0;border-bottom:0}
+  .g-row:first-child{border-top:0}
+  .g-row:hover{background:var(--gray0)}
+  .g-row .code{width:36px;height:36px;border-radius:var(--r-8);color:#fff;display:grid;place-items:center;
+    font-size:var(--fs-12);font-weight:700;flex:none}
+  .g-row .nm{flex:1;min-width:0}
+  .g-row .nm b{font-size:var(--fs-14);display:block}
+  .g-row .nm .sub{font-size:var(--fs-12);color:var(--gray6)}
+  .g-row .met{display:flex;gap:var(--sp-16);font-size:var(--fs-12);text-align:right}
+  .g-row .met div{min-width:56px}
+  .g-row .met b{display:block;font-size:var(--fs-14);font-variant-numeric:tabular-nums}
+  .g-row .met span{color:var(--gray6)}
+  .g-row .chev{color:var(--gray5);font-size:var(--fs-12);width:16px;text-align:center;transition:.12s}
+  .g-row.open .chev{transform:rotate(90deg)}
+  .g-body{display:none;border-top:1px solid var(--gray2)}
+  .g-body.on{display:block}
+  .g-tbl{background:transparent}
+  .g-tbl th{padding:var(--sp-8) var(--sp-16);background:transparent}
+  .g-tbl th:first-child, .g-tbl td:first-child{padding-left:64px}
+  .g-tbl td{padding:var(--sp-8) var(--sp-16);border-bottom:1px solid var(--gray2)}
+  .g-tbl tbody tr:last-child td{border-bottom:0}
+  .g-tbl tbody tr{cursor:pointer}
+  .g-tbl tbody tr:hover{background:var(--gray0)}
+  .g-tbl tbody tr:hover .go{color:var(--blue)}
+  .g-tbl .go{color:var(--gray5);font-size:var(--fs-12);white-space:nowrap}
+  .g-tbl .num{color:var(--gray5);font-size:var(--fs-12)}
+  .bad{color:#c92a2a} .mid{color:#d9480f} .good{color:#2b8a3e}
+
+  /* ── вкладки ── */
+  .tabs{display:flex;gap:var(--sp-4);margin:var(--sp-16) 0 0;border-bottom:1px solid var(--gray2)}
+  .tabs button{border:0;background:none;padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);color:var(--gray6);border-bottom:2px solid transparent;margin-bottom:-1px}
+  .tabs button:hover{color:var(--gray9)}
+  .tabs button.on{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
+  .tabs .cnt{font-size:var(--fs-12);font-weight:700;background:var(--gray1);color:var(--gray6);border-radius:var(--r-8);padding:var(--sp-4) var(--sp-8);margin-left:6px}
+  .tabs button.on .cnt{background:var(--blue-l);color:var(--blue)}
+  .pane{display:none;padding:var(--sp-16) 0 0} .pane.on{display:block}
+
+  .sec{padding:var(--sp-16) var(--sp-20);margin-bottom:14px}
+  .sec-h{display:flex;align-items:center;gap:var(--sp-12);margin-bottom:12px;flex-wrap:wrap}
+  .sec-h h3{margin:0;font-size:var(--fs-14)}
+  .legend{display:flex;gap:var(--sp-16);font-size:var(--fs-12);color:var(--gray6);flex-wrap:wrap}
+  .legend i{display:inline-block;width:11px;height:11px;border-radius:var(--r-4);margin-right:5px;vertical-align:-1px}
+
+  /* ── квадратики ── */
+  .sq{width:var(--sq);height:var(--sq);border-radius:var(--sq-r);display:inline-grid;place-items:center;font-size:var(--fs-12);font-weight:700;
+    color:#fff;cursor:default;flex:none}
+  .sq svg{display:block}
+  .sq.p{background:var(--green)} .sq.a{background:var(--red)}
+  .sq.e{background:var(--gray2);color:var(--gray5)}
+  .sq.f{background:#fff;border:1px dashed var(--gray3);color:var(--gray5)}  /* шаг ещё не открыт */
+  /* посещаемость: месяцы идут друг за другом; месяц — неделимый блок и переносится целиком */
+  .strip{display:flex;flex-wrap:wrap;gap:var(--sp-12) 22px;align-items:flex-start;overflow-x:auto}
+  .mo-g{display:flex;flex-direction:column;gap:var(--sp-6);flex:none}
+  .mo-g .mo{font-size:var(--fs-12);color:var(--gray7);font-weight:600;display:flex;gap:var(--sp-8);align-items:baseline}
+  .mo-g .mp{font-size:var(--fs-12);color:var(--gray5);font-weight:400;font-variant-numeric:tabular-nums}
+  .mo-g .sqs{display:flex;gap:var(--sp-6);flex-wrap:nowrap}
+  .sq.ind{border-radius:50%}                    /* индивидуальное занятие */
+  .sq.ind.e{box-shadow:inset 0 0 0 1px var(--gray3)}
+  .legend i.ind{border-radius:50%}
+
+  /* ── таблицы ── */
+  table.t{width:100%;border-collapse:collapse;font-size:var(--fs-14)}
+  table.t th{text-align:left;font-size:var(--fs-12);letter-spacing:.04em;text-transform:uppercase;color:var(--gray5);
+    font-weight:700;padding:var(--sp-8) var(--sp-12);border-bottom:1px solid var(--gray2);white-space:nowrap}
+  table.t td{padding:var(--sp-8) var(--sp-12);border-bottom:1px solid var(--gray1);vertical-align:middle}
+  table.t tr:last-child td{border-bottom:0}
+  table.t tbody tr:hover{background:var(--gray0)}
+  .dt{font-variant-numeric:tabular-nums;color:var(--gray7);white-space:nowrap}
+  .lb{display:inline-block;font-size:var(--fs-12);font-weight:700;padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4);background:var(--gray1);color:var(--gray6)}
+  .lb.kr{background:#ffe3e3;color:#c92a2a} .lb.sr{background:var(--blue-l);color:#1864ab} .lb.dz{background:var(--green-l);color:#2b8a3e}
+  .kind{font-size:var(--fs-12);color:var(--gray6)}
+  .kind.ind{color:var(--violet)}
+  .score{font-weight:700;font-variant-numeric:tabular-nums}
+  .link{color:var(--blue);cursor:pointer} .link:hover{text-decoration:underline}
+
+  /* ── прогресс по урокам ── */
+  /* один урок — одна строка: название · шаги · работы · процент */
+  .les{display:grid;grid-template-columns:246px 1fr 74px;gap:var(--sp-16);align-items:center;
+    padding:var(--sp-12) 0;border-top:1px solid var(--gray1)}
+  .les:first-of-type{border-top:0}
+  .les:hover{background:var(--gray0)}
+  .les-h{display:flex;align-items:center;gap:var(--sp-12);min-width:0}
+  .les-h .n{width:24px;height:24px;border-radius:var(--r-6);background:var(--gray1);color:var(--gray6);
+    display:grid;place-items:center;font-size:var(--fs-12);font-weight:700;flex:none}
+  .les-h b{font-size:var(--fs-14);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+  .les-h b:hover{color:var(--blue);text-decoration:underline}
+  .les-h small{color:var(--gray5);font-size:var(--fs-12);flex:none}
+  .steps{display:flex;flex-wrap:wrap;gap:var(--sp-6);align-items:center}
+  .steps .sep{width:1px;height:22px;background:var(--gray3);margin:0 var(--sp-6);flex:none}
+  .wchip{display:inline-flex;align-items:center;gap:var(--sp-6);border:1px solid var(--gray2);border-radius:var(--r-pill);
+    padding:var(--sp-4) var(--sp-12) var(--sp-4) var(--sp-6);font-size:var(--fs-12);white-space:nowrap}
+  .wchip .d{width:9px;height:9px;border-radius:50%;flex:none}
+  .les .pc{font-size:var(--fs-14);color:var(--gray6);font-variant-numeric:tabular-nums;text-align:right;font-weight:600}
+
+  .empty{color:var(--gray5);font-size:var(--fs-14);padding:var(--sp-20) 0;text-align:center}
+
+  @media (max-width:1360px){ .kpis{grid-template-columns:repeat(3,1fr)} }
+  @media (max-width:1000px){ .les{grid-template-columns:1fr auto;gap:var(--sp-8) var(--sp-12)} .les-h{grid-column:1/-1} }
+  @media (max-width:1150px){
+    .prof{grid-template-columns:1fr;gap:var(--sp-16)}
+    .rows{grid-template-columns:1fr}
+    .rows .r:nth-child(2){border-top:1px solid var(--gray1)}
+  }
+  @media (max-width:820px){ .kpis{grid-template-columns:repeat(2,1fr)} }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-top">
+      <div class="logo">ШБ</div>
+      <div style="flex:1"><b>Шаг в будущее</b><small>Управление</small></div>
+      <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')">⟨</button>
+    </div>
+    <div class="switch"><button>Обучение</button><button class="on">Управление</button></div>
+    <nav class="nav">
+      <h4>Моя работа</h4>
+      <a href="#"><i class="ic">◱</i><span>Главная</span></a>
+      <a href="06-individual.html"><i class="ic">◷</i><span>Расписание</span></a>
+      <a href="04-journal.html"><i class="ic">▦</i><span>Журнал</span></a>
+      <a href="07-student.html" class="on"><i class="ic">◉</i><span>Группы</span></a>
+      <a href="08-lesson.html#pick"><i class="ic">▤</i><span>Уроки</span></a>
+      <a href="09-work.html#pick"><i class="ic">✎</i><span>Работы</span></a>
+      <a href="05-review.html"><i class="ic">✓</i><span>Проверка</span><span class="cnt">7</span></a>
+      <h4>Обучение</h4>
+      <a href="02-player.html"><i class="ic">◈</i><span>Мои курсы</span></a>
+    </nav>
+    <div class="side-user">
+      <div class="ava">УИ</div>
+      <div style="flex:1"><b style="font-size:var(--fs-14);display:block">Училков И.</b><small style="font-size:var(--fs-12);color:var(--gray6)">Преподаватель</small></div>
+      <span style="color:var(--gray5)">⚙</span>
+    </div>
+  </aside>
+
+  <div class="app">
+    <header class="head">
+      <div>
+        <h1 id="hName">Абрамов Кирилл</h1>
+      </div>
+      <div id="encBox" class="ctx"></div>
+      <div class="sp"></div>
+      <label class="demo">период <i>(демо)</i>
+        <select id="period" onchange="setPeriod()" style="padding:var(--sp-4) var(--sp-8);font-size:var(--fs-12)">
+          <option value="term">сентябрь–октябрь</option>
+          <option value="year">учебный год</option>
+        </select></label>
+      <label class="demo">роль <i>(демо)</i>
+        <select id="role" onchange="setRole()" style="padding:var(--sp-4) var(--sp-8);font-size:var(--fs-12)">
+          <option value="teacher">Преподаватель</option>
+          <option value="method">Методист</option>
+        </select></label>
+
+      <button class="btn btn-s ctx" onclick="step(-1)">‹</button>
+      <span class="muted ctx" id="navPos">1 из 10</span>
+      <button class="btn btn-s ctx" onclick="step(1)">›</button>
+      <button class="btn ctx" onclick="openPicker()">Другой ученик</button>
+      <a class="btn ctx" href="04-journal.html" style="text-decoration:none">К журналу</a>
+    </header>
+
+    <div class="picker" id="picker">
+      <div class="card pk">
+        <h2>Мои группы</h2>
+        <p class="lead">Группа разворачивается в список учеников. В сводку по ученику можно попасть и короче — кликом по фамилии в журнале.</p>
+        <div class="pk-f">
+          <input type="text" placeholder="Поиск по фамилии" oninput="toast('Поиск: '+this.value)">
+        </div>
+        <div class="pk-list" id="pkList"></div>
+      </div>
+    </div>
+
+    <div class="body" id="body">
+      <!-- профиль -->
+      <div class="card prof">
+        <div>
+          <div class="prof-h">
+            <div class="ava-l" id="pIni">АК</div>
+            <div style="flex:1;min-width:0">
+              <b id="pName">Абрамов Кирилл Сергеевич</b>
+              <small id="pAge">14 лет · 12.03.2012</small>
+            </div>
+          </div>
+          <div class="chips" id="encChips"></div>
+        </div>
+
+        <div class="rows">
+          <div class="r"><span>Учится с</span><span>01.09.2026</span></div>
+          <div class="r"><span>Период</span><span>2026/27, 1 полугодие</span></div>
+          <div class="r"><span>Почта</span><span>k.abramov@example.ru <small class="muted">(родительская)</small></span></div>
+          <div class="r"><span>Телефон</span><span>+7 912 345-67-89</span></div>
+          <div class="r"><span>Представитель</span><span>Абрамова Елена Петровна<br><span class="muted">+7 912 000-11-22</span></span></div>
+          <div class="r"><span>Преподаватель</span><span>Училков И. С.</span></div>
+        </div>
+
+        <div class="acc">
+          <h5>Доступ в систему</h5>
+          <div class="r"><span>Логин</span><code>k.abramov</code>
+            <button class="copy" title="Скопировать" onclick="toast('Логин скопирован')">⧉</button></div>
+          <div class="r"><span>Пароль</span><code style="letter-spacing:2px">•••••••</code></div>
+          <button class="btn btn-s pwd-btn" onclick="openPwd()">Выдать временный пароль</button>
+        </div>
+      </div>
+
+      <!-- показатели -->
+      <div class="kpis" id="kpis"></div>
+
+      <div class="tabs">
+        <button class="on" onclick="tab(0,this)">Занятия и прогресс</button>
+        <button onclick="tab(1,this)">Работы<span class="cnt" id="cW">—</span></button>
+      </div>
+
+      <!-- 1. посещаемость -->
+      <div class="pane on" id="p0">
+        <div class="card sec">
+          <div class="sec-h">
+            <h3>Посещаемость</h3>
+            <span class="muted" id="attSum"></span>
+            <div class="sp" style="flex:1"></div>
+            <div class="legend">
+              <span><i style="background:var(--green)"></i>был</span>
+              <span><i style="background:var(--red)"></i>не был</span>
+              <span><i style="background:var(--gray2)"></i>не отмечено</span>
+              <span><i class="ind" style="background:var(--gray5)"></i>индивидуальное</span>
+            </div>
+          </div>
+          <div class="strip" id="attStrip"></div>
+        </div>
+
+        <div class="card sec">
+          <div class="sec-h"><h3>Занятия и прогресс по урокам</h3>
+            <span class="muted" id="stSum"></span>
+            <div style="flex:1"></div>
+            <div class="legend">
+              <span><i style="background:var(--green)"></i>пройден</span>
+              <span><i style="background:var(--red)"></i>не пройден</span>
+              <span><i style="background:var(--gray2)"></i>не начат</span>
+              <span><i style="background:#fff;border:1px dashed var(--gray3)"></i>ещё не открыт</span>
+            </div>
+          </div>
+          <table class="t"><thead><tr>
+            <th style="width:var(--col-92)">Дата</th><th style="width:var(--col-160)">Тип</th>
+            <th style="width:var(--col-260)">Тема урока</th><th>Шаги урока</th>
+            <th style="width:var(--col-110)">Присутствие</th><th style="width:var(--col-220)">Работы занятия</th></tr></thead>
+            <tbody id="feed"></tbody></table>
+        </div>
+      </div>
+
+      <!-- 2. работы -->
+      <div class="pane" id="p1">
+        <div class="card sec">
+          <div class="sec-h"><h3>Работы</h3><span class="muted" id="wSum"></span>
+            <div style="flex:1"></div>
+            <div class="modes"><button class="on">Все</button><button onclick="toast('Фильтр: только несданные')">Несданные</button>
+              <button onclick="toast('Фильтр: только итоговые')">Итоговые</button></div></div>
+          <table class="t"><thead><tr>
+            <th style="width:var(--col-110)">Тип</th><th>Работа</th><th style="width:var(--col-260)">Урок</th><th style="width:var(--col-110)">Срок</th>
+            <th style="width:var(--col-160)">Статус</th><th style="width:var(--col-92)">Попыток</th><th style="width:var(--col-110)">Балл</th>
+          </tr></thead><tbody id="works"></tbody></table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- модалка временного пароля -->
+<div class="scrim" id="scrim" onclick="closePwd()"></div>
+<div class="modal" id="mPwd">
+  <div class="mo-h">Временный пароль</div>
+  <div class="mo-b">
+    <p style="margin:0 0 var(--sp-16);font-size:var(--fs-14);color:var(--gray7)">
+      Пароль для <b>Абрамова Кирилла</b> сброшен. Передайте его ученику — при первом входе система попросит задать свой.
+      Повторно этот пароль показать нельзя.</p>
+    <div style="display:flex;gap:var(--sp-12);align-items:center;background:var(--gray0);border:1px solid var(--gray2);
+      border-radius:var(--r-8);padding:var(--sp-16) var(--sp-16)">
+      <code style="font-size:var(--fs-16);font-family:ui-monospace,Menlo,monospace;letter-spacing:1px;flex:1">7fK-2mQ-84</code>
+      <button class="btn btn-s" onclick="toast('Пароль скопирован в буфер')">Скопировать</button>
+    </div>
+    <div class="muted" style="margin-top:12px;line-height:1.5">
+      Логин <code style="background:#fff;border:1px solid var(--gray3);border-radius:var(--r-4);padding:var(--sp-4) var(--sp-6)">k.abramov</code> ·
+      действие записывается в журнал событий: кто и когда сбросил пароль.</div>
+  </div>
+  <div class="mo-f">
+    <button class="btn" onclick="toast('Пароль и логин отправлены на почту представителя')">Отправить на почту</button>
+    <button class="btn btn-p" onclick="closePwd()">Готово</button>
+  </div>
+</div>
+<div class="encpop" id="encPop"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ─────────── записи ученика и права на них ───────────
+   Преподаватель видит только те записи, где ведёт он сам: одна запись — просто подпись,
+   две и больше — выбор. Чужие направления ему недоступны. Полный список — у методиста и выше. */
+var ME = 'Училков И. С.';
+var ENROLL = [
+  {code:'МЕГЭ', color:'var(--violet)', name:'МЕГЭ-1 · Математика',          kind:'g', teacher:ME},
+  {code:'ИНД',  color:'var(--teal)',   name:'Индивидуальные · Математика',  kind:'i', teacher:ME},
+  {code:'ИНФ',  color:'var(--orange)', name:'ИНФ-2 · Информатика',          kind:'g', teacher:'Петров П. П.'}
+];
+var ROLE = 'teacher', curEnc = 0;
+function myEnc(){
+  return ENROLL.filter(function(e){ return ROLE === 'method' || e.teacher === ME; });
+}
+function setRole(){
+  ROLE = document.getElementById('role').value;
+  if(myEnc().indexOf(ENROLL[curEnc]) < 0) curEnc = ENROLL.indexOf(myEnc()[0]);
+  closeEnc(); render();
+  toast(ROLE === 'method'
+    ? 'Методист: видны все направления ученика'
+    : 'Преподаватель: видны только направления, где ведёт он сам');
+}
+function renderEnc(){
+  var vis = myEnc(), e = ENROLL[curEnc], one = vis.length < 2;
+  document.getElementById('encBox').innerHTML =
+    '<div class="enc '+(one?'':'sel')+'"'+(one?'':' onclick="openEnc(event)"')+'>' +
+      '<span class="code" style="background:'+e.color+'">'+e.code+'</span>' +
+      '<div><div>'+e.name+'</div>' +
+      (one && ROLE === 'teacher' ? '<div class="only">ваше направление</div>' : '') + '</div>' +
+      (one ? '' : '<span style="color:var(--gray5)">▾</span>') + '</div>';
+
+  document.getElementById('encChips').innerHTML = vis.map(function(x){
+    var alien = x.teacher !== ME;
+    return '<span class="chip '+(x.kind==='g'?'g':'')+(alien?' alien':'')+'"><i style="background:'+x.color+'"></i>' +
+      x.name + (alien ? ' <small style="color:var(--gray5)">· '+x.teacher+'</small>' : '') + '</span>';
+  }).join('');
+}
+function openEnc(ev){
+  ev.stopPropagation();
+  var vis = myEnc(), p = document.getElementById('encPop');
+  p.innerHTML = '<h5>Направления ученика</h5>' + vis.map(function(x){
+    var i = ENROLL.indexOf(x), alien = x.teacher !== ME;
+    return '<button class="'+(i===curEnc?'on':'')+'" onclick="pickEnc('+i+')">' +
+      '<span class="code" style="background:'+x.color+'">'+x.code+'</span>' +
+      '<span style="flex:1">'+x.name+'<small>'+(alien ? 'ведёт '+x.teacher : 'ведёте вы')+'</small></span></button>';
+  }).join('') +
+  (ROLE === 'teacher'
+    ? '<div class="note">Показаны только ваши направления. Статистика по другим группам ученика доступна их преподавателю и методисту.</div>'
+    : '<div class="note">Методист видит все направления ученика.</div>');
+  p.classList.add('on');
+  var r = ev.currentTarget.getBoundingClientRect();
+  p.style.left = Math.min(r.left, innerWidth - 300) + 'px';
+  p.style.top = (r.bottom + 6) + 'px';
+}
+function pickEnc(i){ curEnc = i; closeEnc(); render(); toast('Статистика пересчитана по записи: ' + ENROLL[i].name); }
+function closeEnc(){ document.getElementById('encPop').classList.remove('on'); }
+document.addEventListener('click', closeEnc);
+
+/* ─────────── данные ─────────── */
+var GROUP = STUDENTS_LIST();
+function STUDENTS_LIST(){ return ['Абрамов Кирилл','Белова Мария','Волков Артём','Гусева Дарья','Дёмин Илья',
+  'Ерохина Анна','Жуков Матвей','Зайцева Полина','Ильин Роман','Кузнецова София']; }
+var meIdx = 0;
+
+/* занятия: att — p был / a не был / null не отмечено / undefined впереди */
+var LESSONS = [
+  {mo:'Сентябрь', d:'01.09', kind:'g', topic:'Повторение: дроби',        att:'p', steps:6,  works:[]},
+  {mo:'Сентябрь', d:'04.09', kind:'g', topic:'Проценты и пропорции',     att:'p', steps:7,  works:[{l:'ДЗ',max:5,  st:'graded', sc:4, tries:1, due:'07.09'}]},
+  {mo:'Сентябрь', d:'08.09', kind:'g', topic:'Линейные уравнения',       att:'a', steps:5,  works:[]},
+  {mo:'Сентябрь', d:'10.09', kind:'i', topic:'Отработка: линейные уравнения', att:'p', steps:4, works:[]},
+  {mo:'Сентябрь', d:'11.09', kind:'g', topic:'Системы уравнений',        att:'p', steps:8,  works:[{l:'СР',max:10, st:'graded', sc:8, tries:1, due:'11.09'},{l:'ДЗ',max:5, st:'graded', sc:5, tries:2, due:'14.09'}]},
+  {mo:'Сентябрь', d:'15.09', kind:'g', topic:'Квадратные уравнения',     att:'p', steps:9,  works:[]},
+  {mo:'Сентябрь', d:'18.09', kind:'g', topic:'Неравенства',              att:'p', steps:7,  works:[{l:'КР',max:20, st:'graded', sc:15, tries:1, due:'18.09', fin:true}]},
+  {mo:'Сентябрь', d:'22.09', kind:'g', topic:'Функции и графики',        att:'a', steps:8,  works:[{l:'СР',max:10, st:'late',   sc:null, tries:0, due:'22.09'},{l:'ДЗ',max:5, st:'review', sc:null, tries:1, due:'25.09'}]},
+  {mo:'Сентябрь', d:'25.09', kind:'g', topic:'Степени и корни',          att:null,steps:6,  works:[{l:'ДЗ',max:5,  st:'none',   sc:null, tries:0, due:'28.09'}]},
+  {mo:'Октябрь',  d:'02.10', kind:'g', topic:'Прогрессии',               att:'p', steps:7,  works:[{l:'СР',max:10, st:'review', sc:null, tries:1, due:'02.10'}]},
+  {mo:'Октябрь',  d:'06.10', kind:'g', topic:'Текстовые задачи',         steps:6,  works:[]},
+  {mo:'Октябрь',  d:'09.10', kind:'g', topic:'Итоговая по разделу',      steps:4,  works:[{l:'КР',max:20, st:'none', sc:null, tries:0, due:'09.10', fin:true}]}
+];
+var TERM = LESSONS, OPEN_UPTO = 10;       /* уроки с этого индекса ещё закрыты расписанием */
+var TYPES = ['text','video','task','work','exam','live'];
+
+/* демо: полный учебный год — август–июнь, 8–9 занятий в месяце (проверка переносов и объёма) */
+var MONTHS = [['Август','08'],['Сентябрь','09'],['Октябрь','10'],['Ноябрь','11'],['Декабрь','12'],
+              ['Январь','01'],['Февраль','02'],['Март','03'],['Апрель','04'],['Май','05'],['Июнь','06']];
+var DAYS = ['01','04','08','11','15','18','22','25','29'];
+var TOPICS = ['Повторение: дроби','Проценты и пропорции','Линейные уравнения','Системы уравнений',
+  'Квадратные уравнения','Неравенства','Функции и графики','Степени и корни','Прогрессии','Текстовые задачи',
+  'Логарифмы','Тригонометрия','Производная','Первообразная','Стереометрия','Планиметрия','Вероятность',
+  'Комбинаторика','Параметры','Модули'];
+function buildYear(){
+  var out = [], k = 0;
+  MONTHS.forEach(function(m, mi){
+    var n = mi % 2 ? 8 : 9;
+    for(var i=0; i<n; i++, k++){
+      var ind = k % 11 === 6;
+      var l = {mo:m[0], d:DAYS[i]+'.'+m[1], kind: ind ? 'i' : 'g',
+               topic: (ind ? 'Отработка: ' : '') + TOPICS[k % TOPICS.length],
+               steps: 4 + (k % 6), works:[]};
+      if(k % 3 === 1) l.works.push({l:'ДЗ', max:5,  st:'graded', sc:3 + (k%3), tries:1, due:l.d});
+      if(k % 6 === 4) l.works.push({l:'СР', max:10, st:'graded', sc:6 + (k%5), tries:1, due:l.d});
+      if(k % 12 === 9) l.works.push({l:'КР', max:20, st:'graded', sc:12 + (k%8), tries:1, due:l.d, fin:true});
+      out.push(l);
+    }
+  });
+  /* последние шесть занятий — ещё впереди, перед ними одно неотмеченное */
+  out.forEach(function(l, i){
+    if(i >= out.length - 6){ delete l.att; l.works.forEach(function(w){ w.st = 'none'; w.sc = null; w.tries = 0; }); }
+    else if(i === out.length - 7) l.att = null;
+    else l.att = (i % 9 === 3) ? 'a' : 'p';
+  });
+  return out;
+}
+function setPeriod(){
+  var year = document.getElementById('period').value === 'year';
+  LESSONS = year ? buildYear() : TERM;
+  OPEN_UPTO = year ? LESSONS.length - 6 : 10;
+  buildSteps(); render();
+  toast(year ? 'Демо: учебный год, ' + LESSONS.length + ' занятий' : 'Демо: сентябрь–октябрь');
+}
+
+/* состояния шагов: done / fail / new / locked */
+function buildSteps(){
+  LESSONS.forEach(function(l, li){
+    l.st = [];
+    for(var i=0;i<l.steps;i++){
+      var t = TYPES[(li*3+i) % TYPES.length];
+      var s;
+      if(li >= OPEN_UPTO) s = 'locked';
+      else if(li === OPEN_UPTO-1) s = i < 3 ? 'done' : 'new';
+      else if(l.att === 'a' && (i % 4 === 2)) s = 'fail';
+      else if((li*5 + i*3) % 13 === 0) s = 'fail';
+      else if((li*7 + i) % 11 === 0) s = 'new';
+      else s = 'done';
+      l.st.push({t:t, s:s, n:'Шаг '+(i+1)});
+    }
+  });
+}
+buildSteps();
+
+/* ─────────── расчёты ─────────── */
+function calc(){
+  var held = LESSONS.filter(function(l){ return l.att !== undefined; });
+  var was  = held.filter(function(l){ return l.att === 'p'; }).length;
+  var miss = held.filter(function(l){ return l.att === 'a'; }).length;
+  var mark = held.filter(function(l){ return l.att !== null; }).length;
+
+  var wAll = [], cg=0, cm=0, fg=0, fm=0, done=0, wait=0, late=0;
+  LESSONS.forEach(function(l, li){
+    l.works.forEach(function(w, wi){
+      wAll.push({w:w, l:l, li:li, wi:wi});
+      if(w.st==='graded'){ done++; if(w.fin){ fg+=w.sc; fm+=w.max; } else { cg+=w.sc; cm+=w.max; } }
+      if(w.st==='review') wait++;
+      if(w.st==='late')   late++;
+    });
+  });
+  var sAll=0, sDone=0, sFail=0, sOpen=0;
+  LESSONS.forEach(function(l){ l.st.forEach(function(s){
+    sAll++; if(s.s!=='locked') sOpen++;
+    if(s.s==='done') sDone++; if(s.s==='fail') sFail++; }); });
+
+  return {held:held.length, was:was, miss:miss, mark:mark,
+    attPct: mark ? Math.round(was/mark*100) : 0,
+    wAll:wAll, done:done, wait:wait, late:late,
+    cg:cg, cm:cm, fg:fg, fm:fm,
+    cp: cm ? Math.round(cg/cm*100) : null, fp: fm ? Math.round(fg/fm*100) : null,
+    sAll:sAll, sDone:sDone, sFail:sFail, sOpen:sOpen,
+    sp: sOpen ? Math.round(sDone/sOpen*100) : 0};
+}
+
+/* ─────────── отрисовка ─────────── */
+function kpi(lab, big, sub, pct, cls){
+  return '<div class="card kpi"><div class="lab">'+lab+'</div><div class="big">'+big+'</div>' +
+    '<div class="sub">'+sub+'</div>' +
+    (pct===null ? '' : '<div class="bar"><i class="'+cls+'" style="width:'+Math.max(2,pct)+'%"></i></div>') + '</div>';
+}
+function color(p){ return p>=80 ? 'g' : (p>=60 ? '' : (p>=40 ? 'o' : 'r')); }
+
+function render(){
+  var c = calc();
+  renderEnc();
+
+  document.getElementById('kpis').innerHTML =
+    kpi('Посещаемость', c.attPct+'%',
+        c.was+' из '+c.mark+' занятий' + (c.miss ? ' · <span class="warn">'+c.miss+' пропуск'+(c.miss>1?'а':'')+'</span>' : ''),
+        c.attPct, color(c.attPct)) +
+    kpi('Работы', c.done+'<span style="font-size:var(--fs-16);color:var(--gray5)"> / '+c.wAll.length+'</span>',
+        'оценено · ' + (c.wait?c.wait+' на проверке · ':'') + (c.late? '<span class="warn">'+c.late+' просрочено</span>' : 'просрочек нет'),
+        Math.round(c.done/c.wAll.length*100), 'g') +
+    kpi('Текущие баллы', (c.cp===null?'—':c.cp+'%'), c.cg+' из '+c.cm+' баллов', c.cp===null?0:c.cp, color(c.cp||0)) +
+    kpi('Итоговые баллы', (c.fp===null?'—':c.fp+'%'), c.fm ? c.fg+' из '+c.fm+' баллов' : 'ещё не было', c.fp===null?0:c.fp, color(c.fp||0)) +
+    kpi('Прогресс курса', c.sp+'%', c.sDone+' из '+c.sOpen+' открытых шагов' + (c.sFail? ' · <span class="warn">'+c.sFail+' не пройдено</span>':''), c.sp, color(c.sp)) +
+    kpi('Активность', '<span style="font-size:var(--fs-22)">сегодня</span>', '14:20 · шаг «Функции и графики»<br>4 индивидуальных занятия за период', null, '');
+
+  /* полоса посещаемости */
+  var groups = [], mo = null;
+  LESSONS.forEach(function(l){
+    if(l.att === undefined) return;                 /* будущие занятия в полосе не показываем */
+    if(l.mo !== mo){ mo = l.mo; groups.push({mo:mo, sq:'', was:0, held:0}); }
+    var g0 = groups[groups.length-1];
+    if(l.att !== null){ g0.held++; if(l.att === 'p') g0.was++; }
+    var cls = (l.att === 'p' ? 'p' : l.att === 'a' ? 'a' : 'e') + (l.kind === 'i' ? ' ind' : '');
+    var li = LESSONS.indexOf(l);
+    groups[groups.length-1].sq += '<div class="sq '+cls+'" onmouseenter="tipLesson(event,'+li+')" onmouseleave="tipHide()"></div>';
+  });
+  document.getElementById('attStrip').innerHTML = groups.map(function(g){
+    var p = g.held ? Math.round(g.was/g.held*100) : null;
+    return '<div class="mo-g"><div class="mo">'+g.mo +
+      (p === null ? '' : ' <span class="mp">'+g.was+' из '+g.held+'</span>') +
+      '</div><div class="sqs">'+g.sq+'</div></div>';
+  }).join('');
+  document.getElementById('attSum').innerHTML = c.was+' из '+c.mark+' · '+c.attPct+'%' +
+    (c.mark<c.held ? ' · <span style="color:var(--orange)">'+(c.held-c.mark)+' не отмечено</span>' : '');
+
+  /* лента занятий с полосой шагов урока */
+  document.getElementById('stSum').textContent = c.sDone + ' из ' + c.sOpen + ' открытых шагов · ' + c.sp + '%';
+  document.getElementById('feed').innerHTML = LESSONS.map(function(l, li){
+    /* присутствие: не отмечено — прочерк, занятие впереди — пусто */
+    var att = l.att === 'p' ? '<span class="badge b-ok">был</span>'
+      : l.att === 'a' ? '<span class="badge" style="background:var(--red-l);color:#c92a2a">не был</span>'
+      : l.att === null ? '<span class="muted">—</span>' : '';
+
+    /* шаги урока: закрытые расписанием показываем пустой строкой, а не прочерком */
+    var open = l.st.filter(function(x){ return x.s !== 'locked'; }).length;
+    var sq = open ? l.st.map(function(x, i){
+      var cls = x.s==='done' ? 'p' : x.s==='fail' ? 'a' : x.s==='new' ? 'e' : 'f';
+      return '<div class="sq '+cls+'" onmouseenter="tipStep(event,'+li+','+i+')" onmouseleave="tipHide()">' +
+        stepIcon(x.t, 16, true) + '</div>';
+    }).join('') : '';
+
+    /* работы: не сдана — прочерк; работ в уроке нет — пусто */
+    var works = l.works.map(function(w){
+      var v = w.st === 'graded' ? '<b>'+w.sc+'/'+w.max+'</b>'
+        : w.st === 'review' ? '<span class="muted">ждёт</span>' : '<span class="muted">—</span>';
+      return '<span class="lb '+lbCls(w)+'">'+w.l+'</span> '+v;
+    }).join(' &nbsp; ');
+
+    return '<tr><td class="dt">'+l.d+'</td>' +
+      '<td><span class="kind '+(l.kind==='i'?'ind':'')+'">'+(l.kind==='i'?'◆ индивид.':'◱ групповое')+'</span></td>' +
+      '<td><span class="link" onclick="location.href=\'08-lesson.html\'" title="Урок по группе">'+l.topic+'</span></td>' +
+      '<td><div class="steps">'+sq+'</div></td>' +
+      '<td>'+att+'</td><td>'+works+'</td></tr>';
+  }).join('');
+
+  /* работы */
+  document.getElementById('cW').textContent = c.wAll.length;
+  document.getElementById('wSum').textContent = c.done + ' оценено · ' + c.wait + ' на проверке · ' +
+    (c.wAll.length - c.done - c.wait) + ' не сдано';
+  document.getElementById('works').innerHTML = c.wAll.map(function(x){
+    var w = x.w, st;
+    if(w.st==='graded') st = '<span class="badge b-ok">зачтено</span>';
+    else if(w.st==='review') st = '<span class="badge b-info">на проверке</span>';
+    else st = '<span class="muted">не сдано</span>';
+    var pct = w.st==='graded' ? Math.round(w.sc/w.max*100) : null;
+    return '<tr><td><span class="lb '+lbCls(w)+'">'+w.l+'</span></td>' +
+      '<td><span class="link" onclick="location.href=\'09-work.html\'" title="Работа по группе">' +
+        w.l+' · '+x.l.topic+'</span>'+(w.fin?' <span class="muted">(итоговая)</span>':'')+'</td>' +
+      '<td class="muted">'+x.l.topic+'</td>' +
+      '<td class="dt">'+w.due+'</td><td>'+st+'</td>' +
+      '<td class="dt">'+(w.tries||'—')+'</td>' +
+      '<td>'+(pct===null ? '<span class="muted">—</span>'
+        : '<span class="score">'+w.sc+'/'+w.max+'</span> <span class="muted">'+pct+'%</span>')+'</td>' +
+      '</tr>';
+  }).join('') || '<tr><td colspan="7" class="empty">Работ пока нет</td></tr>';
+
+  document.getElementById('navPos').textContent = (meIdx+1)+' из '+GROUP.length;
+  document.getElementById('hName').textContent = GROUP[meIdx];
+  document.getElementById('pName').textContent = GROUP[meIdx] + ' Сергеевич';
+  document.getElementById('pIni').textContent = GROUP[meIdx].split(' ').map(function(w){ return w[0]; }).join('');
+}
+function lbCls(w){ return w.fin ? 'kr' : (w.l==='ДЗ' ? 'dz' : 'sr'); }
+
+/* ─────────── подсказки ─────────── */
+function tipLesson(e, li){
+  var l = LESSONS[li];
+  var att = l.att === 'p' ? '<div class="a good"><span>Присутствие:</span><span>был на занятии</span></div>'
+    : l.att === 'a' ? '<div class="a bad"><span>Присутствие:</span><span>не был</span></div>'
+    : '<div class="a"><span>Присутствие:</span><span style="color:#adb5bd">не отмечено</span></div>';
+  var works = l.works.map(function(w){
+    var v = w.st === 'graded' ? w.sc+' из '+w.max
+      : w.st === 'review' ? 'на проверке' : w.st === 'late' ? 'просрочено' : 'не сдано';
+    var cl = w.st === 'graded' ? (w.sc/w.max >= .6 ? ' good' : ' bad') : w.st === 'none' || w.st === 'late' ? ' bad' : '';
+    return '<div class="a'+cl+'"><span>'+w.l+':</span><span>'+v+'</span></div>';
+  }).join('');
+  tipShow(e, '<div class="h">'+l.d+' · '+(l.kind === 'i' ? 'индивидуальное занятие' : 'групповое занятие')+'</div>' +
+    '<div class="q">'+l.topic+'</div>' + att + works);
+}
+function tipStep(e, li, i){
+  var st = LESSONS[li].st[i];
+  var lab = st.s === 'done' ? '<div class="a good"><span>Состояние:</span><span>пройден</span></div>'
+    : st.s === 'fail' ? '<div class="a bad"><span>Состояние:</span><span>не пройден</span></div>'
+    : st.s === 'new' ? '<div class="a"><span>Состояние:</span><span style="color:#adb5bd">не начат</span></div>'
+    : '<div class="a"><span>Состояние:</span><span style="color:#adb5bd">ещё не открыт</span></div>';
+  tipShow(e, '<div class="h">Шаг '+(i+1)+' · '+stepName(st.t)+'</div>' +
+    '<div class="q">'+LESSONS[li].topic+' · '+LESSONS[li].d+'</div>' + lab);
+}
+
+/* ─────────── экран выбора ─────────── */
+function needPick(){ return (location.search + location.hash).indexOf('pick') >= 0; }
+var GROUPS = [
+  {code:'МЕГЭ', color:'var(--violet)', n:'МЕГЭ-1 · Математика', att:92, works:86, bad:2,
+   flags:{2:'3 пропуска подряд', 6:'застрял на обязательном шаге'}},
+  {code:'ОГЭ', color:'var(--orange)', n:'ОГЭ-1 · Информатика', att:78, works:64, bad:4,
+   flags:{0:'не сдал КР', 3:'посещаемость 60%', 5:'2 работы на доработке', 8:'3 пропуска подряд'}}
+];
+var openGrp = 0;
+function pcCls(p){ return p >= 85 ? 'good' : p >= 70 ? 'mid' : 'bad'; }
+
+function renderPicker(){
+  document.getElementById('pkList').innerHTML = GROUPS.map(function(g, gi){
+    var rows = '<table class="t g-tbl"><thead><tr>' +
+      '<th style="width:var(--col-92)">№</th><th>Ученик</th>' +
+      '<th style="width:var(--col-260)">Требует внимания</th>' +
+      '<th style="width:var(--col-110)"></th></tr></thead><tbody>' +
+      GROUP.map(function(n, i){
+        var f = g.flags[i];
+        return '<tr onclick="pickStudent('+i+')" title="Открыть профиль"><td class="num">'+(i+1)+'</td>' +
+          '<td><b style="font-weight:600">'+n+'</b></td>' +
+          '<td>'+(f ? '<span class="bad">'+f+'</span>' : '')+'</td>' +
+          '<td style="text-align:right"><span class="go">открыть ›</span></td></tr>';
+      }).join('') + '</tbody></table>';
+    return '<button class="g-row'+(gi===openGrp?' open':'')+'" onclick="toggleGrp('+gi+')">' +
+        '<span class="chev">›</span>' +
+        '<span class="code" style="background:'+g.color+'">'+g.code+'</span>' +
+        '<span class="nm"><b>'+g.n+'</b><span class="sub">'+GROUP.length+' учеников · ' +
+          (g.bad ? '<span class="bad">'+g.bad+' требуют внимания</span>' : 'вопросов нет') + '</span></span>' +
+        '<span class="met"><div><b class="'+pcCls(g.att)+'">'+g.att+'%</b><span>посещ.</span></div>' +
+        '<div><b class="'+pcCls(g.works)+'">'+g.works+'%</b><span>работы</span></div></span></button>' +
+      '<div class="g-body'+(gi===openGrp?' on':'')+'">'+rows+'</div>';
+  }).join('');
+}
+function toggleGrp(i){ openGrp = (openGrp === i) ? -1 : i; renderPicker(); }
+function pickStudent(i){
+  meIdx = i; closePicker(); render();
+  toast('Сводка по ученику: ' + GROUP[i]);
+}
+function openPicker(){
+  renderPicker();
+  document.body.classList.add('picking');
+  document.getElementById('hName').textContent = 'Группы';
+  document.getElementById('picker').classList.add('on');
+  document.getElementById('body').classList.add('off');
+}
+function closePicker(){
+  document.body.classList.remove('picking');
+  document.getElementById('picker').classList.remove('on');
+  document.getElementById('body').classList.remove('off');
+}
+
+/* ─────────── взаимодействие ─────────── */
+function tab(i, el){
+  [].forEach.call(document.querySelectorAll('.tabs button'), function(b){ b.classList.remove('on'); });
+  el.classList.add('on');
+  for(var k=0;k<2;k++) document.getElementById('p'+k).classList.toggle('on', k===i);
+}
+function step(d){
+  meIdx = (meIdx + d + GROUP.length) % GROUP.length;
+  render(); toast('Ученик: ' + GROUP[meIdx] + ' (демо — данные те же)');
+}
+function openPwd(){ document.getElementById('scrim').classList.add('on'); document.getElementById('mPwd').classList.add('on'); }
+function closePwd(){ document.getElementById('scrim').classList.remove('on'); document.getElementById('mPwd').classList.remove('on'); }
+var tt;
+function toast(m){ var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3200); }
+render();
+if(needPick()) openPicker();
+</script>
+</body>
+</html>

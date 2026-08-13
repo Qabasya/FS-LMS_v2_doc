@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Журнал — FS-LMS 2.0</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+  /* ═══ ШИРИНЫ КОЛОНОК ЖУРНАЛА — правьте эти значения (§4.4) ═══ */
+  :root{
+    --w-name: var(--col-300);   /* «Ученик» — минимум, фактическая считается в fitColumns */
+    --w-name-run: 350px;
+    --w-tot-run: 120px;   /* итоговые — тоже растут вместе со всеми */
+    --w-sub:   72px;   /* подколонка: «присут.» и каждая работа */
+    --w-tot:  var(--col-110);   /* итоговые: Пропуски / Текущие / Итоговые */
+    --sub-min: 56px;   /* минимум подколонки — ниже включается скролл */
+    --sub-max:130px;   /* максимум — шире не растягиваем */
+  }
+  .mo{display:flex;align-items:center;gap:var(--sp-8);font-weight:600;font-size:var(--fs-16);min-width:150px;justify-content:center}
+  .alert{background:var(--orange-l);border-bottom:1px solid #ffd8a8;color:#d9480f;padding:var(--sp-8) var(--sp-20);font-size:var(--fs-14);
+    display:flex;gap:var(--sp-12);align-items:center;flex:none}
+  .alert.hide{display:none}
+
+  .wrap{flex:1;overflow:auto;padding:0 0 var(--user-h)}
+  table{border-collapse:separate;border-spacing:0;font-size:var(--fs-14);background:#fff;table-layout:fixed;width:100%;height:100%}
+  /* колонка-заполнитель и распорка: сетка занимает всю ширину и высоту, не обрываясь посреди экрана */
+  tbody tr{height:1px} tbody tr.filler{height:auto}
+  tr.filler td{border:0;background:#fff;padding:0}
+  thead th{position:sticky;top:0;background:#fff;z-index:3;border-bottom:1px solid var(--gray2);padding:0}
+  /* колонка ученика резиновая: остаток ширины уходит в неё, пустого столбца нет */
+  th.stu, td.stu{position:sticky;left:0;background:#fff;z-index:2;border-right:1px solid var(--gray2);
+    width:var(--w-name-run);min-width:var(--w-name-run);max-width:var(--w-name-run)}
+  thead th.stu{z-index:4}
+  .th-day{padding:var(--sp-6) var(--sp-6) var(--sp-4);text-align:center;border-left:1px solid var(--gray2)}
+  .th-day .dt{font-weight:700;font-size:var(--fs-14)}
+  .th-day.pending{background:var(--orange-l)}
+  .th-sub{padding:var(--sp-4) var(--sp-4) var(--sp-6);text-align:center;font-size:var(--fs-12);color:var(--gray6);border-left:1px solid var(--gray1)}
+  .th-sub.first{border-left:1px solid var(--gray2)}
+  .th-sub .lb{display:inline-block;font-size:var(--fs-12);font-weight:700;padding:var(--sp-4) var(--sp-6);border-radius:var(--r-4);background:var(--gray1);color:var(--gray6)}
+  .th-sub .lb.kr{background:#ffe3e3;color:#c92a2a}
+  .th-sub .lb.sr{background:var(--blue-l);color:#1864ab}
+  .th-sub .lb.dz{background:var(--green-l);color:#2b8a3e}
+  th.subcol, td.sub{width:var(--w-sub);min-width:var(--w-sub);max-width:var(--w-sub)}
+  td.sub.first{border-left:1px solid var(--gray2)}
+  td.sub{border-left:1px solid var(--gray1)}
+  td{border-bottom:1px solid var(--gray1);padding:0}
+  .thead-in{padding:var(--sp-8) var(--sp-6);text-align:center}
+  tbody tr:hover td.stu{background:var(--gray0)}
+  .stu-in{display:flex;gap:var(--sp-12);align-items:center;padding:var(--sp-8) var(--sp-12)}
+  .stu-in .n{color:var(--gray5);font-size:var(--fs-12);min-width:16px}
+  .stu-in .av{width:26px;height:26px;border-radius:50%;background:var(--blue-l);color:var(--blue);display:grid;
+    place-items:center;font-size:var(--fs-12);font-weight:700;flex:none}
+  .stu-in .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+  .stu-in .nm:hover{color:var(--blue);text-decoration:underline}
+
+  .cell{height:46px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--sp-4);cursor:pointer;
+    outline:none;border-radius:var(--r-6);margin:var(--sp-4);min-width:0}
+  .cell:hover{background:var(--gray1)}
+  .cell:focus{box-shadow:inset 0 0 0 2px var(--blue);background:var(--blue-l)}
+  .cell .att{font-size:var(--fs-14);font-weight:700;line-height:1.1}
+  .cell.p .att{color:var(--green)}
+  .cell.a .att{color:var(--red)}
+  .cell.a{background:var(--red-l)}
+  .cell.empty .att{color:var(--gray3)}
+  .cell .score{font-size:var(--fs-12);color:var(--gray7);background:var(--gray1);border-radius:var(--r-4);padding:0 var(--sp-6);line-height:1.45}
+  .cell.ro{cursor:default}
+  .cell.ro:hover{background:none}
+
+  /* итоговые колонки закреплены справа */
+  th.tot, td.tot{position:sticky;background:#fff;z-index:2;border-left:1px solid var(--gray2);
+    width:var(--w-tot-run);min-width:var(--w-tot-run);max-width:var(--w-tot-run)}
+  thead th.tot{z-index:4}
+  .tot1{right:calc(var(--w-tot-run) * 2)} .tot2{right:var(--w-tot-run)} .tot3{right:0}
+  th.tot.tot1, td.tot.tot1{border-left:2px solid var(--gray2)}
+
+  .pop{position:fixed;background:#fff;border:1px solid var(--gray2);border-radius:var(--r-8);box-shadow:0 10px 30px rgba(0,0,0,.16);
+    padding:var(--sp-12);z-index:30;display:none;width:220px}
+  .pop.on{display:block}
+  .pop h5{margin:0 0 var(--sp-8);font-size:var(--fs-12);color:var(--gray6);font-weight:600}
+  .pop .row{display:flex;gap:var(--sp-6)}
+  .pop .row button{flex:1;border:1px solid var(--gray3);background:#fff;border-radius:var(--r-6);padding:var(--sp-8);font-size:var(--fs-14)}
+  .pop .row button.p{border-color:#8ce99a;color:#2b8a3e}
+  .pop .row button.a{border-color:#ffc9c9;color:#c92a2a}
+  .pop .sc{margin-top:9px;padding-top:9px;border-top:1px solid var(--gray2)}
+  .pop .sc label{font-size:var(--fs-12);color:var(--gray6);display:block;margin-bottom:5px}
+  .pop .hint{font-size:var(--fs-12);color:var(--gray5);margin-top:8px}
+
+  .foot{background:#fff;border-top:1px solid var(--gray2);padding:var(--sp-12) var(--sp-20);display:flex;gap:var(--sp-20);font-size:var(--fs-12);
+    color:var(--gray6);flex:none;flex-wrap:wrap;align-items:center}
+  .foot b{color:var(--gray7)}
+  kbd{background:var(--gray1);border:1px solid var(--gray3);border-bottom-width:2px;border-radius:var(--r-4);padding:0 var(--sp-6);font-size:var(--fs-12);font-family:inherit}
+
+  @media (max-width:820px){ th.stu,td.stu{width:var(--col-160);min-width:var(--col-160);max-width:var(--col-160)} }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-top">
+      <div class="logo">ШБ</div>
+      <div style="flex:1"><b>Шаг в будущее</b><small>Управление</small></div>
+      <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')">⟨</button>
+    </div>
+    <div class="switch"><button>Обучение</button><button class="on">Управление</button></div>
+    <nav class="nav">
+      <h4>Моя работа</h4>
+      <a href="#"><i class="ic">◱</i><span>Главная</span></a>
+      <a href="06-individual.html"><i class="ic">◷</i><span>Расписание</span></a>
+      <a href="04-journal.html" class="on"><i class="ic">▦</i><span>Журнал</span></a>
+      <a href="07-student.html#pick"><i class="ic">◉</i><span>Группы</span></a>
+      <a href="08-lesson.html#pick"><i class="ic">▤</i><span>Уроки</span></a>
+      <a href="09-work.html#pick"><i class="ic">✎</i><span>Работы</span></a>
+      <a href="05-review.html"><i class="ic">✓</i><span>Проверка</span><span class="cnt">7</span></a>
+      <h4>Обучение</h4>
+      <a href="02-player.html"><i class="ic">◈</i><span>Мои курсы</span></a>
+    </nav>
+    <div class="side-user">
+      <div class="ava">УИ</div>
+      <div style="flex:1"><b style="font-size:var(--fs-14);display:block">Училков И.</b><small style="font-size:var(--fs-12);color:var(--gray6)">Преподаватель</small></div>
+      <span style="color:var(--gray5)">⚙</span>
+    </div>
+  </aside>
+
+  <div class="app">
+    <header class="head">
+      <h1>Журнал группы</h1>
+      <div class="fld" style="margin:0"><div class="v" style="display:flex;gap:var(--sp-12);align-items:center;padding:var(--sp-8) var(--sp-12)">
+        <span style="width:26px;height:26px;border-radius:var(--r-6);background:var(--violet);color:#fff;font-size:var(--fs-12);display:grid;place-items:center;font-weight:700">МЕГЭ</span>
+        МЕГЭ-1 · Математика <span style="color:var(--gray5)">▾</span></div></div>
+      <div class="mo"><button class="btn btn-s">‹</button><span>Сентябрь 2026</span><button class="btn btn-s">›</button></div>
+      <div class="sp"></div>
+      <span class="muted" id="stat">—</span>
+      <button class="btn" onclick="toast('Журнал выгружен в XLSX')">Выгрузить</button>
+    </header>
+
+    <div class="alert" id="alert">
+      <span>⚠</span>
+      <div style="flex:1"><b>Не заполнена посещаемость:</b> <span id="alertList"></span></div>
+      <button class="btn btn-s" onclick="jumpPending()">Перейти</button>
+    </div>
+
+    <div class="wrap"><table id="table"></table></div>
+
+    <div class="foot">
+      <span><b>Посещаемость:</b> «+» присутствовал · «Н» отсутствовал</span>
+      <span><b>Работы:</b> баллы приходят автоматически · <b>⏳</b> на проверке · <b>—</b> не сдано · <b style="color:var(--orange)">—</b> просрочено</span>
+      <span class="sp"></span>
+      <span>Клавиши: <kbd>←↑↓→</kbd> перемещение · <kbd>пробел</kbd> присутствовал · <kbd>Н</kbd> отсутствовал · <kbd>Del</kbd> очистить</span>
+    </div>
+  </div>
+</div>
+
+<div class="pop" id="pop">
+  <h5 id="popTitle">Ученик · дата</h5>
+  <div class="row">
+    <button class="p" onclick="setAtt('p')">Был</button>
+    <button class="a" onclick="setAtt('a')">Н</button>
+    <button onclick="setAtt(null)">—</button>
+  </div>
+  <div class="sc" id="popScore" style="display:none">
+    <label id="popScoreLabel">Работы</label>
+    <div id="popScoreVal" style="font-size:var(--fs-14);margin-bottom:8px"></div>
+    <button class="btn btn-s" style="width:100%" onclick="openSubmission()">Открыть сдачу</button>
+  </div>
+  <div class="hint">Посещаемость сохраняется сразу. Баллы приходят из работ — в журнале не вводятся</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var STUDENTS = ['Абрамов Кирилл','Белова Мария','Волков Артём','Гусева Дарья','Дёмин Илья',
+  'Ерохина Анна','Жуков Матвей','Зайцева Полина','Ильин Роман','Кузнецова София'];
+/* на занятии может быть несколько работ — это шаги-работы внутри урока (§4.4) */
+var LESSONS = [
+  {d:'01.09', topic:'Повторение: дроби',    works:[], past:true},
+  {d:'04.09', topic:'Проценты и пропорции', works:[{label:'ДЗ', max:5,  final:false}], past:true},
+  {d:'08.09', topic:'Линейные уравнения',   works:[], past:true},
+  {d:'11.09', topic:'Системы уравнений',    works:[{label:'СР', max:10, final:false},{label:'ДЗ', max:5, final:false}], past:true},
+  {d:'15.09', topic:'Квадратные уравнения', works:[], past:true},
+  {d:'18.09', topic:'Неравенства',          works:[{label:'КР', max:20, final:true}], past:true},
+  {d:'22.09', topic:'Функции и графики',    works:[{label:'СР', max:10, final:false},{label:'ДЗ', max:5, final:false}], past:true},
+  {d:'25.09', topic:'Степени и корни',      works:[], past:false}
+];
+var state = STUDENTS.map(function(_, si){
+  return LESSONS.map(function(l, li){
+    var c = {att:null, subs: l.works.map(function(){ return null; })};
+    if(li < 5) c.att = (si+li) % 7 === 3 ? 'a' : 'p';
+    if(li < 7) c.subs = l.works.map(function(w, wi){
+      var r = (si*3 + li + wi*2) % 9;
+      if(r===0) return {status:'review', score:null};
+      if(r===1) return {status:'none',   score:null};
+      if(r===2) return {status:'late',   score:null};
+      return {status:'graded', score: Math.max(0, w.max - ((si+li+wi) % 3))};
+    });
+    return c;
+  });
+});
+var cur = {s:0, l:0}, pop = {s:null, l:null};
+
+function totals(si){
+  var cg=0, cm=0, fg=0, fm=0, by={};
+  LESSONS.forEach(function(l, li){
+    l.works.forEach(function(w, wi){
+      var sub = state[si][li].subs[wi];
+      if(!sub || sub.status !== 'graded') return;
+      if(w.final){ fg += sub.score; fm += w.max; } else { cg += sub.score; cm += w.max; }
+      by[w.label] = by[w.label] || [0,0];
+      by[w.label][0] += sub.score; by[w.label][1] += w.max;
+    });
+  });
+  var pct = function(g,m){ return m ? Math.round(g/m*100) : null; };
+  var hint = Object.keys(by).map(function(k){ return k + ': ' + by[k][0] + '/' + by[k][1]; }).join(' · ') || 'нет оценённых работ';
+  return {cg:cg, cm:cm, fg:fg, fm:fm, cp:pct(cg,cm), fp:pct(fg,fm), hint:hint};
+}
+function subCell(sub){
+  if(!sub) return '<span class="score" style="color:var(--gray3)">·</span>';
+  if(sub.status==='graded') return '<span class="score">'+sub.score+'</span>';
+  if(sub.status==='review') return '<span class="score" title="Сдана, ждёт проверки">⏳</span>';
+  if(sub.status==='late')   return '<span class="score" style="color:var(--orange)" title="Просрочено">—</span>';
+  return '<span class="score" style="color:var(--gray5)" title="Не сдано">—</span>';
+}
+function fitColumns(){
+  var cs = getComputedStyle(document.documentElement);
+  var px = function(n){ return parseFloat(cs.getPropertyValue(n)); };
+  var wName = px('--w-name'), wTot = px('--w-tot'), min = px('--sub-min'), max = px('--sub-max');
+  var n = LESSONS.reduce(function(a,l){ return a + 1 + l.works.length; }, 0);
+  var avail = document.querySelector('.wrap').clientWidth - wName - wTot*3;
+  /* Свободное место делится поровну между всеми колонками: «Ученик», подколонки занятий
+     и три итоговые. Подколонка не растёт выше своего максимума — то, что она не добрала,
+     во втором проходе достаётся текстовым колонкам. */
+  var box = document.querySelector('.wrap').clientWidth;
+  var base = wName + wTot*3 + min*n;
+  var add = Math.max(0, Math.floor((box - base) / (4 + n)));
+  var sub = Math.min(max, min + add);
+  var rest = box - wName - wTot*3 - sub*n;          /* второй проход: остаток на 4 текстовые колонки */
+  var add2 = Math.max(0, Math.floor(rest / 4));
+  document.documentElement.style.setProperty('--w-sub', sub + 'px');
+  document.documentElement.style.setProperty('--w-name-run', (wName + add2) + 'px');
+  document.documentElement.style.setProperty('--w-tot-run', (wTot + add2) + 'px');
+  document.getElementById('table').style.minWidth = (wName + sub*n + wTot*3) + 'px';
+}
+addEventListener('resize', fitColumns);
+
+function render(){
+  var r1 = '<tr><th class="stu" rowspan="2"><div class="stu-in muted" style="font-size:var(--fs-12)">Ученик</div></th>';
+  var r2 = '<tr>';
+  LESSONS.forEach(function(l, li){
+    var pending = l.past && state.some(function(r){ return r[li].att === null; });
+    r1 += '<th colspan="'+(1 + l.works.length)+'"><div class="th-day '+(pending?'pending':'')+'" title="'+l.topic+'">' +
+      '<div class="dt">'+l.d+'</div></div></th>';
+    r2 += '<th class="subcol"><div class="th-sub first" title="Посещаемость">присут.</div></th>';
+    l.works.forEach(function(w){
+      var cls = w.final ? 'kr' : (w.label==='ДЗ' ? 'dz' : 'sr');
+      r2 += '<th class="subcol"><div class="th-sub" title="'+w.label+(w.final?' · итоговая':'')+', макс. '+w.max+'">' +
+        '<span class="lb '+cls+'">'+w.label+'</span></div></th>';
+    });
+  });
+  r1 += '<th rowspan="2" class="tot tot1"><div class="thead-in muted" style="font-size:var(--fs-12)">Пропуски</div></th>' +
+        '<th rowspan="2" class="tot tot2"><div class="thead-in muted" style="font-size:var(--fs-12)">Текущие</div></th>' +
+        '<th rowspan="2" class="tot tot3"><div class="thead-in muted" style="font-size:var(--fs-12)">Итоговые</div></th></tr>';
+  r2 += '</tr>';
+  var html = '<thead>' + r1 + r2 + '</thead><tbody>';
+
+  STUDENTS.forEach(function(name, si){
+    var miss = state[si].filter(function(c){ return c.att === 'a'; }).length;
+    var ini = name.split(' ').map(function(w){ return w[0]; }).join('');
+    html += '<tr><td class="stu"><div class="stu-in"><span class="n">'+(si+1)+'</span>' +
+      '<span class="av">'+ini+'</span>' +
+      '<span class="nm" onclick="location.href=\'07-student.html\'" title="Сводка по ученику">'+name+'</span></div></td>';
+    state[si].forEach(function(c, li){
+      var cls = c.att==='p' ? 'p' : (c.att==='a' ? 'a' : 'empty');
+      var att = c.att==='p' ? '+' : (c.att==='a' ? 'Н' : '·');
+      html += '<td class="sub first"><div class="cell '+cls+'" tabindex="0" data-s="'+si+'" data-l="'+li+'" ' +
+        'onclick="openPop(event,'+si+','+li+')" onfocus="cur={s:'+si+',l:'+li+'}"><span class="att">'+att+'</span></div></td>';
+      LESSONS[li].works.forEach(function(w, wi){
+        var sub = state[si][li].subs[wi];
+        var title = w.label + ': ' + (sub && sub.status==='graded' ? sub.score + ' из ' + w.max : 'нет оценки');
+        html += '<td class="sub"><div class="cell ro" title="'+title+'" onclick="openSub('+si+','+li+','+wi+')">' +
+          subCell(sub) + '</div></td>';
+      });
+    });
+    var t = totals(si);
+    html += '<td class="tot tot1"><div class="cell ro"><span class="att" style="color:'+(miss?'var(--gray7)':'var(--gray3)')+'">'+(miss||'·')+'</span></div></td>' +
+      '<td class="tot tot2"><div class="cell ro" title="'+t.hint+'">' +
+        (t.cm ? '<span class="att" style="font-size:var(--fs-12);color:var(--gray7)">'+t.cg+'/'+t.cm+'</span><span class="score">'+t.cp+'%</span>'
+              : '<span class="att" style="color:var(--gray3)">·</span>') + '</div></td>' +
+      '<td class="tot tot3"><div class="cell ro" title="'+t.hint+'">' +
+        (t.fm ? '<span class="att" style="font-size:var(--fs-12);color:var(--gray7)">'+t.fg+'/'+t.fm+'</span><span class="score">'+t.fp+'%</span>'
+              : '<span class="att" style="color:var(--gray3)">·</span>') + '</div></td></tr>';
+  });
+  var cols = 1 + LESSONS.reduce(function(a,l){ return a + 1 + l.works.length; }, 0) + 3;
+  html += '<tr class="filler"><td colspan="'+cols+'"></td></tr>';
+  document.getElementById('table').innerHTML = html + '</tbody>';
+
+  var pend = LESSONS.map(function(l, li){
+    return l.past && state.some(function(r){ return r[li].att === null; }) ? l.d : null;
+  }).filter(Boolean);
+  document.getElementById('alert').classList.toggle('hide', pend.length === 0);
+  document.getElementById('alertList').textContent = pend.join(', ');
+
+  var total = STUDENTS.length * LESSONS.filter(function(l){ return l.past; }).length;
+  var filled = state.reduce(function(a, r){
+    return a + r.filter(function(c, li){ return LESSONS[li].past && c.att !== null; }).length; }, 0);
+  var wCount = LESSONS.reduce(function(a,l){ return a + l.works.length; }, 0);
+  document.getElementById('stat').textContent =
+    STUDENTS.length + ' учеников · ' + LESSONS.length + ' занятий · ' + wCount + ' работ · посещаемость ' + filled + ' из ' + total;
+  fitColumns();
+}
+
+function openPop(e, si, li){
+  e.stopPropagation(); pop = {s:si, l:li}; cur = {s:si, l:li};
+  var p = document.getElementById('pop'), r = e.currentTarget.getBoundingClientRect();
+  document.getElementById('popTitle').textContent = STUDENTS[si].split(' ')[0] + ' · ' + LESSONS[li].d;
+  var works = LESSONS[li].works, box = document.getElementById('popScore');
+  if(works.length){
+    box.style.display = 'block';
+    document.getElementById('popScoreLabel').textContent = works.length > 1 ? 'Работы этого занятия' : 'Работа';
+    document.getElementById('popScoreVal').innerHTML = works.map(function(w, wi){
+      var sub = state[si][li].subs[wi];
+      var txt = !sub ? '—'
+        : sub.status==='graded' ? '<b>'+sub.score+'/'+w.max+'</b>'
+        : sub.status==='review' ? '⏳ на проверке'
+        : sub.status==='late'   ? '<span style="color:var(--orange)">просрочено</span>' : 'не сдано';
+      return '<div style="display:flex;justify-content:space-between;padding:var(--sp-4) 0"><span>'+w.label+'</span><span>'+txt+'</span></div>';
+    }).join('');
+  } else box.style.display = 'none';
+  p.style.left = Math.min(r.left, innerWidth - 240) + 'px';
+  p.style.top = Math.min(r.bottom + 6, innerHeight - 240) + 'px';
+  p.classList.add('on');
+}
+function setAtt(v){
+  if(pop.s === null) return;
+  state[pop.s][pop.l].att = v; render(); focusCell(pop.s, pop.l);
+  if(v !== null) document.getElementById('pop').classList.remove('on');
+}
+function openSub(si, li, wi){
+  event.stopPropagation();
+  toast('Карточка сдачи: ' + STUDENTS[si].split(' ')[0] + ' · ' + LESSONS[li].works[wi].label + ' · ' + LESSONS[li].d);
+}
+function openSubmission(){ document.getElementById('pop').classList.remove('on'); toast('Открыта карточка сдачи'); }
+function jumpPending(){
+  for(var li=0; li<LESSONS.length; li++)
+    if(LESSONS[li].past && state.some(function(r){ return r[li].att === null; }))
+      for(var si=0; si<STUDENTS.length; si++)
+        if(state[si][li].att === null){ focusCell(si, li); return; }
+}
+function focusCell(s, l){
+  var el = document.querySelector('.cell[data-s="'+s+'"][data-l="'+l+'"]');
+  if(el){ el.focus(); cur = {s:s, l:l}; }
+}
+document.addEventListener('keydown', function(e){
+  var s = cur.s, l = cur.l;
+  if(document.activeElement && document.activeElement.tagName === 'INPUT') return;
+  if(e.key==='ArrowRight'){ e.preventDefault(); focusCell(s, Math.min(LESSONS.length-1, l+1)); }
+  else if(e.key==='ArrowLeft'){ e.preventDefault(); focusCell(s, Math.max(0, l-1)); }
+  else if(e.key==='ArrowDown'){ e.preventDefault(); focusCell(Math.min(STUDENTS.length-1, s+1), l); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); focusCell(Math.max(0, s-1), l); }
+  else if(e.key===' '){ e.preventDefault(); state[s][l].att='p'; render(); focusCell(Math.min(STUDENTS.length-1, s+1), l); }
+  else if(e.key.toLowerCase()==='н' || e.key.toLowerCase()==='y'){ e.preventDefault(); state[s][l].att='a'; render(); focusCell(Math.min(STUDENTS.length-1, s+1), l); }
+  else if(e.key==='Delete' || e.key==='Backspace'){ e.preventDefault(); state[s][l].att=null; render(); focusCell(s,l); }
+});
+document.addEventListener('click', function(){ document.getElementById('pop').classList.remove('on'); });
+document.getElementById('pop').addEventListener('click', function(e){ e.stopPropagation(); });
+var tt;
+function toast(m){ var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3400); }
+render();
+</script>
+</body>
+</html>

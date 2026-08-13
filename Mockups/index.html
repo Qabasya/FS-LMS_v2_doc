@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Мокапы FS-LMS 2.0</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+  body{background:var(--gray0)}
+  .page{max-width:980px;margin:0 auto;padding:var(--sp-48) var(--sp-24) var(--sp-60)}
+  h1{margin:0 0 var(--sp-6);font-size:var(--fs-26)}
+  .lead{color:var(--gray6);font-size:var(--fs-16);margin:0 0 32px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:var(--sp-16)}
+  a.card{display:block;background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);padding:var(--sp-20) var(--sp-20);
+    text-decoration:none;color:inherit;transition:.12s}
+  a.card:hover{border-color:var(--blue);box-shadow:0 4px 16px rgba(0,0,0,.07);transform:translateY(-1px)}
+  a.card h3{margin:0 0 var(--sp-6);font-size:var(--fs-16)}
+  a.card p{margin:0;font-size:var(--fs-14);color:var(--gray6);line-height:1.55}
+  a.card .who{display:inline-block;margin-top:10px;font-size:var(--fs-12);font-weight:700;letter-spacing:.04em;
+    text-transform:uppercase;background:var(--gray1);color:var(--gray6);border-radius:var(--r-4);padding:var(--sp-4) var(--sp-8)}
+  .note{margin-top:34px;background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);padding:var(--sp-16) var(--sp-20);font-size:var(--fs-14);color:var(--gray7)}
+  .note b{display:block;margin-bottom:6px;color:var(--gray9)}
+  .note ul{margin:var(--sp-8) 0 0;padding-left:18px} .note li{margin-bottom:4px}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Мокапы интерфейсов FS-LMS 2.0</h1>
+  <p class="lead">Кликабельные прототипы ключевых экранов. Спецификация — в <code>03-design.md</code>, раздел 4.</p>
+
+  <div class="grid">
+    <a class="card" href="10-home.html">
+      <h3>Главная</h3>
+      <p>Строка дня и счётчики-переходы, «Требует внимания» с конкретными задачами, расписание на день и неделю, ученики с провалами. Два вида: преподаватель и методист — переключатель ролей в шапке.</p>
+      <span class="who">Преподаватель / методист · §3.1</span>
+    </a>
+    <a class="card" href="01-course-builder.html">
+      <h3>Конструктор курса</h3>
+      <p>Дерево разделов и уроков, полоса шагов с лимитом 20, отметки скопированного контента, редактор в стиле Дзена, автосохранение.</p>
+      <span class="who">Методист · §4.1</span>
+    </a>
+    <a class="card" href="13-work-builder.html">
+      <h3>Конструктор работы</h3>
+      <p>Один конструктор на все виды: режим проведения (в плеере / с таймером / ЕГЭ) задаёт вендор и переключает настройки, тип работы — «тег» школы для журнала и отчётности.</p>
+      <span class="who">Методист · §4.9</span>
+    </a>
+    <a class="card" href="14-task-bank.html">
+      <h3>Банк задач</h3>
+      <p>Список с фильтрами по предмету, проверке, сложности, номеру ЕГЭ и автору; у каждой задачи видно, где она используется. Массовые действия, импорт и экспорт.</p>
+      <span class="who">Методист · §4.9</span>
+    </a>
+    <a class="card" href="15-task-editor.html">
+      <h3>Конструктор задачи</h3>
+      <p>Условие в редакторе §1.4, тип ответа списком (базовые и модульные), эталон под тип, критерии для ручной проверки, темы из справочника и блок «где используется».</p>
+      <span class="who">Методист · §4.9</span>
+    </a>
+    <a class="card" href="12-exam.html">
+      <h3>Экзамен</h3>
+      <p>Прихожая с условиями, полноэкранный режим с липким таймером и панелью заданий, поведение при обрыве связи и при нуле на таймере, два вида результата.</p>
+      <span class="who">Ученик · §4.6</span>
+    </a>
+    <a class="card" href="11-student-home.html">
+      <h3>Главная ученика</h3>
+      <p>Приветствие, «Продолжить обучение» с последним шагом, расписание с кнопкой «Подключиться», список «Что сделать» со сроками и возвратами на доработку, свои результаты.</p>
+      <span class="who">Ученик · §3.7</span>
+    </a>
+    <a class="card" href="02-player.html">
+      <h3>Плеер курса</h3>
+      <p>Свёрнутое дерево, блокировка обязательным шагом, лонгрид с липким оглавлением, работа с панелью заданий. Три режима: ученик, предпросмотр, педагог.</p>
+      <span class="who">Ученик · §4.2</span>
+    </a>
+    <a class="card" href="03-ktp.html">
+      <h3>КТП и расписание</h3>
+      <p>Темы курса и календарь занятий, «Распределить», перетаскивание, перенос и отмена, доп. занятия, публикация со сводкой.</p>
+      <span class="who">Методист · §4.3</span>
+    </a>
+    <a class="card" href="04-journal.html">
+      <h3>Журнал</h3>
+      <p>Сетка «ученики × занятия» с подколонками работ, ввод посещаемости с клавиатуры, баллы только для чтения, закреплённые итоги.</p>
+      <span class="who">Преподаватель · §4.4</span>
+    </a>
+    <a class="card" href="05-review.html">
+      <h3>Проверка работ</h3>
+      <p>Очередь по всем группам, карточка-страница с вкладками «Ответ / Эталон», оценивание по критериям, режим «подряд».</p>
+      <span class="who">Преподаватель · §4.5</span>
+    </a>
+    <a class="card" href="08-lesson.html">
+      <h3>Урок по группе</h3>
+      <p>Одна таблица: слева ученик, у него строка шагов урока и по строке на каждую работу — клетками её задания. Внизу — доля справившихся по каждой клетке.</p>
+      <span class="who">Преподаватель · §4.12</span>
+    </a>
+    <a class="card" href="09-work.html">
+      <h3>Работа по группе</h3>
+      <p>Ученики × задания работы, подсказка с ответом ученика и верным ответом, средний балл и статусы сдач. Разбор всей работы — в модуле ручной проверки.</p>
+      <span class="who">Преподаватель · §4.13</span>
+    </a>
+    <a class="card" href="07-student.html">
+      <h3>Сводка по ученику</h3>
+      <p>Карточка ученика с доступом в систему, шесть показателей всегда на виду и три вкладки: посещаемость с лентой занятий, работы, прогресс по шагам уроков.</p>
+      <span class="who">Преподаватель · §4.11</span>
+    </a>
+    <a class="card" href="06-individual.html">
+      <h3>Индивидуальные занятия · Расписание</h3>
+      <p>Недельная сетка по рабочему времени, планирование у методиста и просмотр у преподавателя — переключатель ролей в шапке.</p>
+      <span class="who">Методист / преподаватель · §4.10</span>
+    </a>
+  </div>
+
+  <div class="note">
+    <b>Как читать мокапы</b>
+    <ul>
+      <li>Открывать в обычном браузере — во встроенных панелях предпросмотра JS не выполняется.</li>
+      <li>Демо-переключатели (роль, режим) подписаны словом «демо» — в продукте их нет: вид определяется правами.</li>
+      <li>Данные вымышленные; действия показывают тосты вместо реальных запросов.</li>
+      <li>Общий каркас и переменные — в <code>_shared.css</code>: высота шапки, карточка пользователя, палитра, кнопки, оверлеи.</li>
+      <li>Иконки и цвета типов шагов — в <code>_icons.js</code> (<code>stepIcon</code>, <code>stepName</code>, <code>stepColor</code>): один набор на конструктор, плеер, сводку по ученику и урок.</li>
+    </ul>
+  </div>
+</div>
+</body>
+</html>

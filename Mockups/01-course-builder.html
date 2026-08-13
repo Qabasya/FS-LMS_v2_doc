@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Конструктор курса — FS-LMS 2.0</title>
+<link rel="stylesheet" href="_shared.css">
+<script src="_icons.js"></script>
+<style>
+  .work{flex:1;display:flex;min-height:0}
+  .tree{width:290px;flex:none;background:#fff;border-right:1px solid var(--gray2);display:flex;flex-direction:column}
+  .tree-h{padding:var(--sp-12) var(--sp-16);border-bottom:1px solid var(--gray2);display:flex;justify-content:space-between;align-items:center}
+  .tree-h b{font-size:var(--fs-12);letter-spacing:.05em;text-transform:uppercase;color:var(--gray6)}
+  .tree-h span{font-size:var(--fs-12);color:var(--gray5)}
+  .tree-body{flex:1;overflow:auto;padding:var(--sp-8)}
+  .sec-h{display:flex;gap:var(--sp-8);align-items:center;padding:var(--sp-8) var(--sp-8);border-radius:var(--r-6);font-weight:600;font-size:var(--fs-14);color:var(--gray7)}
+  .grip{color:var(--gray5);cursor:grab;font-size:var(--fs-12)}
+  .les{display:flex;gap:var(--sp-8);align-items:center;padding:var(--sp-8) var(--sp-8) var(--sp-8) var(--sp-24);border-radius:var(--r-6);font-size:var(--fs-14);color:var(--gray7);cursor:pointer}
+  .les:hover{background:var(--gray1)}
+  .les.on{background:var(--blue-l);color:var(--blue);font-weight:600}
+  .les .num{color:var(--gray5);font-size:var(--fs-12);min-width:24px}
+  .les .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .les.is-hidden .nm{color:var(--gray5);text-decoration:line-through;text-decoration-color:var(--gray3)}
+  .cnt2{font-size:var(--fs-12);color:var(--gray6);background:var(--gray1);border-radius:var(--r-8);padding:var(--sp-4) var(--sp-8)}
+  .les.on .cnt2{background:#fff}
+  .warn-dot{width:17px;height:17px;border-radius:50%;background:var(--red);color:#fff;font-size:var(--fs-12);font-weight:700;display:grid;place-items:center;flex:none}
+  .hidden-eye{color:var(--gray5);display:flex;flex:none}
+  .tree-f{border-top:1px solid var(--gray2);padding:var(--sp-12);display:flex;gap:var(--sp-8)}
+  .tree-f .btn{flex:1;text-align:center}
+
+  .canvas{flex:1;overflow:auto;min-width:0}
+  .pane{max-width:1560px;margin:0 auto;padding:var(--sp-20) var(--sp-32) var(--user-h)}
+  .lesson-h{display:flex;align-items:center;gap:var(--sp-12);margin-bottom:4px}
+  .lesson-h h2{margin:0;font-size:var(--fs-22)}
+  .menu-wrap{position:relative}
+  .menu{position:absolute;right:0;top:36px;background:#fff;border:1px solid var(--gray2);border-radius:var(--r);
+    box-shadow:0 6px 20px rgba(0,0,0,.12);padding:var(--sp-6);width:270px;z-index:30;display:none}
+  .menu.open{display:block}
+  .menu button{display:flex;gap:var(--sp-12);width:100%;border:0;background:none;text-align:left;padding:var(--sp-8) var(--sp-12);border-radius:var(--r-6);font-size:var(--fs-14);color:var(--gray7)}
+  .menu button:hover{background:var(--gray1)}
+  .menu hr{border:0;border-top:1px solid var(--gray2);margin:var(--sp-6) var(--sp-4)}
+
+  .note{display:flex;gap:var(--sp-12);align-items:flex-start;background:var(--red-l);border:1px solid #ffc9c9;border-radius:var(--r);
+    padding:var(--sp-12) var(--sp-12);margin:var(--sp-12) 0 var(--sp-6);font-size:var(--fs-14);color:#c92a2a}
+  .note.hide{display:none}
+  .note b{display:block}
+
+  .sec-label{font-size:var(--fs-12);letter-spacing:.06em;text-transform:uppercase;color:var(--gray5);font-weight:600;
+    margin:var(--sp-20) 0 var(--sp-8);display:flex;align-items:center;gap:var(--sp-12)}
+  .limit{font-size:var(--fs-12);color:var(--gray6);letter-spacing:0;text-transform:none;font-weight:400}
+  .limit.near{color:#d9480f;font-weight:600}
+
+  /* полоса шагов: один режим, плотная посадка — 20 шагов в строку (§4.1) */
+  .steps{display:flex;flex-wrap:wrap;gap:var(--sp-6);align-items:flex-start}
+  .step{width:62px;border:0;background:none;padding:0;text-align:center;position:relative}
+  /* плитка типа шага (§4.1): цвет — по типу, иконка белая, номер в углу */
+  .step .box{width:52px;height:52px;margin:0 auto;border-radius:var(--r-12);display:grid;place-items:center;position:relative;color:#fff}
+  .step .n{position:absolute;top:3px;left:6px;font-size:var(--fs-12);opacity:.8;font-weight:700}
+  .step.on .box{outline:3px solid var(--blue);outline-offset:2px}
+  .step .cap{display:block;margin-top:6px;font-size:var(--fs-12);color:var(--gray7);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .step.on .cap{color:var(--blue);font-weight:600}
+  .step .flag{position:absolute;top:-4px;right:4px;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;
+    font-size:var(--fs-12);font-weight:700;display:grid;place-items:center;border:2px solid #fff}
+  .t-text{background:var(--blue)} .t-video{background:var(--violet)} .t-task{background:var(--green)}
+  .t-work{background:var(--orange)} .t-exam{background:var(--red)} .t-live{background:var(--teal)}
+  .add{width:52px;height:52px;margin:0 auto;border:2px dashed var(--gray3);border-radius:var(--r-12);display:grid;place-items:center;
+    color:var(--gray6);font-size:var(--fs-22);background:#fff}
+  .add:hover{border-color:var(--blue);color:var(--blue)}
+
+  .step-bar{display:flex;align-items:center;gap:var(--sp-12);margin:var(--sp-16) 0 0;padding:var(--sp-12);background:#fff;border:1px solid var(--gray2);border-radius:var(--r)}
+  .chip{display:inline-flex;gap:var(--sp-8);align-items:center;background:var(--gray1);border-radius:var(--r-6);padding:var(--sp-6) var(--sp-12);font-size:var(--fs-14);font-weight:600;color:var(--gray7)}
+  .step-bar input[type=text]{flex:1;min-width:120px}
+  .sw{display:flex;gap:var(--sp-8);align-items:center;font-size:var(--fs-14);color:var(--gray7);white-space:nowrap}
+
+  /* редактор в стиле Дзена (§1.4) */
+  .editor{margin-top:14px;background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);padding:var(--sp-32) var(--sp-40) var(--sp-60);min-height:340px;position:relative}
+  .editor h3{font-size:var(--fs-26);margin:0 0 var(--sp-16)}
+  .editor p{margin:0 0 var(--sp-16);font-size:var(--fs-16);line-height:1.7;color:#2b2b2b}
+  .ph{color:var(--gray5)}
+  .bubble{position:absolute;display:none;background:#fff;border:1px solid var(--gray2);border-radius:var(--r-8);
+    box-shadow:0 8px 24px rgba(0,0,0,.14);padding:var(--sp-6);gap:var(--sp-4);z-index:40}
+  .bubble.show{display:flex}
+  .bubble button{border:0;background:none;width:32px;height:30px;border-radius:var(--r-6);color:var(--gray7);font-size:var(--fs-14)}
+  .bubble button:hover{background:var(--gray1)}
+  .hint{margin-top:10px;font-size:var(--fs-12);color:var(--gray6);display:flex;gap:var(--sp-6);align-items:center}
+  kbd{background:var(--gray1);border:1px solid var(--gray3);border-bottom-width:2px;border-radius:var(--r-4);padding:var(--sp-4) var(--sp-6);font-size:var(--fs-12);font-family:inherit}
+
+  .pop{position:fixed;background:#fff;border:1px solid var(--gray2);border-radius:var(--r);box-shadow:0 8px 24px rgba(0,0,0,.14);
+    padding:var(--sp-6);width:240px;z-index:50;display:none}
+  .pop.open{display:block}
+  .pop button{display:flex;gap:var(--sp-12);align-items:center;width:100%;border:0;background:none;padding:var(--sp-8) var(--sp-12);border-radius:var(--r-6);
+    font-size:var(--fs-14);color:var(--gray7);text-align:left}
+  .pop button:hover{background:var(--gray1)}
+  .dot{width:26px;height:26px;border-radius:var(--r-6);display:grid;place-items:center;color:#fff;flex:none}
+  .pop h5{margin:var(--sp-6) var(--sp-8);font-size:var(--fs-12);letter-spacing:.05em;text-transform:uppercase;color:var(--gray5)}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-top">
+      <div class="logo">ШБ</div>
+      <div style="flex:1"><b>Шаг в будущее</b><small>Управление</small></div>
+      <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')" title="Свернуть меню">⟨</button>
+    </div>
+    <div class="switch"><button>Обучение</button><button class="on">Управление</button></div>
+    <nav class="nav">
+      <h4>Моя работа</h4>
+      <a href="#"><i class="ic">◱</i><span>Главная</span></a>
+      <a href="04-journal.html"><i class="ic">▦</i><span>Журнал</span></a>
+      <a href="03-ktp.html"><i class="ic">▤</i><span>КТП и расписание</span></a>
+      <a href="07-student.html#pick"><i class="ic">◉</i><span>Группы</span></a>
+      <a href="08-lesson.html#pick"><i class="ic">▤</i><span>Уроки</span></a>
+      <a href="09-work.html#pick"><i class="ic">✎</i><span>Работы</span></a>
+      <a href="05-review.html"><i class="ic">✓</i><span>Проверка</span></a>
+      <a href="06-individual.html"><i class="ic">◷</i><span>Индивидуальные занятия</span></a>
+      <h4>Обучение</h4>
+      <a href="#" class="on"><i class="ic">◈</i><span>Курсы</span></a>
+      <a href="#"><i class="ic">✎</i><span>Работы и экзамены</span></a>
+      <a href="#"><i class="ic">?</i><span>Банк задач</span></a>
+      <h4>Настройки</h4>
+      <a href="#"><i class="ic">⚙</i><span>Предметы</span></a>
+    </nav>
+    <div class="side-user">
+      <div class="ava">КМ</div>
+      <div style="flex:1"><b style="font-size:var(--fs-14);display:block">Кэбс М.</b><small style="font-size:var(--fs-12);color:var(--gray6)">Методист</small></div>
+      <span style="color:var(--gray5)">⚙</span>
+    </div>
+  </aside>
+
+  <div class="app">
+    <header class="head">
+      <div>
+        <div class="crumbs">Обучение · Курсы · Информатика</div>
+        <h1>Информатика ЕГЭ — базовый</h1>
+      </div>
+      <span class="badge b-draft" id="courseStatus">Черновик</span>
+      <div class="sp"></div>
+      <span class="muted" id="savedNote">Сохранено</span>
+      <button class="btn">Предпросмотр</button>
+      <button class="btn btn-p" onclick="compose()">Проверить и составить</button>
+    </header>
+
+    <div class="work">
+      <div class="tree">
+        <div class="tree-h"><b>Структура курса</b><span>2 раздела · 5 уроков</span></div>
+        <div class="tree-body" id="treeBody"></div>
+        <div class="tree-f"><button class="btn">+ Урок</button><button class="btn">+ Раздел</button></div>
+      </div>
+
+      <div class="canvas">
+        <div class="pane">
+          <div class="lesson-h">
+            <h2 id="lessonTitle">Системы счисления</h2>
+            <span class="badge b-ok" id="lessonState">Готов</span>
+            <div class="sp"></div>
+            <div class="menu-wrap">
+              <button class="btn btn-s" onclick="toggleMenu(event)">⋯</button>
+              <div class="menu" id="lessonMenu">
+                <button onclick="act('Урок продублирован — шаги помечены «контент не обновлён»')">⧉ &nbsp;Дублировать урок</button>
+                <button onclick="act('Открыт выбор курса для копирования')">↗ &nbsp;Скопировать в другой курс…</button>
+                <button onclick="act('Раздел скопирован в другой курс')">▤ &nbsp;Скопировать раздел…</button>
+                <hr>
+                <button onclick="toggleHidden()">◍ &nbsp;Скрыть / показать урок</button>
+                <button class="btn-danger" onclick="act('Урок убран из курса — данные сохранены')">✕ &nbsp;Убрать из курса</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="note" id="copyNote">
+            <span>❗</span>
+            <div style="flex:1">
+              <b>Скопированный контент: <span id="pendingCount">5</span> шагов не обновлено</b>
+              Отметка снимется сама, когда вы отредактируете содержимое шага.
+            </div>
+            <button class="btn btn-s" onclick="markAllDone()">Отметить все готовыми</button>
+          </div>
+
+          <div class="sec-label">Шаги <span id="limitNote" class="limit">12 из 20</span></div>
+          <div class="steps" id="stepsRow"></div>
+
+          <div class="step-bar">
+            <span class="chip" id="stepChip">Шаг 1 · Текст</span>
+            <input type="text" id="stepName" value="Позиционные системы счисления" oninput="autosave()">
+            <label class="sw"><input type="checkbox" checked> Обязательный</label>
+            <button class="btn btn-s" onclick="act('Шаг продублирован')">⧉ Дублировать</button>
+            <button class="btn btn-s" onclick="act('Шаг скрыт — прогресс сохранён')">✕</button>
+          </div>
+
+          <div class="editor" id="editor">
+            <div class="bubble" id="bubble">
+              <button title="Заголовок 2">H2</button><button title="Заголовок 3">H3</button>
+              <button title="Жирный"><b>B</b></button><button title="Курсив"><i>i</i></button>
+              <button title="Зачёркнутый"><s>S</s></button><button title="Список">≡</button>
+              <button title="Цитата">❝</button><button title="Ссылка">🔗</button>
+            </div>
+            <h3>Позиционные системы счисления</h3>
+            <p>Выделите этот текст мышью — над выделением появится панель форматирования, как в Дзене. Постоянной панели-«простыни» нет: чистый лист, пишете текст, форматирование под рукой.</p>
+            <p>Поддерживаются хоткеи и markdown на лету: <kbd>##</kbd> превращает строку в заголовок, <kbd>-</kbd> начинает список, <kbd>&gt;</kbd> — цитату.</p>
+            <p class="ph">Пустая строка — нажмите «/» для вставки изображения, таблицы, формулы или файла…</p>
+            <div class="hint">💡 <span>Один и тот же редактор — в лекциях, условиях задач, описаниях карточек и статьях блога.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="pop" id="typePop">
+  <h5>Базовые</h5>
+  <button onclick="addStep('text','Текст')"><span class="dot" data-t="text"></span>Текст (лекция)</button>
+  <button onclick="addStep('video','Видео')"><span class="dot" data-t="video"></span>Видео по ссылке</button>
+  <button onclick="addStep('task','Задача')"><span class="dot" data-t="task"></span>Задача из банка</button>
+  <button onclick="addStep('work','Работа')"><span class="dot" data-t="work"></span>Работа</button>
+  <button onclick="addStep('exam','Экзамен')"><span class="dot" data-t="exam"></span>Экзамен</button>
+  <h5>Модули</h5>
+  <button onclick="addStep('live','Трансляция')"><span class="dot" data-t="live"></span>Трансляция <small style="color:var(--gray5)">· S3</small></button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var LIMIT = 20;
+var lessons = [
+  {sec:'1. Введение', num:'1.1', name:'Системы счисления', pending:0, hidden:false, steps:[
+    ['text','Лекция'],['video','Видео'],['task','Задача'],['task','Задача'],['task','Задача'],
+    ['task','Задача'],['task','Задача'],['work','Практика'],['text','Разбор'],['task','Задача'],
+    ['task','Задача'],['exam','Проверочная']], copied:[]},
+  {sec:'1. Введение', num:'1.2', name:'Кодирование информации', pending:5, hidden:false, steps:[
+    ['text','Лекция'],['video','Видео'],['task','Задача'],['task','Задача'],['task','Задача'],
+    ['work','Практика'],['exam','Проверочная']], copied:[2,3,4,5,6]},
+  {sec:'1. Введение', num:'1.3', name:'Логика', pending:0, hidden:true, steps:[
+    ['text','Лекция'],['task','Задача'],['task','Задача'],['work','Практика']], copied:[]},
+  {sec:'2. Алгоритмизация', num:'2.1', name:'Основы алгоритмов', pending:0, hidden:false, steps:[
+    ['text','Лекция'],['live','Трансляция'],['task','Задача'],['task','Задача'],['work','Практика'],['exam','Экзамен']], copied:[]},
+  {sec:'2. Алгоритмизация', num:'2.2', name:'Циклы', pending:0, hidden:false, steps:[
+    ['text','Лекция'],['task','Задача'],['task','Задача'],['task','Задача'],['work','Практика']], copied:[]}
+];
+var cur = 0, curStep = 0;
+var EYE = '<span class="hidden-eye" title="Урок скрыт от учеников"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17.9 17.9A10.1 10.1 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.1-5.9M9.9 4.2A9.1 9.1 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.2 3.2m-6.7-1.1a3 3 0 1 1-4.2-4.2"/><line x1="1" y1="1" x2="23" y2="23"/></svg></span>';
+
+function renderTree(){
+  var html = '', lastSec = null;
+  lessons.forEach(function(l,i){
+    if(l.sec !== lastSec){ lastSec = l.sec;
+      html += '<div class="sec"><div class="sec-h"><span class="grip">⠿</span>'+l.sec+'</div>'; }
+    html += '<div class="les '+(i===cur?'on':'')+' '+(l.hidden?'is-hidden':'')+'" onclick="pick('+i+')">' +
+      '<span class="grip">⠿</span><span class="num">'+l.num+'</span>' +
+      '<span class="nm">'+l.name+'</span>' +
+      (l.hidden?EYE:'') +
+      (l.pending?'<span class="warn-dot" title="'+l.pending+' шагов не обновлено">!</span>':'') +
+      '<span class="cnt2">'+l.steps.length+'</span></div>';
+  });
+  document.getElementById('treeBody').innerHTML = html + '</div>';
+}
+function renderSteps(){
+  var l = lessons[cur], html = '';
+  l.steps.forEach(function(s,i){
+    var flagged = l.copied.indexOf(i) >= 0;
+    html += '<button class="step '+(i===curStep?'on':'')+'" onclick="pickStep('+i+')" title="'+stepName(s[0])+'">' +
+      '<span class="box" style="background:'+stepColor(s[0])+'"><span class="n">'+(i+1)+'</span>' +
+      stepIcon(s[0], 26, true)+'</span>' +
+      (flagged?'<span class="flag">!</span>':'') +
+      '<span class="cap" title="'+s[1]+'">'+s[1]+'</span></button>';
+  });
+  html += '<button class="step" onclick="openTypes(event)"><span class="add">+</span><span class="cap">Добавить</span></button>';
+  document.getElementById('stepsRow').innerHTML = html;
+
+  var n = l.steps.length, lim = document.getElementById('limitNote');
+  lim.textContent = n + ' из ' + LIMIT;
+  lim.className = 'limit' + (n >= LIMIT-2 ? ' near' : '');
+
+  var s = l.steps[curStep] || l.steps[0];
+  document.getElementById('stepChip').textContent = 'Шаг ' + (curStep+1) + ' · ' + stepName(s[0]);
+  document.getElementById('stepName').value = s[1];
+  document.getElementById('lessonTitle').textContent = l.name;
+
+  var note = document.getElementById('copyNote');
+  if(l.pending){ note.classList.remove('hide'); document.getElementById('pendingCount').textContent = l.pending; }
+  else note.classList.add('hide');
+
+  var st = document.getElementById('lessonState');
+  st.textContent = l.hidden ? 'Скрыт' : (l.pending ? 'Требует правки' : 'Готов');
+  st.className = 'badge ' + (l.hidden ? 'b-draft' : (l.pending ? 'b-warn' : 'b-ok'));
+}
+function pick(i){ cur = i; curStep = 0; renderTree(); renderSteps(); }
+function pickStep(i){
+  var l = lessons[cur], k = l.copied.indexOf(i);
+  if(k >= 0){ l.copied.splice(k,1); l.pending--; toast('Отметка «контент не обновлён» снята'); autosave(); renderTree(); }
+  curStep = i; renderSteps();
+}
+function markAllDone(){ var l = lessons[cur]; l.copied = []; l.pending = 0; renderTree(); renderSteps(); autosave();
+  toast('Все шаги отмечены готовыми'); }
+function toggleHidden(){
+  var l = lessons[cur]; l.hidden = !l.hidden;
+  document.getElementById('lessonMenu').classList.remove('open');
+  renderTree(); renderSteps(); autosave();
+  toast(l.hidden ? 'Урок скрыт от учеников — данные и прогресс сохранены' : 'Урок снова виден ученикам');
+}
+function addStep(type,name){
+  var l = lessons[cur];
+  document.getElementById('typePop').classList.remove('open');
+  if(l.steps.length >= LIMIT){ toast('Достигнут предел: 20 шагов в уроке'); return; }
+  l.steps.push([type,name]); curStep = l.steps.length-1; renderTree(); renderSteps(); autosave();
+}
+function openTypes(e){
+  e.stopPropagation();
+  var p = document.getElementById('typePop'), r = e.currentTarget.getBoundingClientRect();
+  p.style.left = Math.min(r.left, innerWidth-256) + 'px';
+  p.style.top = Math.min(r.bottom + 8, innerHeight - 320) + 'px';
+  p.classList.toggle('open');
+}
+function toggleMenu(e){ e.stopPropagation(); document.getElementById('lessonMenu').classList.toggle('open'); }
+function act(msg){ document.getElementById('lessonMenu').classList.remove('open'); autosave(); toast(msg); }
+function compose(){
+  var pend = lessons.reduce(function(a,l){ return a + l.pending; }, 0);
+  if(pend){ toast('Проверка: ' + pend + ' скопированных шагов не обновлено — можно продолжить'); return; }
+  var b = document.getElementById('courseStatus');
+  b.textContent = 'Составлен'; b.className = 'badge b-ok';
+  toast('Курс составлен — можно назначать группам');
+}
+var st;
+function autosave(){
+  var n = document.getElementById('savedNote');
+  n.textContent = 'Сохранение…'; clearTimeout(st);
+  st = setTimeout(function(){ n.textContent = 'Сохранено'; }, 700);
+}
+var tt;
+function toast(m){ var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3400); }
+
+document.addEventListener('click', function(){
+  document.getElementById('lessonMenu').classList.remove('open');
+  document.getElementById('typePop').classList.remove('open');
+});
+document.addEventListener('selectionchange', function(){
+  var sel = document.getSelection(), b = document.getElementById('bubble');
+  if(!sel.rangeCount || sel.isCollapsed){ b.classList.remove('show'); return; }
+  var r = sel.getRangeAt(0), ed = document.getElementById('editor');
+  if(!ed.contains(r.commonAncestorContainer)){ b.classList.remove('show'); return; }
+  var rect = r.getBoundingClientRect(), er = ed.getBoundingClientRect();
+  b.style.left = Math.max(8, rect.left - er.left + rect.width/2 - 140) + 'px';
+  b.style.top = Math.max(4, rect.top - er.top - 46) + 'px';
+  b.classList.add('show');
+});
+/* иконки типов в поповере «+» */
+[].forEach.call(document.querySelectorAll('.dot[data-t]'), function(el){
+  var t = el.getAttribute('data-t');
+  el.style.background = stepColor(t);
+  el.innerHTML = stepIcon(t, 16, true);
+});
+renderTree(); renderSteps();
+</script>
+</body>
+</html>

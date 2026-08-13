@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Главная — FS-LMS 2.0</title>
+<link rel="stylesheet" href="_shared.css">
+<script src="_icons.js"></script>
+<script src="_tip.js"></script>
+<style>
+  .body{flex:1;overflow:auto;padding:var(--sp-16) var(--sp-20) var(--user-h)}
+  .card{background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);box-shadow:var(--sh)}
+
+  .day{display:flex;align-items:baseline;gap:var(--sp-12);flex-wrap:wrap;margin-bottom:var(--sp-16)}
+  .day h2{margin:0;font-size:var(--fs-16)}
+  .day .sub{color:var(--gray6);font-size:var(--fs-14)}
+  .day .sub b{color:var(--gray9)}
+
+  /* счётчики-навигация: набор зависит от прав, порядок — от приоритета блока */
+  .tiles{display:grid;gap:var(--sp-12);margin-bottom:var(--sp-12)}
+  .tile{padding:var(--sp-16);display:flex;flex-direction:column;gap:var(--sp-4);text-align:left;
+    border:1px solid var(--gray2);background:#fff;border-radius:var(--r-12);box-shadow:var(--sh);cursor:pointer}
+  .tile:hover{border-color:var(--blue)}
+  .tile .lab{display:flex;align-items:center;gap:var(--sp-8);font-size:var(--fs-12);color:var(--gray6);font-weight:600}
+  .tile .ic-b{width:24px;height:24px;border-radius:var(--r-6);display:grid;place-items:center;font-size:var(--fs-12);flex:none}
+  .tile .big{font-size:var(--fs-26);font-weight:700;line-height:1.2}
+  .tile .sub{font-size:var(--fs-12);color:var(--gray6)}
+  .tile.warn .big{color:#d9480f}
+  .tile.ok .big{color:var(--gray5)}
+
+  /* блоки: широкий занимает строку целиком, обычные встают по два */
+  .blocks{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-12);align-items:start}
+  .blk{margin:0}
+  .blk.wide{grid-column:1 / -1}
+  .sec-h{display:flex;align-items:center;gap:var(--sp-12);padding:var(--sp-12) var(--sp-16);
+    border-bottom:1px solid var(--gray2);flex-wrap:wrap}
+  .sec-h h3{margin:0;font-size:var(--fs-14)}
+  .sec-h .cnt{font-size:var(--fs-12);font-weight:700;background:var(--gray1);color:var(--gray6);
+    border-radius:var(--r-8);padding:var(--sp-4) var(--sp-8)}
+  .sec-h .cnt.red{background:var(--red-l);color:#c92a2a}
+  .sec-h .scope{font-size:var(--fs-12);color:var(--violet);font-weight:600}
+
+  .row{display:flex;gap:var(--sp-12);align-items:center;padding:var(--sp-12) var(--sp-16);border-top:1px solid var(--gray1)}
+  .row:first-of-type{border-top:0}
+  .row:hover{background:var(--gray0)}
+  .row .mark{width:32px;height:32px;border-radius:var(--r-8);display:grid;place-items:center;font-size:var(--fs-14);flex:none}
+  .m-att{background:var(--orange-l);color:#d9480f}
+  .m-rev{background:var(--blue-l);color:#1864ab}
+  .m-due{background:var(--red-l);color:#c92a2a}
+  .m-stu{background:var(--violet-l);color:#5f3dc4}
+  .m-doc{background:var(--teal-l);color:#0b7285}
+  .m-pay{background:var(--gray1);color:var(--gray7)}
+  .row .body-t{flex:1;min-width:0}
+  .row b{font-size:var(--fs-14);font-weight:600;display:block}
+  .row .sub{font-size:var(--fs-12);color:var(--gray6);margin-top:2px}
+  .row .act{flex:none}
+  .who{color:var(--violet);font-weight:600}
+
+  /* расписание */
+  .modes{display:flex;gap:var(--sp-4);background:var(--gray1);padding:var(--sp-4);border-radius:var(--r-8);font-size:var(--fs-12)}
+  .modes button{border:0;background:none;padding:var(--sp-4) var(--sp-12);border-radius:var(--r-6);color:var(--gray6)}
+  .modes button.on{background:#fff;box-shadow:var(--sh);color:var(--gray9);font-weight:600}
+  .les{display:flex;gap:var(--sp-12);padding:var(--sp-12) var(--sp-16);border-top:1px solid var(--gray1)}
+  .les:first-of-type{border-top:0}
+  .les:hover{background:var(--gray0)}
+  .les .time{width:var(--col-92);flex:none;font-size:var(--fs-12);color:var(--gray7);font-variant-numeric:tabular-nums}
+  .les .time b{display:block;font-size:var(--fs-14)}
+  .les .line{width:3px;border-radius:2px;background:var(--blue);flex:none}
+  .les.ind .line{background:var(--violet)}
+  .les .info{flex:1;min-width:0}
+  .les .info b{font-size:var(--fs-14);display:block}
+  .les .info .sub{font-size:var(--fs-12);color:var(--gray6);margin-top:2px}
+  .les .acts{display:flex;gap:var(--sp-6);margin-top:var(--sp-8);flex-wrap:wrap}
+  .les.now{background:var(--blue-l)}
+  .now-b{display:inline-block;font-size:var(--fs-12);font-weight:700;color:var(--blue);margin-left:var(--sp-8)}
+  .wk{display:grid;grid-template-columns:repeat(7,1fr)}
+  .wk-d{border-left:1px solid var(--gray1);min-height:132px;padding:var(--sp-8)}
+  .wk-d:first-child{border-left:0}
+  .wk-d.today{background:var(--blue-l)}
+  .wk-h{font-size:var(--fs-12);color:var(--gray6);font-weight:600;margin-bottom:var(--sp-8);text-align:center}
+  .wk-h b{display:block;font-size:var(--fs-14);color:var(--gray9)}
+  .wk-ev{display:block;width:100%;text-align:left;border:0;border-left:3px solid var(--blue);background:var(--gray0);
+    border-radius:var(--r-4);padding:var(--sp-4) var(--sp-6);margin-bottom:var(--sp-4);font-size:var(--fs-12);line-height:1.35}
+  .wk-ev.ind{border-left-color:var(--violet)}
+  .wk-ev b{display:block;font-variant-numeric:tabular-nums}
+  .wk-ev span{color:var(--gray6);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .wk-none{font-size:var(--fs-12);color:var(--gray5);text-align:center;padding-top:var(--sp-12)}
+
+  /* метрики внутри блока */
+  .met{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--gray2)}
+  .met .cell{background:#fff;padding:var(--sp-8) var(--sp-12)}
+  .met .lab{font-size:var(--fs-12);color:var(--gray6);font-weight:600}
+  .met .v{display:flex;align-items:baseline;gap:var(--sp-6);margin-top:2px}
+  .met .big{font-size:var(--fs-22);font-weight:700;line-height:1.15}
+  .met .sub{font-size:var(--fs-12);color:var(--gray6)}
+  .bad{color:#c92a2a} .mid{color:#d9480f} .good{color:#2b8a3e}
+
+  .empty{padding:var(--sp-32) var(--sp-16);text-align:center;color:var(--gray6);font-size:var(--fs-14)}
+  .empty b{display:block;color:var(--gray9);margin-bottom:var(--sp-4)}
+  .demo{display:flex;align-items:center;gap:var(--sp-6);font-size:var(--fs-12);color:var(--gray6)}
+
+  @media (max-width:1200px){ .blocks{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-top">
+      <div class="logo">ШБ</div>
+      <div style="flex:1"><b>Шаг в будущее</b><small>Управление</small></div>
+      <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')">⟨</button>
+    </div>
+    <div class="switch"><button>Обучение</button><button class="on">Управление</button></div>
+    <nav class="nav" id="nav"></nav>
+    <div class="side-user">
+      <div class="ava" id="userAva">УИ</div>
+      <div style="flex:1"><b style="font-size:var(--fs-14);display:block" id="userName">Училков И.</b>
+        <small style="font-size:var(--fs-12);color:var(--gray6)" id="userRole">Преподаватель</small></div>
+      <span style="color:var(--gray5)">⚙</span>
+    </div>
+  </aside>
+
+  <div class="app">
+    <header class="head">
+      <h1>Главная</h1>
+      <div class="sp"></div>
+      <label class="demo">роль <i>(демо)</i>
+        <select id="role" onchange="render()" style="padding:var(--sp-4) var(--sp-8);font-size:var(--fs-12)">
+          <option value="teacher">Преподаватель</option>
+          <option value="method">Методист</option>
+          <option value="edu">Адм. учебной части</option>
+          <option value="fin">Финансовый администратор</option>
+          <option value="owner">Владелец</option>
+          <option value="custom">Кастомная роль «Куратор набора»</option>
+        </select></label>
+      <label class="demo">день <i>(демо)</i>
+        <select id="dayMode" onchange="render()" style="padding:var(--sp-4) var(--sp-8);font-size:var(--fs-12)">
+          <option value="full">с занятиями</option>
+          <option value="empty">без занятий</option>
+        </select></label>
+      <label class="demo"><input type="checkbox" id="mod" checked onchange="render()"> модуль ручной проверки <i>(демо)</i></label>
+      <span style="color:var(--gray5)">🔔</span>
+    </header>
+
+    <div class="body">
+      <div class="day">
+        <h2 id="dayTitle">Вторник, 12 августа</h2>
+        <span class="sub" id="daySub">—</span>
+      </div>
+      <div class="tiles" id="tiles"></div>
+      <div class="blocks" id="blocks"></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   Главная собирается из блоков по ПРАВАМ, а не по названию роли.
+   Роль здесь — только демонстрационный набор прав; добавление роли или
+   переименование существующей не требует ни строчки в этом файле.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+var ME = 'Училков И. С.';
+
+/* демо-роли = наборы прав. read_all включает сводное представление блоков */
+var ROLES = {
+  teacher: {name:'Училков И.',  ava:'УИ', role:'Преподаватель',
+            perms:['conduct','attendance','review','courses.own']},
+  method:  {name:'Методова М.', ava:'ММ', role:'Методист',
+            perms:['supervise','plan','review','courses.edit','conduct']},
+  edu:     {name:'Учебникова А.', ava:'УА', role:'Адм. учебной части',
+            perms:['admission','groups','schedule.plan','read_all']},
+  fin:     {name:'Счётова Л.',  ava:'СЛ', role:'Финансовый администратор',
+            perms:['finance','read_all']},
+  owner:   {name:'Владельцев О.', ava:'ВО', role:'Владелец',
+            perms:['org','finance','admission','groups','supervise','review','read_all']},
+  custom:  {name:'Кураторов К.', ava:'КК', role:'Куратор набора',
+            perms:['review','students.watch']}
+};
+var P = [];                                   /* права текущего пользователя */
+function can(p){ return P.indexOf(p) >= 0; }
+function all(){ return can('read_all'); }     /* область «вся школа» → сводный вид */
+
+/* ── меню: пункт знает своё право и свою группу; порядок групп фиксирован ── */
+var MENU = [
+  {g:'Моя работа', t:'Главная',     ic:'◱', href:'#', on:true, perm:null},
+  {g:'Моя работа', t:'Расписание',  ic:'◷', href:'06-individual.html', perm:'conduct'},
+  {g:'Моя работа', t:'Журнал',      ic:'▦', href:'04-journal.html', perm:'attendance'},
+  {g:'Моя работа', t:'Группы',      ic:'◉', href:'07-student.html#pick', perm:'conduct|supervise|groups'},
+  {g:'Моя работа', t:'Уроки',       ic:'▤', href:'08-lesson.html#pick', perm:'conduct|supervise'},
+  {g:'Моя работа', t:'Работы',      ic:'✎', href:'09-work.html#pick', perm:'conduct|supervise|review'},
+  {g:'Моя работа', t:'Проверка',    ic:'✓', href:'05-review.html', perm:'review', mod:true, cnt:7},
+  {g:'Моя работа', t:'КТП и расписание', ic:'▤', href:'03-ktp.html', perm:'plan|schedule.plan'},
+  {g:'Обучение',   t:'Мои курсы',   ic:'◈', href:'02-player.html', perm:'courses.own'},
+  {g:'Обучение',   t:'Курсы',       ic:'◈', href:'01-course-builder.html', perm:'courses.edit'},
+  {g:'Люди',       t:'Ученики',     ic:'◉', href:'#', perm:'admission|groups'},
+  {g:'Люди',       t:'Приём',       ic:'✎', href:'#', perm:'admission'},
+  {g:'Люди',       t:'Сотрудники и роли', ic:'⚙', href:'#', perm:'org'},
+  {g:'Финансы',    t:'Лицевые счета', ic:'₽', href:'#', perm:'finance'},
+  {g:'Финансы',    t:'Операции',    ic:'₽', href:'#', perm:'finance'},
+  {g:'Настройки',  t:'Предметы и периоды', ic:'⚙', href:'#', perm:'groups|org'}
+];
+function permOk(p){
+  if(!p) return true;
+  return p.split('|').some(function(x){ return can(x); });
+}
+
+/* ── данные (демо) ── */
+var TODAY = [
+  {t1:'15:00', t2:'16:30', grp:'МЕГЭ-1 · Математика', room:'каб. 315', topic:'Квадратные уравнения',
+   kind:'g', state:'now', teacher:ME},
+  {t1:'16:00', t2:'17:30', grp:'ИНФ-2 · Информатика', room:'каб. 210', topic:'Списки и словари',
+   kind:'g', state:'next', teacher:'Петрова А. В.', other:true},
+  {t1:'17:00', t2:'18:30', grp:'ОГЭ-1 · Информатика', room:'трансляция', topic:'Циклы и массивы',
+   kind:'g', state:'next', live:true, teacher:ME},
+  {t1:'18:00', t2:'19:30', grp:'ЕГЭ-3 · Физика', room:'каб. 118', topic:'Электростатика',
+   kind:'g', state:'next', teacher:'Сидоров П. Н.', other:true},
+  {t1:'19:00', t2:'19:45', grp:'Абрамов Кирилл', room:'каб. 302', topic:'Отработка: линейные уравнения',
+   kind:'i', state:'next', teacher:ME}
+];
+var WEEK = [
+  {d:'Пн', n:'11', items:[{t:'15:00', grp:'МЕГЭ-1', kind:'g', teacher:ME},
+    {t:'16:00', grp:'ИНФ-2', kind:'g', teacher:'Петрова А. В.', other:true}]},
+  {d:'Вт', n:'12', today:true, items:[{t:'15:00', grp:'МЕГЭ-1', kind:'g', teacher:ME},
+    {t:'16:00', grp:'ИНФ-2', kind:'g', teacher:'Петрова А. В.', other:true},
+    {t:'17:00', grp:'ОГЭ-1', kind:'g', teacher:ME},
+    {t:'19:00', grp:'Абрамов К.', kind:'i', teacher:ME}]},
+  {d:'Ср', n:'13', items:[{t:'15:00', grp:'МЕГЭ-1', kind:'g', teacher:ME},
+    {t:'18:00', grp:'ЕГЭ-3', kind:'g', teacher:'Сидоров П. Н.', other:true}]},
+  {d:'Чт', n:'14', items:[{t:'16:00', grp:'ИНФ-2', kind:'g', teacher:'Петрова А. В.', other:true}]},
+  {d:'Пт', n:'15', items:[{t:'15:00', grp:'МЕГЭ-1', kind:'g', teacher:ME},
+    {t:'18:00', grp:'Волков А.', kind:'i', teacher:ME}]},
+  {d:'Сб', n:'16', items:[{t:'11:00', grp:'ОГЭ-1', kind:'g', teacher:ME}]},
+  {d:'Вс', n:'17', items:[]}
+];
+var STUDENTS = [
+  {n:'Волков Артём', g:'ОГЭ-1', teacher:ME, why:'3 пропуска подряд', det:'последнее занятие — 05.08', bad:true},
+  {n:'Жуков Матвей', g:'МЕГЭ-1', teacher:ME, why:'застрял на обязательном шаге', det:'урок «Системы уравнений»', bad:true},
+  {n:'Смирнов Егор', g:'ИНФ-2', teacher:'Петрова А. В.', other:true, why:'4 пропуска подряд', det:'последнее занятие — 01.08', bad:true},
+  {n:'Кузнецова София', g:'МЕГЭ-1', teacher:ME, why:'не сдала КР', det:'дедлайн прошёл 3 дня назад'},
+  {n:'Ильин Роман', g:'ОГЭ-1', teacher:ME, why:'2 работы на доработке', det:'больше недели без сдачи'}
+];
+var schMode = 'day';
+
+/* ═══ КАТАЛОГ БЛОКОВ ═══
+   у каждого — требуемое право, приоритет (меньше = выше) и ширина.
+   prio: 10 — просрочено и висит · 20 — сегодняшняя операционка · 30 — метрики.
+   Исключение одно: у того, кто сам ведёт занятия, день начинается с расписания —
+   у него оно поднимается наверх; администратору расписание нужно справочно. */
+
+var BLOCKS = [
+  /* ── то, что висит ───────────────────────────────────────────── */
+  {id:'attention', perm:'attendance|review|supervise', prio:10, wide:false, render:function(){
+    var t = [], sup = can('supervise') && !can('attendance');
+    if(can('attendance') || can('supervise')){
+      t.push({m:'m-att', ic:'▦', ttl:(sup?'<span class="who">Училков И. С.</span> · ':'')+'Заполнить посещаемость · ОГЭ-1',
+        sub:'вчера, 11.08, 17:00 · «Массивы» · 12 учеников', act:sup?'Отправить уведомление':'Заполнить', href:'04-journal.html'});
+      /* чужая группа попадает в список только тому, кто видит чужие: методисту и школьным ролям */
+      if(sup || all()) t.push({m:'m-att', ic:'▦', ttl:'<span class="who">Петрова А. В.</span> · Заполнить посещаемость · ИНФ-2',
+        sub:'09.08, 16:00 · «Функции» · 14 учеников', act:'Отправить уведомление', href:'04-journal.html'});
+    }
+    if(can('review') && MOD) t.push({m:'m-rev', ic:'✓',
+      ttl:(all()?'34 работы ждут проверки по школе':'7 работ ждут проверки'),
+      sub:all()?'5 просрочены · дольше всех у Петровой А. В.':'2 просрочены · самая старая сдана 3 дня назад',
+      act:sup||all()?'Посмотреть':'Проверять подряд', href:'05-review.html'});
+    if(can('conduct')) t.push({m:'m-due', ic:'⏱', ttl:'Дедлайн сегодня · ДЗ «Степени и корни»',
+      sub:'МЕГЭ-1 · до 23:59 · не сдали 4 из 10', act:'Открыть работу', href:'09-work.html'});
+    return card('Требует внимания', t.length, 'red', rows(t), all() ? 'по школе' : '');
+  }},
+
+  {id:'admission', perm:'admission', prio:10, wide:false, render:function(){
+    var t = [
+      {m:'m-doc', ic:'✎', ttl:'3 заявки на зачисление', sub:'из них 1 старше двух дней · МЕГЭ-2, ОГЭ-1', act:'Открыть', href:'#'},
+      {m:'m-doc', ic:'✎', ttl:'2 договора без подписи', sub:'модуль ЭДО · отправлены 08.08', act:'Открыть', href:'#'},
+      {m:'m-att', ic:'!', ttl:'Конфликт расписания', sub:'каб. 315 — МЕГЭ-1 и ЕГЭ-3 в четверг 15:00', act:'Разобрать', href:'03-ktp.html'}
+    ];
+    return card('Приём и зачисление', t.length, 'red', rows(t), 'по школе');
+  }},
+
+  {id:'debts', perm:'finance', prio:10, wide:false, render:function(){
+    var t = [
+      {m:'m-pay', ic:'₽', ttl:'12 должников · 148 500 ₽', sub:'из них 3 просрочены больше месяца', act:'Открыть', href:'#'},
+      {m:'m-pay', ic:'₽', ttl:'4 неоплаченных заказа с витрины', sub:'оформлены вчера · 26 000 ₽', act:'Открыть', href:'#'},
+      {m:'m-pay', ic:'↺', ttl:'2 возврата в работе', sub:'заявления от 07.08 и 09.08', act:'Открыть', href:'#'}
+    ];
+    return card('Деньги: что висит', t.length, 'red', rows(t), 'по школе');
+  }},
+
+  /* ── сегодняшняя операционка ─────────────────────────────────── */
+  {id:'schedule', perm:'conduct|schedule.plan|org', prio:function(){ return can('conduct') ? 5 : 20; },
+   wide:true, render:function(){
+    var sup = !can('conduct') || all();
+    var today = EMPTY ? [] : TODAY.filter(function(l){ return sup || !l.other; });
+    var head = '<div class="sec-h"><h3>Расписание</h3>' +
+      '<span class="muted" style="font-size:var(--fs-12)" id="schSum"></span>' +
+      (sup ? '<span class="scope">по школе</span>' : '') +
+      '<div style="flex:1"></div><div class="modes" id="schMode">' +
+      '<button class="'+(schMode==='day'?'on':'')+'" onclick="setSch(\'day\',this)">День</button>' +
+      '<button class="'+(schMode==='week'?'on':'')+'" onclick="setSch(\'week\',this)">Неделя</button></div></div>';
+    var body;
+    if(schMode === 'week'){
+      body = '<div class="wk">' + WEEK.map(function(d){
+        var items = ((d.today && EMPTY) ? [] : d.items).filter(function(e){ return sup || !e.other; });
+        return '<div class="wk-d'+(d.today?' today':'')+'"><div class="wk-h">'+d.d+'<b>'+d.n+'</b></div>' +
+          (items.length ? items.map(function(e){
+            return '<button class="wk-ev '+(e.kind==='i'?'ind':'')+'" onclick="toast(\'Занятие: '+e.grp+'\')">' +
+              '<b>'+e.t+'</b><span>'+e.grp+'</span>' + (sup ? '<span class="who">'+e.teacher+'</span>' : '') + '</button>';
+          }).join('') : '<div class="wk-none">—</div>') + '</div>';
+      }).join('') + '</div>';
+    } else {
+      body = today.length ? today.map(function(l){ return lesRow(l, sup); }).join('')
+        : '<div class="empty"><b>Сегодня занятий нет</b>Есть время разобрать проверку и долги по журналам</div>';
+    }
+    return '<div class="card blk wide">' + head + body + '</div>';
+  }},
+
+  /* ── метрики ─────────────────────────────────────────────────── */
+  {id:'students', perm:'conduct|supervise|students.watch', prio:12, wide:false, render:function(){
+    var sup = can('supervise') || all();
+    var list = STUDENTS.filter(function(s){ return sup || !s.other; });
+    return card('Ученики, требующие внимания', list.length, '', list.map(function(s){
+      return '<div class="row"><span class="mark m-stu">'+s.n.split(' ').map(function(w){ return w[0]; }).join('')+'</span>' +
+        '<span class="body-t"><b>'+s.n+' <span class="muted" style="font-weight:400;font-size:var(--fs-12)">· ' +
+        (sup ? s.teacher + ' · ' : '') + s.g+'</span></b>' +
+        '<span class="sub"><span class="'+(s.bad?'bad':'mid')+'">'+s.why+'</span> · '+s.det+'</span></span>' +
+        '<span class="act"><button class="btn btn-s" onclick="location.href=\'07-student.html\'">Сводка</button></span></div>';
+    }).join(''), sup ? 'по школе' : '');
+  }},
+
+  {id:'groups', perm:'groups', prio:30, wide:false, render:function(){
+    return card('Группы', '', '', met([
+      ['Недобор до старта', '2', 'bad', 'МЕГЭ-2, ЕГЭ-1'],
+      ['Заполнено', '86%', 'good', '124 из 144 мест'],
+      ['Стартуют на неделе', '3', '', 'ближайший — 15.08'],
+      ['Периоды', '1', 'mid', 'заканчивается 31.08']
+    ]), 'по школе');
+  }},
+
+  {id:'money', perm:'finance', prio:30, wide:false, render:function(){
+    return card('Деньги: цифры месяца', '', '', met([
+      ['Собрано за август', '1,24 млн ₽', 'good', '82% плана'],
+      ['Платежей сегодня', '9', '', '68 400 ₽'],
+      ['Дебиторка', '148 500 ₽', 'bad', '12 человек'],
+      ['Начисления завтра', '6 групп', '', 'поурочная схема']
+    ]), 'по школе');
+  }},
+
+  {id:'org', perm:'org', prio:15, wide:false, render:function(){
+    return card('Школа сегодня', '', '', met([
+      ['Активных учеников', '148', '', 'порог тарифа — 200'],
+      ['Посещаемость', '88%', 'good', 'за неделю'],
+      ['Работы на проверке', '34', 'mid', '5 просрочены'],
+      ['Обращения к вендору', '1', '', 'в работе с 09.08']
+    ]), 'по школе');
+  }}
+];
+
+/* ── сборка ── */
+var MOD = true, EMPTY = false;
+
+function card(title, cnt, cls, body, scope){
+  return '<div class="card blk"><div class="sec-h"><h3>'+title+'</h3>' +
+    (cnt !== '' && cnt !== undefined ? '<span class="cnt '+(cls||'')+'">'+cnt+'</span>' : '') +
+    (scope ? '<span class="scope">'+scope+'</span>' : '') +
+    '</div>' + (body || '<div class="empty">Пусто</div>') + '</div>';
+}
+function rows(list){
+  return list.map(function(t){
+    return '<div class="row"><span class="mark '+t.m+'">'+t.ic+'</span>' +
+      '<span class="body-t"><b>'+t.ttl+'</b><span class="sub">'+t.sub+'</span></span>' +
+      '<span class="act"><button class="btn btn-s" onclick="location.href=\''+t.href+'\'">'+t.act+'</button></span></div>';
+  }).join('');
+}
+function met(cells){
+  return '<div class="met">' + cells.map(function(c){
+    return '<div class="cell"><div class="lab">'+c[0]+'</div>' +
+      '<div class="v"><span class="big '+c[2]+'">'+c[1]+'</span><span class="sub">'+c[3]+'</span></div></div>';
+  }).join('') + '</div>';
+}
+function lesRow(l, sup){
+  var now = l.state === 'now';
+  return '<div class="'+['les', l.kind==='i'?'ind':'', now?'now':''].join(' ')+'">' +
+    '<span class="time"><b>'+l.t1+'</b>'+l.t2+'</span><span class="line"></span>' +
+    '<span class="info"><b>'+l.grp+(now?'<span class="now-b">идёт сейчас</span>':'')+'</b>' +
+    '<span class="sub">'+(sup ? '<span class="who">'+l.teacher+'</span> · ' : '') +
+      (l.kind==='i'?'индивидуальное · ':'')+l.room+' · '+l.topic+'</span>' +
+    '<span class="acts">' +
+      (l.live && !sup ? '<button class="btn btn-s btn-p" onclick="toast(\'Подключение к трансляции\')">Подключиться</button>' : '') +
+      '<button class="btn btn-s" onclick="location.href=\''+(l.kind==='i'?'07-student.html':'04-journal.html')+'\'">' +
+        (l.kind==='i' ? 'Сводка ученика' : 'Журнал') + '</button>' +
+      (sup ? '' : '<button class="btn btn-s" onclick="location.href=\'02-player.html\'">Материалы урока</button>') +
+    '</span></span></div>';
+}
+
+/* счётчики — те же правила: право → плитка */
+function tiles(){
+  var t = [], today = EMPTY ? [] : TODAY.filter(function(l){ return all() || !l.other; });
+  if(can('conduct') || can('org')) t.push({lab:'Занятий сегодня', ic:'◷', bg:'var(--blue-l)', c:'var(--blue)',
+    big:all() ? 18 : today.length, sub:all() ? 'по школе' : (today.length ? 'ближайшее в ' + today[0].t1 : 'свободный день'),
+    href:'06-individual.html', cls:today.length ? '' : 'ok'});
+  if(can('review') && MOD) t.push({lab:'На проверке', ic:'✓', bg:'var(--green-l)', c:'#2b8a3e',
+    big:all() ? 34 : (can('supervise') ? 12 : 7), sub:all() ? '5 просрочены · по школе' : '2 просрочены',
+    href:'05-review.html', cls:'warn'});
+  if(can('attendance') || can('supervise')) t.push({lab:'Не заполнено', ic:'!', bg:'var(--orange-l)', c:'#d9480f',
+    big:can('supervise') ? 3 : 2, sub:'журнала посещаемости', href:'04-journal.html', cls:'warn'});
+  if(can('admission')) t.push({lab:'Заявки на зачисление', ic:'✎', bg:'var(--teal-l)', c:'#0b7285',
+    big:3, sub:'1 старше двух дней', href:'#', cls:'warn'});
+  if(can('finance')) t.push({lab:'Задолженность', ic:'₽', bg:'var(--red-l)', c:'#c92a2a',
+    big:'148 500 ₽', sub:'12 человек', href:'#', cls:'warn'});
+  if(can('org')) t.push({lab:'Активных учеников', ic:'◉', bg:'var(--violet-l)', c:'#5f3dc4',
+    big:148, sub:'порог тарифа — 200', href:'#', cls:''});
+  return t;
+}
+
+function render(){
+  var r = ROLES[document.getElementById('role').value];
+  P = r.perms;
+  MOD = document.getElementById('mod').checked;
+  EMPTY = document.getElementById('dayMode').value === 'empty';
+
+  document.getElementById('userName').textContent = r.name;
+  document.getElementById('userRole').textContent = r.role;
+  document.getElementById('userAva').textContent = r.ava;
+
+  /* меню собирается из прав; группа пункта задана заранее, порядок групп фиксирован */
+  var groups = ['Моя работа','Обучение','Люди','Финансы','Настройки'], nav = '';
+  groups.forEach(function(g){
+    var items = MENU.filter(function(m){ return m.g === g && permOk(m.perm) && (!m.mod || MOD); });
+    if(!items.length) return;
+    nav += '<h4>'+g+'</h4>' + items.map(function(m){
+      return '<a href="'+m.href+'"'+(m.on?' class="on"':'')+'><i class="ic">'+m.ic+'</i><span>'+m.t+'</span>' +
+        (m.cnt ? '<span class="cnt">'+m.cnt+'</span>' : '') + '</a>';
+    }).join('');
+  });
+  document.getElementById('nav').innerHTML = nav;
+
+  /* строка дня */
+  var today = EMPTY ? [] : TODAY.filter(function(l){ return all() || !l.other; });
+  document.getElementById('daySub').innerHTML = can('conduct') || can('org')
+    ? (today.length ? '<b>' + today.length + ' занятия</b> · ближайшее в <b>' + today[0].t1 + '</b>'
+                    : 'занятий нет — свободный день')
+    : (all() ? 'сводка по школе' : 'ваша рабочая сводка');
+
+  /* плитки */
+  var tl = tiles();
+  document.getElementById('tiles').innerHTML = tl.map(function(t){
+    return '<button class="tile '+(t.cls||'')+'" onclick="location.href=\''+t.href+'\'">' +
+      '<span class="lab"><span class="ic-b" style="background:'+t.bg+';color:'+t.c+'">'+t.ic+'</span>'+t.lab+'</span>' +
+      '<span class="big">'+t.big+'</span><span class="sub">'+t.sub+'</span></button>';
+  }).join('');
+  /* одна-две плитки не должны растягиваться во всю ширину, больше четырёх — переносим */
+  var cols = tl.length <= 2 ? 3 : Math.min(tl.length, 4);
+  document.getElementById('tiles').style.gridTemplateColumns = 'repeat(' + cols + ',1fr)';
+
+  /* блоки: фильтр по правам, сортировка по приоритету */
+  var pr = function(b){ return typeof b.prio === 'function' ? b.prio() : b.prio; };
+  var vis = BLOCKS.filter(function(b){ return permOk(b.perm); })
+                  .sort(function(a, b){ return pr(a) - pr(b); });
+  document.getElementById('blocks').innerHTML = vis.length
+    ? vis.map(function(b){ return b.render(); }).join('')
+    : fallback();
+
+  var sum = document.getElementById('schSum');
+  if(sum) sum.textContent = schMode === 'week' ? 'неделя 11–17 августа' : 'вторник, 12 августа';
+}
+
+/* запасной блок: прав мало, ни один блок не выпал — показываем, куда идти */
+function fallback(){
+  var items = MENU.filter(function(m){ return m.perm && permOk(m.perm); });
+  return '<div class="card blk wide"><div class="sec-h"><h3>Ваши разделы</h3></div>' +
+    (items.length ? items.map(function(m){
+      return '<div class="row"><span class="mark m-stu">'+m.ic+'</span>' +
+        '<span class="body-t"><b>'+m.t+'</b><span class="sub">'+m.g+'</span></span>' +
+        '<span class="act"><button class="btn btn-s" onclick="location.href=\''+m.href+'\'">Открыть</button></span></div>';
+    }).join('') : '<div class="empty"><b>Разделы не назначены</b>Обратитесь к администратору школы</div>') + '</div>';
+}
+
+function setSch(m, el){ schMode = m; render(); }
+var tt;
+function toast(m){ var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3200); }
+render();
+</script>
+</body>
+</html>

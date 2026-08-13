@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Конструктор задачи — FS-LMS 2.0</title>
+<link rel="stylesheet" href="_shared.css">
+<script src="_tip.js"></script>
+<style>
+  .work{flex:1;display:flex;min-height:0}
+  .main{flex:1;min-width:0;overflow:auto;padding:var(--sp-16) var(--sp-20) var(--user-h)}
+  .props{width:340px;flex:none;background:#fff;border-left:1px solid var(--gray2);overflow:auto;
+    padding:var(--sp-16) var(--sp-20) var(--user-h)}
+  .card{background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);box-shadow:var(--sh);margin-bottom:var(--sp-12)}
+  .sec-h{display:flex;align-items:center;gap:var(--sp-12);padding:var(--sp-12) var(--sp-16);
+    border-bottom:1px solid var(--gray2);flex-wrap:wrap}
+  .sec-h h3{margin:0;font-size:var(--fs-14)}
+  .sec-b{padding:var(--sp-16)}
+
+  /* условие — тот же редактор, что и в конструкторе курса (§1.4) */
+  .editor{min-height:150px;border:1px solid var(--gray3);border-radius:var(--r-8);padding:var(--sp-12) var(--sp-16);
+    font-size:var(--fs-16);line-height:1.7}
+  .editor:focus{outline:2px solid var(--blue);outline-offset:-1px}
+  .etools{display:flex;gap:var(--sp-4);margin-bottom:var(--sp-8);flex-wrap:wrap}
+  .etools button{border:1px solid var(--gray2);background:#fff;border-radius:var(--r-6);
+    padding:var(--sp-4) var(--sp-8);font-size:var(--fs-12);color:var(--gray7)}
+  .etools button:hover{background:var(--gray1)}
+  .files{display:flex;gap:var(--sp-8);flex-wrap:wrap;margin-top:var(--sp-12)}
+  .file{display:flex;gap:var(--sp-8);align-items:center;border:1px solid var(--gray2);border-radius:var(--r-8);
+    padding:var(--sp-6) var(--sp-12);font-size:var(--fs-12)}
+  .file .ext{width:26px;height:26px;border-radius:var(--r-6);background:var(--blue-l);color:var(--blue);
+    display:grid;place-items:center;font-size:var(--fs-12);font-weight:700}
+
+  /* тип ответа — от него зависит блок эталона */
+  .kinds{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-8)}
+  .kind{border:1px solid var(--gray2);background:#fff;border-radius:var(--r-8);padding:var(--sp-12);text-align:left;cursor:pointer}
+  .kind:hover{border-color:var(--blue)}
+  .kind.on{border-color:var(--blue);background:var(--blue-l)}
+  .kind b{display:block;font-size:var(--fs-14);margin-bottom:2px}
+  .kind span{font-size:var(--fs-12);color:var(--gray6);line-height:1.4;display:block}
+  .kind.mod{border-style:dashed}
+
+  .fld{margin-bottom:var(--sp-16)}
+  .fld label{display:block;font-size:var(--fs-12);color:var(--gray6);font-weight:600;margin-bottom:var(--sp-6)}
+  .fld input[type=text], .fld input[type=number], .fld select, .fld textarea{width:100%;border:1px solid var(--gray3);
+    border-radius:var(--r-8);padding:var(--sp-8) var(--sp-12);font:inherit;font-size:var(--fs-14)}
+  .fld textarea{min-height:90px;resize:vertical}
+  .fld .hint{font-size:var(--fs-12);color:var(--gray6);margin-top:var(--sp-6);line-height:1.45}
+  .sw{display:flex;gap:var(--sp-8);align-items:flex-start;font-size:var(--fs-14);margin-bottom:var(--sp-8)}
+  .sw .t{flex:1}
+  .sw .t .hint{font-size:var(--fs-12);color:var(--gray6);margin-top:2px}
+  .group{border-top:1px solid var(--gray2);margin-top:var(--sp-16);padding-top:var(--sp-16)}
+  .group h4{margin:0 0 var(--sp-12);font-size:var(--fs-12);color:var(--gray6);text-transform:uppercase;letter-spacing:.05em}
+
+  /* варианты ответа */
+  .opt{display:flex;gap:var(--sp-8);align-items:center;margin-bottom:var(--sp-8)}
+  .opt input[type=text]{flex:1;border:1px solid var(--gray3);border-radius:var(--r-8);padding:var(--sp-8) var(--sp-12);font:inherit;font-size:var(--fs-14)}
+  .opt .del{border:0;background:none;color:var(--gray5);padding:var(--sp-4)}
+  .opt .del:hover{color:var(--red)}
+  .opt .ok{font-size:var(--fs-12);color:var(--gray6);display:flex;gap:var(--sp-6);align-items:center;white-space:nowrap}
+
+  /* критерии для ручной проверки */
+  .crit{display:grid;grid-template-columns:1fr 72px 32px;gap:var(--sp-8);align-items:center;margin-bottom:var(--sp-8)}
+  .crit input{border:1px solid var(--gray3);border-radius:var(--r-8);padding:var(--sp-8);font:inherit;font-size:var(--fs-14)}
+  .crit input.pt{text-align:center}
+
+  /* где используется — главный предохранитель ссылочной модели */
+  .use{display:flex;gap:var(--sp-8);align-items:center;padding:var(--sp-8) 0;border-top:1px solid var(--gray1);font-size:var(--fs-14)}
+  .use:first-of-type{border-top:0}
+  .use .tag{font-size:var(--fs-12);padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4);background:var(--gray1);color:var(--gray6)}
+  .warnbox{background:var(--orange-l);border:1px solid #ffd8a8;color:#d9480f;border-radius:var(--r-8);
+    padding:var(--sp-8) var(--sp-12);font-size:var(--fs-12);margin-bottom:var(--sp-12)}
+  .terms{display:flex;gap:var(--sp-6);flex-wrap:wrap;margin-bottom:var(--sp-8)}
+  .term{display:inline-flex;align-items:center;gap:var(--sp-6);background:var(--gray1);color:var(--gray7);
+    border-radius:var(--r-pill);padding:var(--sp-4) var(--sp-8);font-size:var(--fs-12)}
+  .term button{border:0;background:none;color:var(--gray5);padding:0 0 0 var(--sp-4);font-size:var(--fs-12)}
+  .term button:hover{color:var(--red)}
+  .tree-pick{max-height:280px;overflow:auto;border:1px solid var(--gray2);border-radius:var(--r-8);padding:var(--sp-8)}
+  .tp{display:block;width:100%;text-align:left;border:0;background:none;padding:var(--sp-6) var(--sp-8);
+    border-radius:var(--r-6);font-size:var(--fs-14);color:var(--gray7)}
+  .tp:hover{background:var(--gray1)}
+  .tp.lvl1{padding-left:var(--sp-24)} .tp.lvl2{padding-left:var(--sp-40)}
+  .tp.sec{color:var(--gray5);font-size:var(--fs-12);text-transform:uppercase;letter-spacing:.05em;cursor:default}
+  .tp.sec:hover{background:none}
+  .tp.on{background:var(--blue-l);color:var(--blue);font-weight:600}
+  .near{background:var(--yellow-l);border:1px solid #ffe8a1;border-radius:var(--r-8);
+    padding:var(--sp-8) var(--sp-12);font-size:var(--fs-12);margin-top:var(--sp-8);display:none}
+  .near.on{display:block}
+  .demo{display:flex;align-items:center;gap:var(--sp-6);font-size:var(--fs-12);color:var(--gray6)}
+  @media (max-width:1150px){ .work{flex-direction:column} .props{width:auto;border-left:0;border-top:1px solid var(--gray2)} }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-top">
+      <div class="logo">ШБ</div>
+      <div style="flex:1"><b>Шаг в будущее</b><small>Управление</small></div>
+      <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')">⟨</button>
+    </div>
+    <div class="switch"><button>Обучение</button><button class="on">Управление</button></div>
+    <nav class="nav">
+      <h4>Моя работа</h4>
+      <a href="10-home.html"><i class="ic">◱</i><span>Главная</span></a>
+      <a href="03-ktp.html"><i class="ic">▤</i><span>КТП и расписание</span></a>
+      <h4>Обучение</h4>
+      <a href="01-course-builder.html"><i class="ic">◈</i><span>Курсы</span></a>
+      <a href="13-work-builder.html"><i class="ic">✎</i><span>Работы и экзамены</span></a>
+      <a href="14-task-bank.html" class="on"><i class="ic">?</i><span>Банк задач</span></a>
+      <a href="#"><i class="ic">⚖</i><span>Шкалы оценивания</span></a>
+      <a href="#"><i class="ic">⚙</i><span>Типы работ</span></a>
+    </nav>
+    <div class="side-user">
+      <div class="ava">ММ</div>
+      <div style="flex:1"><b style="font-size:var(--fs-14);display:block">Методова М.</b><small style="font-size:var(--fs-12);color:var(--gray6)">Методист</small></div>
+      <span style="color:var(--gray5)">⚙</span>
+    </div>
+  </aside>
+
+  <div class="app">
+    <header class="head">
+      <div>
+        <div class="crumbs">Обучение · Банк задач</div>
+        <h1>Задача · Системы уравнений</h1>
+      </div>
+      <span class="badge b-info" id="usedBadge">используется в 5 местах</span>
+      <div class="sp"></div>
+      <a class="btn" href="14-task-bank.html" style="text-decoration:none">К банку</a>
+      <button class="btn" onclick="toast('Сохранено копией — ссылки в других работах остались на исходной задаче')">Сохранить копией</button>
+      <button class="btn btn-p" onclick="save()">Сохранить</button>
+    </header>
+
+    <div class="work">
+      <div class="main">
+        <div class="card">
+          <div class="sec-h"><h3>Условие</h3>
+            <div style="flex:1"></div>
+            <span class="muted" style="font-size:var(--fs-12)">тот же редактор, что в конструкторе курса</span></div>
+          <div class="sec-b">
+            <div class="etools">
+              <button onclick="toast('Полужирный')">Ж</button>
+              <button onclick="toast('Курсив')"><i>К</i></button>
+              <button onclick="toast('Формула — редактор LaTeX')">∑ формула</button>
+              <button onclick="toast('Вставка изображения')">Изображение</button>
+              <button onclick="toast('Вставка таблицы')">Таблица</button>
+              <button onclick="toast('Вставка кода')">Код</button>
+            </div>
+            <div class="editor" contenteditable="true">Решите систему уравнений и опишите ход решения: x + y = 7, x·y = 12</div>
+            <div class="files">
+              <div class="file"><span class="ext">PNG</span><span>chart-1.png · 240 КБ</span></div>
+              <button class="btn btn-s" onclick="toast('Файл прикреплён к условию')">+ Файл к условию</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="sec-h"><h3>Как отвечает ученик</h3></div>
+          <div class="sec-b">
+            <div class="fld" style="max-width:420px;margin-bottom:var(--sp-12)">
+              <label>Тип ответа</label>
+              <select id="kindSel" onchange="setKind(this.value)"></select>
+              <div class="hint" id="kindHint"></div>
+            </div>
+            <div id="answerBox"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="sec-h"><h3>Разбор</h3>
+            <div style="flex:1"></div>
+            <span class="muted" style="font-size:var(--fs-12)">показывается ученику после сдачи, преподавателю — всегда</span></div>
+          <div class="sec-b">
+            <div class="fld" style="margin:0">
+              <textarea placeholder="Ход решения, типичные ошибки, на что обратить внимание">Выражаем x = 7 − y, подставляем во второе уравнение: (7 − y)·y = 12 → y² − 7y + 12 = 0 → y = 3 и y = 4. Обратной подстановкой получаем пары (4; 3) и (3; 4).</textarea>
+              <div class="hint">Частая ошибка — потерять вторую пару решений.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="props">
+        <div class="fld">
+          <label>Предмет</label>
+          <select><option>Математика</option><option>Информатика</option><option>Физика</option></select>
+          <div class="hint">Определяет, кто из методистов может править задачу.</div>
+        </div>
+        <div class="fld">
+          <label>Темы</label>
+          <div class="terms" id="terms"></div>
+          <button class="btn btn-s" onclick="openPick()">+ Тема из справочника</button>
+          <div class="hint">Дерево тем ведёт методист предмета в справочнике. Свободного ввода нет: иначе появятся «уравнения», «Уравнения» и «ур-я», по которым не собрать ни поиск, ни отчёт.</div>
+        </div>
+        <div class="fld">
+          <label>Сложность</label>
+          <select><option>простая</option><option selected>средняя</option><option>сложная</option></select>
+          <div class="hint">Шкала вендорская и одинаковая во всех школах — по ней работают подбор задач и статистика.</div>
+        </div>
+        <div class="fld">
+          <label>Номер ЕГЭ <span class="muted">· модуль</span></label>
+          <select><option>не привязана</option><option selected>№ 13</option><option>№ 14</option></select>
+          <div class="hint">Даёт разрез «статистика ученика по номерам заданий».</div>
+        </div>
+
+        <div class="group">
+          <h4>Где используется</h4>
+          <div class="warnbox">Правка условия и эталона отразится <b>во всех</b> этих местах, включая уже сданные работы. Нужен другой вариант — «Сохранить копией».</div>
+          <div class="use"><span class="tag">СР</span><span style="flex:1">Системы уравнений</span><span class="muted">задание 5</span></div>
+          <div class="use"><span class="tag">КР</span><span style="flex:1">Итоговая за раздел</span><span class="muted">задание 9</span></div>
+          <div class="use"><span class="tag">ЭКЗ</span><span style="flex:1">Экзамен по математике</span><span class="muted">задание 9</span></div>
+          <div class="use"><span class="tag">шаг</span><span style="flex:1">Урок «Системы уравнений»</span><span class="muted">шаг 4</span></div>
+          <div class="use"><span class="tag">шаг</span><span style="flex:1">Тренажёр · Системы</span><span class="muted">публичный</span></div>
+        </div>
+
+        <div class="group">
+          <h4>Публикация <span style="font-weight:400;text-transform:none;letter-spacing:0">· модуль публичных задач</span></h4>
+          <div class="sw"><input type="checkbox"><span class="t">Показывать в публичном тренажёре
+            <div class="hint">Задача попадёт в открытый каталог по своим темам — отдельной разметки для этого не нужно, тренажёр берёт ту же таксономию.</div></span></div>
+          <div class="sw"><input type="checkbox" checked><span class="t">Скрывать разбор до попытки
+            <div class="hint">Иначе решение окажется в поисковой выдаче вместе с условием.</div></span></div>
+        </div>
+
+        <div class="group">
+          <h4>Состояние</h4>
+          <div class="fld">
+            <label>Статус</label>
+            <select><option>активна</option><option>черновик</option><option>в архиве</option></select>
+            <div class="hint">Архивная задача исчезает из поиска, но остаётся в работах, где уже стоит.</div>
+          </div>
+          <div class="fld" style="margin:0">
+            <label>Автор</label>
+            <div style="font-size:var(--fs-14)">Методова М.</div>
+            <div class="hint">Системное поле: ставится при создании и не выбирается. В банке по нему есть фильтр.</div>
+          </div>
+          <div class="hint" style="margin-top:var(--sp-12)">Создана 05.08 · последняя правка сегодня</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="scrim" id="scrim" onclick="closePick()"></div>
+<div class="modal" id="mPick">
+  <div class="mo-h">Тема задачи</div>
+  <div class="mo-b">
+    <input type="text" id="tq" placeholder="Найти тему" oninput="renderPick(this.value)"
+      style="width:100%;border:1px solid var(--gray3);border-radius:var(--r-8);padding:var(--sp-8) var(--sp-12);font:inherit;font-size:var(--fs-14);margin-bottom:var(--sp-12)">
+    <div class="tree-pick" id="treePick"></div>
+    <div class="near" id="near"></div>
+    <div id="slugBox" style="display:none;margin-top:var(--sp-12)">
+      <label style="display:block;font-size:var(--fs-12);color:var(--gray6);font-weight:600;margin-bottom:var(--sp-6)">Адрес темы</label>
+      <input type="text" id="slug" readonly
+        style="width:100%;border:1px solid var(--gray3);border-radius:var(--r-8);padding:var(--sp-8) var(--sp-12);font:inherit;font-size:var(--fs-14);color:var(--gray6)">
+      <div style="font-size:var(--fs-12);color:var(--gray6);margin-top:var(--sp-6);line-height:1.45">
+        Понадобится, когда подключат публичный тренажёр: тема станет страницей каталога задач. Заполняется сама, поправить можно в справочнике.</div>
+    </div>
+    <div class="hint" style="font-size:var(--fs-12);color:var(--gray6);margin-top:var(--sp-8)">
+      Нужной темы нет — её можно добавить прямо отсюда: право есть у методиста своего предмета, преподаватель только выбирает.</div>
+  </div>
+  <div class="mo-f">
+    <button class="btn" onclick="closePick()">Отмена</button>
+    <button class="btn btn-p" id="addBtn" onclick="addTerm()" style="display:none">Добавить тему</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* Справочник тем — дерево по предмету, ведёт методист (01-product §5.4).
+   В задаче тема только выбирается: свободного ввода нет. */
+var TREE = [
+  {t:'Алгебра', lvl:0},
+  {t:'Уравнения', lvl:1}, {t:'Линейные уравнения', lvl:2}, {t:'Квадратные уравнения', lvl:2},
+  {t:'Системы уравнений', lvl:2},
+  {t:'Функции', lvl:1}, {t:'Графики функций', lvl:2}, {t:'Производная', lvl:2},
+  {t:'Геометрия', lvl:0},
+  {t:'Планиметрия', lvl:1}, {t:'Стереометрия', lvl:1},
+  {t:'Вероятность и статистика', lvl:0}
+];
+var picked = ['Системы уравнений', 'Ход решения'];
+var pickQ = '';
+
+function renderTerms(){
+  document.getElementById('terms').innerHTML = picked.length
+    ? picked.map(function(t, i){
+        return '<span class="term">'+t+'<button onclick="delTerm('+i+')">✕</button></span>';
+      }).join('')
+    : '<span class="muted" style="font-size:var(--fs-12)">тема не выбрана</span>';
+}
+function delTerm(i){ picked.splice(i, 1); renderTerms(); }
+function openPick(){ pickQ = ''; document.getElementById('tq').value = '';
+  renderPick(''); document.getElementById('scrim').classList.add('on'); document.getElementById('mPick').classList.add('on'); }
+function closePick(){ document.getElementById('scrim').classList.remove('on'); document.getElementById('mPick').classList.remove('on'); }
+function renderPick(q){
+  pickQ = (q || '').trim();
+  var low = pickQ.toLowerCase();
+  var list = TREE.filter(function(n){ return !low || n.t.toLowerCase().indexOf(low) >= 0; });
+  document.getElementById('treePick').innerHTML = list.length
+    ? list.map(function(n){
+        var on = picked.indexOf(n.t) >= 0;
+        return '<button class="tp lvl'+n.lvl+' '+(n.lvl===0?'sec ':'')+(on?'on':'')+'" ' +
+          (n.lvl === 0 ? '' : 'onclick="pickTerm(\''+n.t+'\')"') + '>'+n.t+(on?' ✓':'')+'</button>';
+      }).join('')
+    : '<div class="muted" style="padding:var(--sp-12);font-size:var(--fs-14)">Совпадений нет</div>';
+
+  /* перед созданием нового термина показываем похожие — так справочник не превращается в свалку */
+  var near = TREE.filter(function(n){
+    return n.lvl > 0 && low && n.t.toLowerCase().indexOf(low.slice(0, 4)) >= 0 && n.t.toLowerCase() !== low;
+  });
+  var box = document.getElementById('near');
+  var canAdd = pickQ && !TREE.some(function(n){ return n.t.toLowerCase() === low; });
+  document.getElementById('addBtn').style.display = canAdd ? '' : 'none';
+  document.getElementById('addBtn').textContent = 'Добавить тему «' + pickQ + '»';
+  document.getElementById('slugBox').style.display = canAdd ? '' : 'none';
+  if(canAdd) document.getElementById('slug').value = '/trainer/' + slugify(pickQ);
+  box.classList.toggle('on', canAdd && near.length > 0);
+  if(near.length) box.innerHTML = 'Похожее уже есть: <b>' + near.map(function(n){ return n.t; }).join('</b>, <b>') +
+    '</b>. Может быть, подойдёт вместо новой темы?';
+}
+/* slug термина — основа адреса публичной страницы темы (модуль публичных задач) */
+function slugify(v){
+  var map = {а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'e',ж:'zh',з:'z',и:'i',й:'y',к:'k',л:'l',м:'m',н:'n',
+    о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'h',ц:'c',ч:'ch',ш:'sh',щ:'sch',ы:'y',э:'e',ю:'yu',я:'ya',
+    ъ:'', ь:''};
+  return v.toLowerCase().split('').map(function(c){
+    return map[c] !== undefined ? map[c] : (/[a-z0-9]/.test(c) ? c : '-');
+  }).join('').replace(/-+/g, '-').replace(/^-|-$/g, '');
+}
+function pickTerm(t){
+  if(picked.indexOf(t) < 0) picked.push(t);
+  renderTerms(); closePick(); toast('Тема добавлена: ' + t);
+}
+function addTerm(){
+  TREE.push({t:pickQ, lvl:2});
+  pickTerm(pickQ);
+  toast('Тема «' + pickQ + '» добавлена в справочник предмета');
+}
+
+/* Тип ответа определяет и блок эталона, и способ проверки */
+var KINDS = [
+  {id:'num',    n:'Число',            d:'Сверяется точно, можно задать допуск'},
+  {id:'short',  n:'Короткий ответ',   d:'Строка: слово, формула, пара значений'},
+  {id:'one',    n:'Выбор одного',     d:'Варианты, верный ровно один'},
+  {id:'many',   n:'Выбор нескольких', d:'Верных несколько, засчитывается только полное совпадение'},
+  {id:'long',   n:'Развёрнутый',      d:'Проверяет преподаватель по критериям', man:true},
+  {id:'code',   n:'Код',              d:'Автотесты плюс ручная проверка', man:true, mod:'Код'},
+  {id:'match',  n:'Соответствие',     d:'Сопоставить пары: слева условие, справа ответ', mod:'ЕГЭ'},
+  {id:'order',  n:'Последовательность', d:'Расставить элементы в правильном порядке', mod:'ЕГЭ'}
+];
+var kind = 'long';
+
+function setKind(k){ kind = k; render(); toast('Тип ответа: ' + KINDS.filter(function(x){ return x.id === k; })[0].n); }
+
+function render(){
+  /* типов ответа будет много — модули добавляют свои, поэтому список, а не плитки */
+  var base = KINDS.filter(function(k){ return !k.mod; }), mods = KINDS.filter(function(k){ return k.mod; });
+  document.getElementById('kindSel').innerHTML =
+    '<optgroup label="Базовые">' + base.map(function(k){
+      return '<option value="'+k.id+'" '+(k.id===kind?'selected':'')+'>'+k.n+'</option>'; }).join('') + '</optgroup>' +
+    '<optgroup label="Из модулей">' + mods.map(function(k){
+      return '<option value="'+k.id+'" '+(k.id===kind?'selected':'')+'>'+k.n+' · '+k.mod+'</option>'; }).join('') + '</optgroup>';
+  var k = KINDS.filter(function(x){ return x.id === kind; })[0];
+  document.getElementById('kindHint').textContent = k.d + (k.mod ? ' · тип приходит с модулем «'+k.mod+'»' : '');
+
+  var b = '';
+  if(kind === 'num'){
+    b = '<div class="fld"><label>Верный ответ</label><input type="text" value="12"></div>' +
+        '<div class="fld"><label>Допуск</label><input type="text" value="0,01" placeholder="0">' +
+        '<div class="hint">Ответ засчитывается, если отличается от верного не больше чем на эту величину. Пусто — точное совпадение.</div></div>' +
+        '<div class="sw"><input type="checkbox" checked><span class="t">Принимать запятую и точку как разделитель' +
+        '<div class="hint">«0,5» и «0.5» — один и тот же ответ.</div></span></div>';
+  } else if(kind === 'short'){
+    b = '<div class="fld"><label>Верные ответы</label>' +
+        '<div class="opt"><input type="text" value="(4; 3) и (3; 4)"><button class="del" onclick="toast(\'Вариант удалён\')">✕</button></div>' +
+        '<div class="opt"><input type="text" value="(3;4) и (4;3)"><button class="del" onclick="toast(\'Вариант удалён\')">✕</button></div>' +
+        '<button class="btn btn-s" onclick="toast(\'Добавлен вариант написания\')">+ Вариант написания</button>' +
+        '<div class="hint">Любой из перечисленных считается верным — так учитываются разные записи одного ответа.</div></div>' +
+        '<div class="sw"><input type="checkbox" checked><span class="t">Не учитывать регистр и лишние пробелы</span></div>';
+  } else if(kind === 'one' || kind === 'many'){
+    var multi = kind === 'many';
+    b = '<div class="fld"><label>Варианты</label>' +
+      ['(4; 3) и (3; 4)', 'только (4; 3)', 'нет решений', 'бесконечно много решений'].map(function(o, i){
+        return '<div class="opt"><input type="'+(multi?'checkbox':'radio')+'" name="ok" '+(i===0?'checked':'')+'>' +
+          '<input type="text" value="'+o+'"><button class="del" onclick="toast(\'Вариант удалён\')">✕</button></div>';
+      }).join('') +
+      '<button class="btn btn-s" onclick="toast(\'Вариант добавлен\')">+ Вариант</button>' +
+      '<div class="hint">' + (multi
+        ? 'Балл ставится только за полное совпадение набора — частичных баллов в v1 нет.'
+        : 'Отметьте верный вариант слева.') + '</div></div>' +
+      '<div class="sw"><input type="checkbox" checked><span class="t">Перемешивать варианты' +
+      '<div class="hint">Порядок будет свой у каждого ученика.</div></span></div>';
+  } else if(kind === 'long'){
+    b = '<div class="fld"><label>Критерии оценивания</label>' +
+        '<div class="crit"><input type="text" value="Ход решения"><input class="pt" type="text" value="2"><button class="del" onclick="toast(\'Критерий удалён\')">✕</button></div>' +
+        '<div class="crit"><input type="text" value="Верные корни"><input class="pt" type="text" value="1"><button class="del" onclick="toast(\'Критерий удалён\')">✕</button></div>' +
+        '<button class="btn btn-s" onclick="toast(\'Критерий добавлен\')">+ Критерий</button>' +
+        '<div class="hint">Проверяющий видит их строками в панели вердикта (§4.5). Сумма баллов критериев и есть вес задачи.</div></div>' +
+        '<div class="fld"><label>Эталон для проверяющего</label>' +
+        '<textarea>Ожидается: выражение переменной, подстановка, квадратное уравнение, обе пары решений, проверка подстановкой.</textarea>' +
+        '<div class="hint">Ученику не показывается — открывается на вкладке «Эталон» в карточке проверки.</div></div>';
+  } else if(kind === 'match'){
+    b = '<div class="fld"><label>Пары соответствия</label>' +
+        ['x + y = 7, x·y = 12 → (4; 3) и (3; 4)', 'x − y = 1, x + y = 5 → (3; 2)', '2x = 8 → x = 4'].map(function(o){
+          return '<div class="opt"><input type="text" value="'+o+'"><button class="del" onclick="toast(\'Пара удалена\')">✕</button></div>';
+        }).join('') +
+        '<button class="btn btn-s" onclick="toast(\'Пара добавлена\')">+ Пара</button>' +
+        '<div class="hint">Ученик соединяет левую и правую части. Балл — только за полностью верное сопоставление.</div></div>';
+  } else if(kind === 'order'){
+    b = '<div class="fld"><label>Верный порядок</label>' +
+        ['Выразить переменную', 'Подставить во второе уравнение', 'Решить квадратное уравнение', 'Проверить подстановкой'].map(function(o, i){
+          return '<div class="opt"><span class="ok">'+(i+1)+'</span><input type="text" value="'+o+'"><button class="del" onclick="toast(\'Шаг удалён\')">✕</button></div>';
+        }).join('') +
+        '<button class="btn btn-s" onclick="toast(\'Шаг добавлен\')">+ Шаг</button>' +
+        '<div class="hint">Ученику элементы показываются перемешанными.</div></div>';
+  } else {
+    b = '<div class="fld"><label>Язык</label><select><option>Python 3</option><option>C++</option><option>Java</option></select></div>' +
+        '<div class="fld"><label>Автотесты</label>' +
+        '<textarea>primes(10) → [2, 3, 5, 7]\nprimes(1) → []\nprimes(30) → [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]</textarea>' +
+        '<div class="hint">Результат тестов — подсказка проверяющему, а не окончательный вердикт: ручная проверка остаётся.</div></div>' +
+        '<div class="fld"><label>Лимит времени на тест</label><input type="text" value="2 сек"></div>';
+  }
+
+  var man = KINDS.filter(function(k){ return k.id === kind; })[0].man;
+  b += '<div class="group"><h4>Проверка</h4>' +
+    '<div class="hint">' + (man
+      ? 'Задача попадёт в очередь проверки — её увидит преподаватель или внештатный проверяющий. Работа с такой задачей не может оцениваться автоматически.'
+      : 'Проверяется автоматически: ответ сверяется с эталоном сразу после отправки.') + '</div>' +
+    (man ? '' : '<div class="fld" style="margin-top:var(--sp-12)"><label>Число попыток в шаге курса</label>' +
+      '<select><option>без ограничения</option><option>1</option><option>2</option><option selected>3</option></select>' +
+      '<div class="hint">Настройка шага: в тренажёре та же задача живёт без лимита.</div></div>') +
+    '</div>';
+
+  document.getElementById('answerBox').innerHTML = b;
+}
+
+function save(){ toast('Задача сохранена — изменения применились во всех 5 местах, где она используется'); }
+var tt;
+function toast(m){ var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3600); }
+render();
+renderTerms();
+</script>
+</body>
+</html>

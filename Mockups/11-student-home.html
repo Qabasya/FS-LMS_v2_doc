@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Главная ученика — FS-LMS 2.0</title>
+<link rel="stylesheet" href="_shared.css">
+<script src="_icons.js"></script>
+<script src="_tip.js"></script>
+<style>
+  .body{flex:1;overflow:auto;padding:var(--sp-16) var(--sp-20) var(--user-h)}
+  .card{background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);box-shadow:var(--sh)}
+
+  /* приветствие */
+  .hi{margin-bottom:var(--sp-16)}
+  .hi h2{margin:0 0 var(--sp-4);font-size:var(--fs-22)}
+  .hi .sub{color:var(--gray6);font-size:var(--fs-14)}
+  .hi .sub b{color:var(--gray9)}
+
+  /* продолжить обучение — не задача, а кнопка возврата во вчерашнее */
+  .go-on{display:flex;gap:var(--sp-16);align-items:center;padding:var(--sp-16) var(--sp-20);margin-bottom:var(--sp-12);
+    background:linear-gradient(135deg,#e7f5ff,#f3f0ff);border:1px solid #d0ebff;border-radius:var(--r-12)}
+  .go-on .ic-l{width:48px;height:48px;border-radius:var(--r-12);background:#fff;display:grid;place-items:center;flex:none}
+  .go-on .txt{flex:1;min-width:0}
+  .go-on .lab{font-size:var(--fs-12);color:var(--blue);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+  .go-on b{display:block;font-size:var(--fs-16);margin:var(--sp-4) 0}
+  .go-on .sub{font-size:var(--fs-12);color:var(--gray7)}
+  .go-on .prog{width:180px;flex:none}
+  .bar{height:6px;border-radius:var(--r-4);background:#fff;overflow:hidden;margin-top:var(--sp-6)}
+  .bar i{display:block;height:100%;background:var(--blue)}
+
+  /* в окне занятия главный контейнер показывает занятие, а не «продолжить» */
+  .go-on.live{background:linear-gradient(135deg,#e7f5ff,#d0ebff);border-color:#a5d8ff}
+  .go-on .lab.live{color:#1864ab}
+  .go-on .pulse{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--red);
+    margin-right:var(--sp-6);vertical-align:1px}
+
+  /* курсы онлайн-кабинета */
+  .crs{display:flex;gap:var(--sp-12);align-items:center;padding:var(--sp-12) var(--sp-16);border-top:1px solid var(--gray1)}
+  .crs:first-of-type{border-top:0}
+  .crs:hover{background:var(--gray0)}
+  .crs .cov{width:44px;height:44px;border-radius:var(--r-8);display:grid;place-items:center;color:#fff;flex:none}
+  .crs .nm{flex:1;min-width:0}
+  .crs .nm b{font-size:var(--fs-14);display:block}
+  .crs .nm .sub{font-size:var(--fs-12);color:var(--gray6);margin-top:2px}
+  .crs .pr{width:160px;flex:none;font-size:var(--fs-12);color:var(--gray6)}
+  .crs .pr .bar{background:var(--gray2)}
+  .crs .pr .bar i{background:var(--green)}
+
+  .sec{margin-bottom:var(--sp-12)}
+  .sec-h{display:flex;align-items:center;gap:var(--sp-12);padding:var(--sp-12) var(--sp-16);
+    border-bottom:1px solid var(--gray2);flex-wrap:wrap}
+  .sec-h h3{margin:0;font-size:var(--fs-14)}
+  .sec-h .cnt{font-size:var(--fs-12);font-weight:700;background:var(--gray1);color:var(--gray6);
+    border-radius:var(--r-8);padding:var(--sp-4) var(--sp-8)}
+  .sec-h .cnt.red{background:var(--red-l);color:#c92a2a}
+  .modes{display:flex;gap:var(--sp-4);background:var(--gray1);padding:var(--sp-4);border-radius:var(--r-8);font-size:var(--fs-12)}
+  .modes button{border:0;background:none;padding:var(--sp-4) var(--sp-12);border-radius:var(--r-6);color:var(--gray6)}
+  .modes button.on{background:#fff;box-shadow:var(--sh);color:var(--gray9);font-weight:600}
+
+  /* расписание */
+  .les{display:flex;gap:var(--sp-12);padding:var(--sp-12) var(--sp-16);border-top:1px solid var(--gray1)}
+  .les:first-of-type{border-top:0}
+  .les .time{width:var(--col-92);flex:none;font-size:var(--fs-12);color:var(--gray7);font-variant-numeric:tabular-nums}
+  .les .time b{display:block;font-size:var(--fs-14)}
+  .les .line{width:3px;border-radius:2px;background:var(--blue);flex:none}
+  .les.ind .line{background:var(--violet)}
+  .les .info{flex:1;min-width:0}
+  .les .info b{font-size:var(--fs-14);display:block}
+  .les .info .sub{font-size:var(--fs-12);color:var(--gray6);margin-top:2px}
+  .les .acts{display:flex;gap:var(--sp-6);margin-top:var(--sp-8);flex-wrap:wrap}
+  .les.now{background:var(--blue-l)}
+  .now-b{display:inline-block;font-size:var(--fs-12);font-weight:700;color:var(--blue);margin-left:var(--sp-8)}
+  .wk{display:grid;grid-template-columns:repeat(7,1fr)}
+  .wk-d{border-left:1px solid var(--gray1);min-height:120px;padding:var(--sp-8)}
+  .wk-d:first-child{border-left:0}
+  .wk-d.today{background:var(--blue-l)}
+  .wk-h{font-size:var(--fs-12);color:var(--gray6);font-weight:600;margin-bottom:var(--sp-8);text-align:center}
+  .wk-h b{display:block;font-size:var(--fs-14);color:var(--gray9)}
+  .wk-ev{display:block;width:100%;text-align:left;border:0;border-left:3px solid var(--blue);background:var(--gray0);
+    border-radius:var(--r-4);padding:var(--sp-4) var(--sp-6);margin-bottom:var(--sp-4);font-size:var(--fs-12);line-height:1.35}
+  .wk-ev.ind{border-left-color:var(--violet)}
+  .wk-ev b{display:block;font-variant-numeric:tabular-nums}
+  .wk-ev span{color:var(--gray6);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .wk-none{font-size:var(--fs-12);color:var(--gray5);text-align:center;padding-top:var(--sp-12)}
+
+  /* задачи ученика */
+  .cols{display:grid;grid-template-columns:1.3fr 1fr;gap:var(--sp-12);align-items:start}
+  .row{display:flex;gap:var(--sp-12);align-items:center;padding:var(--sp-12) var(--sp-16);border-top:1px solid var(--gray1)}
+  .row:first-of-type{border-top:0}
+  .row:hover{background:var(--gray0)}
+  .row .mark{width:32px;height:32px;border-radius:var(--r-8);display:grid;place-items:center;font-size:var(--fs-14);flex:none}
+  .m-due{background:var(--red-l);color:#c92a2a}
+  .m-fix{background:var(--orange-l);color:#d9480f}
+  .m-lock{background:var(--violet-l);color:#5f3dc4}
+  .m-new{background:var(--green-l);color:#2b8a3e}
+  .m-pay{background:var(--gray1);color:var(--gray7)}
+  .row .txt{flex:1;min-width:0}
+  .row b{font-size:var(--fs-14);font-weight:600;display:block}
+  .row .sub{font-size:var(--fs-12);color:var(--gray6);margin-top:2px}
+  .row .quote{font-size:var(--fs-12);color:var(--gray7);background:var(--gray0);border-left:2px solid var(--gray3);
+    padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4);margin-top:var(--sp-6)}
+  .when{font-size:var(--fs-12);font-weight:700;white-space:nowrap}
+  .when.red{color:#c92a2a} .when.orange{color:#d9480f} .when.gray{color:var(--gray6)}
+
+  /* результаты */
+  /* результаты компактно: метка сверху, значение и пояснение — в одну строку */
+  .res{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--gray2)}
+  .res .cell{background:#fff;padding:var(--sp-8) var(--sp-12)}
+  .res .lab{font-size:var(--fs-12);color:var(--gray6);font-weight:600}
+  .res .v{display:flex;align-items:baseline;gap:var(--sp-6);margin-top:2px}
+  .res .big{font-size:var(--fs-22);font-weight:700;line-height:1.15}
+  .res .sub{font-size:var(--fs-12);color:var(--gray6)}
+  .good{color:#2b8a3e} .mid{color:#d9480f} .bad{color:#c92a2a}
+
+  .empty{padding:var(--sp-32) var(--sp-16);text-align:center;color:var(--gray6);font-size:var(--fs-14)}
+  .empty b{display:block;color:var(--gray9);margin-bottom:var(--sp-4)}
+  .demo{display:flex;align-items:center;gap:var(--sp-6);font-size:var(--fs-12);color:var(--gray6)}
+
+  @media (max-width:1100px){ .cols{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-top">
+      <div class="logo">ШБ</div>
+      <div style="flex:1"><b>Шаг в будущее</b><small>Личный кабинет</small></div>
+      <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')">⟨</button>
+    </div>
+    <nav class="nav">
+      <h4>Меню</h4>
+      <a href="#" class="on"><i class="ic">◱</i><span>Главная</span></a>
+      <a href="02-player.html"><i class="ic">◈</i><span>Мои курсы</span></a>
+      <a href="#" id="navCal"><i class="ic">◷</i><span>Календарь</span></a>
+      <a href="#" id="navRes"><i class="ic">▦</i><span>Результаты</span></a>
+      <a href="#" id="navPay"><i class="ic">₽</i><span>Лицевой счёт</span></a>
+    </nav>
+    <div class="side-user">
+      <div class="ava" style="background:var(--blue)">АК</div>
+      <div style="flex:1"><b style="font-size:var(--fs-14);display:block">Абрамов Кирилл</b><small style="font-size:var(--fs-12);color:var(--gray6)">Ученик</small></div>
+      <span style="color:var(--gray5)">⚙</span>
+    </div>
+  </aside>
+
+  <div class="app">
+    <header class="head">
+      <h1>Главная</h1>
+      <div class="sp"></div>
+      <label class="demo">кабинет <i>(демо)</i>
+        <select id="mode" onchange="render()" style="padding:var(--sp-4) var(--sp-8);font-size:var(--fs-12)">
+          <option value="campus">кампус (группа)</option>
+          <option value="online">онлайн (купленные курсы)</option>
+        </select></label>
+      <label class="demo">занятие <i>(демо)</i>
+        <select id="live" onchange="render()" style="padding:var(--sp-4) var(--sp-8);font-size:var(--fs-12)">
+          <option value="now">идёт сейчас</option>
+          <option value="soon5">начнётся через 5 мин</option>
+          <option value="soon">через час</option>
+          <option value="none">сегодня нет</option>
+        </select></label>
+      <label class="demo"><input type="checkbox" id="debt" onchange="render()"> задолженность <i>(демо)</i></label>
+      <span style="color:var(--gray5)">🔔</span>
+    </header>
+
+    <div class="body">
+      <div class="hi">
+        <h2 id="hiName">Привет, Кирилл! 👋</h2>
+        <div class="sub" id="hiSub">—</div>
+      </div>
+
+      <div class="go-on" id="goOn"></div>
+
+      <div class="card sec" id="coursesCard">
+        <div class="sec-h"><h3>Мои курсы</h3><span class="cnt" id="crsCnt">—</span>
+          <div style="flex:1"></div>
+          <span class="muted" style="font-size:var(--fs-12)">доступ открыт бессрочно</span></div>
+        <div id="courses"></div>
+      </div>
+
+      <div class="card sec" id="schedCard">
+        <div class="sec-h"><h3>Расписание</h3>
+          <span class="muted" id="schSum" style="font-size:var(--fs-12)"></span>
+          <div style="flex:1"></div>
+          <div class="modes" id="schMode">
+            <button class="on" onclick="setSch('day',this)">Сегодня</button>
+            <button onclick="setSch('week',this)">Неделя</button>
+          </div>
+        </div>
+        <div id="sched"></div>
+      </div>
+
+      <div class="cols" id="cols">
+        <div class="card sec">
+          <div class="sec-h"><h3>Что сделать</h3><span class="cnt red" id="taskCnt">—</span>
+            <div style="flex:1"></div>
+            <span class="muted" style="font-size:var(--fs-12)">сначала самое срочное</span></div>
+          <div id="tasks"></div>
+        </div>
+
+        <div class="card sec">
+          <div class="sec-h"><h3>Мои результаты</h3>
+            <div style="flex:1"></div>
+            <a class="muted" href="#" style="font-size:var(--fs-12)">все результаты ›</a></div>
+          <div class="res" id="res"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var TODAY = [
+  {t1:'15:00', t2:'16:30', grp:'Математика · МЕГЭ-1', teacher:'Училков И. С.', room:'каб. 315',
+   topic:'Квадратные уравнения', kind:'g', live:true},
+  {t1:'19:00', t2:'19:45', grp:'Индивидуальное занятие', teacher:'Училков И. С.', room:'каб. 302',
+   topic:'Отработка: линейные уравнения', kind:'i'}
+];
+var WEEK = [
+  {d:'Пн', n:'11', items:[{t:'15:00', grp:'Математика', kind:'g'}]},
+  {d:'Вт', n:'12', today:true, items:[{t:'15:00', grp:'Математика', kind:'g'}, {t:'19:00', grp:'Индивид.', kind:'i'}]},
+  {d:'Ср', n:'13', items:[{t:'15:00', grp:'Математика', kind:'g'}]},
+  {d:'Чт', n:'14', items:[]},
+  {d:'Пт', n:'15', items:[{t:'15:00', grp:'Математика', kind:'g'}]},
+  {d:'Сб', n:'16', items:[]},
+  {d:'Вс', n:'17', items:[]}
+];
+var TASKS = [
+  {t:'due', ttl:'Сдать ДЗ «Степени и корни»', sub:'Математика · урок 8',
+   when:'сегодня до 23:59', cls:'red', act:'Открыть'},
+  {t:'fix', ttl:'Работа вернулась на доработку', sub:'СР «Системы уравнений» · Училков И. С.',
+   quote:'В задании 4 потеряна вторая ветка модуля — переделай и сдай снова.',
+   when:'вернули вчера', cls:'orange', act:'Исправить'},
+  {t:'lock', ttl:'Пройди шаг «Тренировка: подстановка»', sub:'урок «Системы уравнений» · без него закрыты ещё 3 шага',
+   when:'обязательный', cls:'gray', act:'Продолжить'},
+  {t:'new', ttl:'Открылся урок «Квадратные уравнения»', sub:'9 шагов · после сегодняшнего занятия',
+   when:'новое', cls:'gray', act:'Начать'},
+  {t:'due', ttl:'Сдать СР «Функции и графики»', sub:'Математика · урок 7',
+   when:'через 3 дня', cls:'gray', act:'Открыть'}
+];
+
+var COURSES = [
+  {n:'Математика с нуля до ЕГЭ', color:'var(--violet)', code:'МА', pr:77,
+   sub:'урок 8 из 12 · последний заход вчера', act:'Продолжить'},
+  {n:'Информатика · подготовка к ЕГЭ', color:'var(--orange)', code:'ИН', pr:12,
+   sub:'урок 2 из 14 · куплен 02.08', act:'Продолжить'},
+  {n:'Английский · уровень A2', color:'var(--teal)', code:'АН', pr:100,
+   sub:'курс пройден 14.07', act:'Открыть'}
+];
+var schMode = 'day';
+
+function render(){
+  var live = document.getElementById('live').value;
+  var debt = document.getElementById('debt').checked;
+  /* онлайн-кабинет: ученик купил курс на витрине — ни группы, ни расписания, ни посещаемости */
+  var online = document.getElementById('mode').value === 'online';
+  var today = (online || live === 'none') ? [] : TODAY;
+  var first = today[0];
+
+  document.getElementById('coursesCard').style.display = online ? '' : 'none';
+  document.getElementById('schedCard').style.display = online ? 'none' : '';
+  document.getElementById('cols').style.display = online ? 'none' : '';
+  document.getElementById('navCal').style.display = online ? 'none' : '';
+  document.getElementById('navRes').style.display = online ? 'none' : '';
+  document.querySelector('.side-top small').textContent = online ? 'Онлайн-курсы' : 'Личный кабинет';
+
+  /* приветствие: что сегодня, а не сколько чего */
+  if(online){
+    document.getElementById('hiSub').innerHTML =
+      'У тебя <b>3 курса</b> · последний заход вчера, урок 8 «Системы уравнений»';
+  } else document.getElementById('hiSub').innerHTML = today.length
+    ? (live === 'now'
+        ? 'Занятие <b>уже идёт</b> — можно подключаться'
+        : 'Сегодня <b>' + today.length + ' занятия</b>, первое в <b>' + first.t1 + '</b>')
+    : 'Сегодня занятий нет — хороший день, чтобы закрыть хвосты';
+
+  /* Главный контейнер. В окне занятия — за 5 минут до начала и до его конца —
+     он показывает само занятие с подключением; в остальное время — «продолжить обучение». */
+  var inWindow = online ? false : (live === 'now' || live === 'soon5');
+  var go = document.getElementById('goOn');
+  go.classList.toggle('live', inWindow);
+  /* у кампусного ученика точка входа — занятие, а не «продолжить»: вне окна плашки нет вовсе */
+  go.style.display = (online || inWindow) ? '' : 'none';
+  if(inWindow){
+    var l = TODAY[0];
+    go.innerHTML =
+      '<span class="ic-l">' + stepIcon('live', 26) + '</span>' +
+      '<span class="txt"><span class="lab live"><span class="pulse"></span>' +
+        (live === 'now' ? 'Занятие идёт' : 'Занятие начнётся через 5 минут') + '</span>' +
+      '<b>'+l.grp+' · '+l.topic+'</b>' +
+      '<span class="sub">'+l.t1+'–'+l.t2+' · '+l.teacher+' · '+l.room+'</span></span>' +
+      '<button class="btn" onclick="location.href=\'02-player.html\'">Материалы урока</button>' +
+      '<button class="btn btn-p" onclick="toast(\'Подключение к трансляции\')">Подключиться</button>';
+  } else {
+    go.innerHTML =
+      '<span class="ic-l">' + stepIcon('task', 26) + '</span>' +
+      '<span class="txt"><span class="lab">Продолжить обучение</span>' +
+      '<b>Урок «Системы уравнений» · шаг 4 из 8</b>' +
+      '<span class="sub">Задача «Тренировка: подстановка» — на ней ты остановился вчера</span></span>' +
+      '<span class="prog"><span class="sub" style="font-size:var(--fs-12);color:var(--gray7)">Курс пройден на 77%</span>' +
+      '<span class="bar"><i style="width:77%"></i></span></span>' +
+      '<button class="btn btn-p" onclick="location.href=\'02-player.html\'">Продолжить</button>';
+  }
+
+  /* расписание */
+  var box = document.getElementById('sched'), sum = document.getElementById('schSum');
+  if(schMode === 'week'){
+    box.innerHTML = '<div class="wk">' + WEEK.map(function(d){
+      var items = (d.today && live === 'none') ? [] : d.items;
+      return '<div class="wk-d'+(d.today?' today':'')+'"><div class="wk-h">'+d.d+'<b>'+d.n+'</b></div>' +
+        (items.length ? items.map(function(e){
+          return '<button class="wk-ev '+(e.kind==='i'?'ind':'')+'" onclick="toast(\'Занятие: '+e.grp+'\')">' +
+            '<b>'+e.t+'</b><span>'+e.grp+'</span></button>';
+        }).join('') : '<div class="wk-none">—</div>') + '</div>';
+    }).join('') + '</div>';
+    sum.textContent = 'неделя 11–17 августа';
+  } else {
+    box.innerHTML = today.length ? today.map(function(l, i){
+      var now = i === 0 && live === 'now';
+      var soon = i === 0 && (live === 'soon' || live === 'soon5');
+      return '<div class="les '+(l.kind==='i'?'ind':'')+(now?' now':'')+'">' +
+        '<span class="time"><b>'+l.t1+'</b>'+l.t2+'</span><span class="line"></span>' +
+        '<span class="info"><b>'+l.grp+(now?'<span class="now-b">идёт сейчас</span>':'')+
+          (soon?'<span class="now-b">'+(live==='soon5'?'через 5 минут':'через час')+'</span>':'')+'</b>' +
+        '<span class="sub">'+l.teacher+' · '+l.room+' · '+l.topic+'</span>' +
+        '<span class="acts">' +
+          '<button class="btn btn-s" onclick="location.href=\'02-player.html\'">Материалы урока</button>' +
+        '</span></span></div>';
+    }).join('') : '<div class="empty"><b>Сегодня занятий нет</b>Ближайшее — завтра в 15:00</div>';
+    sum.textContent = today.length ? 'вторник, 12 августа' : '';
+  }
+
+  /* что сделать */
+  var tasks = TASKS.slice();
+  if(debt) tasks.push({t:'pay', ttl:'Оплатить обучение', sub:'задолженность 4 500 ₽ · доступ пока открыт',
+    when:'ждёт оплаты', cls:'orange', act:'Оплатить'});
+  document.getElementById('taskCnt').textContent = tasks.length;
+  document.getElementById('tasks').innerHTML = tasks.map(function(t){
+    var m = {due:'m-due', fix:'m-fix', lock:'m-lock', new:'m-new', pay:'m-pay'}[t.t];
+    var ic = {due:'⏱', fix:'↺', lock:'🔒', new:'✦', pay:'₽'}[t.t];
+    return '<div class="row"><span class="mark '+m+'">'+ic+'</span>' +
+      '<span class="txt"><b>'+t.ttl+'</b><span class="sub">'+t.sub+'</span>' +
+      (t.quote ? '<span class="quote">«'+t.quote+'»</span>' : '') + '</span>' +
+      '<span class="when '+t.cls+'">'+t.when+'</span>' +
+      '<button class="btn btn-s" onclick="location.href=\'02-player.html\'">'+t.act+'</button></div>';
+  }).join('');
+
+  /* курсы онлайн-кабинета */
+  document.getElementById('crsCnt').textContent = COURSES.length;
+  document.getElementById('courses').innerHTML = COURSES.map(function(c){
+    return '<div class="crs"><span class="cov" style="background:'+c.color+'">'+c.code+'</span>' +
+      '<span class="nm"><b>'+c.n+'</b><span class="sub">'+c.sub+'</span></span>' +
+      '<span class="pr">'+(c.pr === 100 ? 'пройден' : 'пройдено '+c.pr+'%') +
+        '<span class="bar"><i style="width:'+c.pr+'%"></i></span></span>' +
+      '<button class="btn '+(c.pr === 100 ? '' : 'btn-p')+'" onclick="location.href=\'02-player.html\'">'+c.act+'</button></div>';
+  }).join('');
+
+  /* результаты */
+  document.getElementById('res').innerHTML = [
+    ['Посещаемость', '92%', 'good', '23 из 25'],
+    ['Средний балл', '85%', '', 'по 12 работам'],
+    ['Прогресс курса', '77%', '', '46 из 60 шагов'],
+    ['Работ сдать', '2', 'mid', 'ближайшая сегодня']
+  ].map(function(r){
+    return '<div class="cell"><div class="lab">'+r[0]+'</div>' +
+      '<div class="v"><span class="big '+r[2]+'">'+r[1]+'</span><span class="sub">'+r[3]+'</span></div></div>';
+  }).join('');
+}
+
+function setSch(m, el){
+  schMode = m;
+  [].forEach.call(document.querySelectorAll('#schMode button'), function(b){ b.classList.remove('on'); });
+  el.classList.add('on');
+  render();
+}
+var tt;
+function toast(m){ var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3200); }
+render();
+</script>
+</body>
+</html>

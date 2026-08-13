@@ -1,0 +1,148 @@
+/* FS-LMS 2.0 — общий каркас мокапов (03-design §1–§2) */
+:root{
+  --blue:#228be6; --blue-l:#e7f5ff; --gray0:#f8f9fa; --gray1:#f1f3f5; --gray2:#e9ecef;
+  --gray3:#dee2e6; --gray5:#adb5bd; --gray6:#868e96; --gray7:#495057; --gray9:#212529;
+  --red:#fa5252; --red-l:#fff5f5; --green:#40c057; --green-l:#ebfbee; --orange:#fd7e14;
+  --orange-l:#fff4e6; --violet:#7950f2; --violet-l:#f3f0ff; --teal:#12b886; --teal-l:#e6fcf5;
+  --yellow-l:#fff9db;
+  --head-h:64px;   /* высота шапки: сайдбар и контент выровнены по одной линии */
+  --user-h:60px;   /* высота карточки пользователя: на её уровне заканчивается контент */
+  --sh:0 1px 3px rgba(0,0,0,.06);
+
+  /* ═══ ТОКЕНЫ ═══ имя токена = его значение в px, поэтому шкала читается без словаря.
+     Всё, что верстается в мокапах, берётся отсюда: близкие значения сведены к одной ступени. */
+
+  /* типографика: 12 метки, подписи и мелочь · 14 базовый интерфейс и таблицы ·
+     16 крупный текст и заголовок экрана · 22+ цифры показателей */
+  --fs-12:12px; --fs-14:14px; --fs-16:16px; --fs-22:22px; --fs-26:26px; --fs-32:32px;
+
+  /* отступы и зазоры — одна шкала на padding, margin и gap; мельче 4px не бывает */
+  --sp-4:4px; --sp-6:6px; --sp-8:8px; --sp-12:12px; --sp-16:16px;
+  --sp-20:20px; --sp-24:24px; --sp-32:32px; --sp-40:40px; --sp-48:48px; --sp-60:60px;
+
+  /* скругления: 4 мелкие метки · 6 клетки и кнопки · 8 поля и кнопки · 12 карточки ·
+     14 модалки · pill бейджи · круг аватары */
+  --r-4:4px; --r-6:6px; --r-8:8px; --r-12:12px; --r-14:14px; --r-pill:20px;
+  --r:8px;   /* базовое скругление — синоним --r-8, оставлен для совместимости */
+
+  /* ширины колонок таблиц: одинаковые по смыслу колонки на разных экранах равны */
+  --col-92:92px;    /* дата, балл, короткое число */
+  --col-110:110px;  /* тип, попытки, итоговая колонка сетки */
+  --col-160:160px;  /* урок, группа */
+  --col-220:220px;  /* статус с бейджем и действием */
+  --col-260:260px;  /* название работы, подпись строки */
+  --col-300:300px;  /* ученик: номер, аватар, ФИО, отметка */
+
+  /* клетка прогресса: один размер во всех сетках */
+  --sq:28px; --sq-r:6px;
+}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:var(--gray9);background:var(--gray0)}
+button{font:inherit;cursor:pointer}
+.shell{display:flex;height:100vh;overflow:hidden}
+.app{flex:1;min-width:0;display:flex;flex-direction:column;height:100%;overflow:hidden}
+
+/* сайдбар «Управления» */
+.side{width:236px;flex:none;background:#fff;border-right:1px solid var(--gray2);display:flex;flex-direction:column;transition:width .16s}
+.side-top{padding:var(--sp-16) var(--sp-16);border-bottom:1px solid var(--gray2);display:flex;gap:var(--sp-12);align-items:center;min-height:var(--head-h)}
+.logo{width:34px;height:34px;border-radius:var(--r-8);background:linear-gradient(135deg,#4dabf7,#228be6);color:#fff;display:grid;place-items:center;font-weight:700;font-size:var(--fs-12);flex:none}
+.side-top b{display:block;font-size:var(--fs-14);line-height:1.2}
+.side-top small{font-size:var(--fs-12);color:var(--gray6)}
+.switch{margin:var(--sp-12) var(--sp-12) var(--sp-4);display:flex;background:var(--gray1);border-radius:var(--r-6);padding:var(--sp-4)}
+.switch button{flex:1;border:0;background:none;padding:var(--sp-6);border-radius:var(--r-4);font-size:var(--fs-14);color:var(--gray7)}
+.switch button.on{background:#fff;box-shadow:var(--sh);font-weight:600;color:var(--gray9)}
+.nav{flex:1;overflow:auto;padding:var(--sp-8) var(--sp-12) var(--sp-16)}
+.nav h4{font-size:var(--fs-12);letter-spacing:.06em;text-transform:uppercase;color:var(--gray5);margin:var(--sp-16) var(--sp-8) var(--sp-6);font-weight:600}
+.nav a{display:flex;gap:var(--sp-12);align-items:center;padding:var(--sp-8) var(--sp-12);border-radius:var(--r-6);color:var(--gray7);text-decoration:none;font-size:var(--fs-14)}
+.nav a:hover{background:var(--gray1)}
+.nav a.on{background:var(--blue-l);color:var(--blue);font-weight:600}
+.nav .cnt{margin-left:auto;background:var(--blue);color:#fff;border-radius:var(--r-8);padding:0 var(--sp-8);font-size:var(--fs-12);font-weight:700}
+.ic{width:16px;text-align:center;font-size:var(--fs-14);flex:none;opacity:.85}
+.side-user{border-top:1px solid var(--gray2);padding:var(--sp-12) var(--sp-16);display:flex;gap:var(--sp-12);align-items:center;height:var(--user-h)}
+.ava{width:30px;height:30px;border-radius:50%;background:var(--violet);color:#fff;display:grid;place-items:center;font-size:var(--fs-12);font-weight:600;flex:none}
+.collapse-btn{border:1px solid var(--gray3);background:#fff;border-radius:var(--r-6);width:24px;height:24px;display:grid;place-items:center;font-size:var(--fs-12);color:var(--gray6);padding:0;flex:none}
+.collapse-btn:hover{background:var(--gray1);color:var(--gray9)}
+.side.collapsed{width:58px}
+.side.collapsed .side-top div,.side.collapsed .switch,.side.collapsed .nav h4,
+.side.collapsed .nav a span,.side.collapsed .nav .cnt,.side.collapsed .side-user div,.side.collapsed .side-user>span{display:none}
+.side.collapsed .nav a{justify-content:center;padding:var(--sp-12) 0}
+.side.collapsed .side-top{padding:var(--sp-16) var(--sp-12);justify-content:center}
+.side.collapsed .side-user{justify-content:center;padding:var(--sp-12) 0}
+.side.collapsed .collapse-btn{transform:rotate(180deg)}
+
+/* шапка экрана */
+.head{background:#fff;border-bottom:1px solid var(--gray2);padding:var(--sp-12) var(--sp-20);display:flex;align-items:center;gap:var(--sp-24);
+  flex:none;flex-wrap:wrap;min-height:var(--head-h)}
+.head h1{margin:0;font-size:var(--fs-16)}
+.crumbs{font-size:var(--fs-12);color:var(--gray6)}
+.sp{flex:1}
+.muted{color:var(--gray6);font-size:var(--fs-14)}
+
+/* кнопки */
+.btn{border:1px solid var(--gray3);background:#fff;padding:var(--sp-8) var(--sp-16);border-radius:var(--r);font-size:var(--fs-14);color:var(--gray7)}
+.btn:hover{background:var(--gray0)}
+.btn:active{transform:translateY(1px)}
+.btn-p{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600}
+.btn-p:hover{background:#1c7ed6;border-color:#1c7ed6}
+.btn-ok{background:var(--green);border-color:var(--green);color:#fff;font-weight:600}
+.btn-ok:hover{background:#2f9e44;border-color:#2f9e44}
+.btn-s{padding:var(--sp-6) var(--sp-12);font-size:var(--fs-14)}
+.btn-danger{color:var(--red)}
+
+/* бейджи статусов (§1.9) */
+.badge{display:inline-flex;align-items:center;gap:var(--sp-6);padding:var(--sp-4) var(--sp-12);border-radius:var(--r-pill);font-size:var(--fs-12);font-weight:600}
+.b-draft{background:var(--gray1);color:var(--gray7)}
+.b-ok{background:var(--green-l);color:#2b8a3e}
+.b-warn{background:var(--orange-l);color:#d9480f}
+.b-info{background:var(--blue-l);color:#1864ab}
+
+/* переключатели режимов */
+.modes{display:flex;gap:var(--sp-4);background:var(--gray1);padding:var(--sp-4);border-radius:var(--r-8);font-size:var(--fs-14)}
+.modes button{border:0;background:none;padding:var(--sp-6) var(--sp-12);border-radius:var(--r-6);color:var(--gray6)}
+.modes button.on{background:#fff;box-shadow:var(--sh);color:var(--gray9);font-weight:600}
+
+/* формы */
+select,input[type=text],input[type=date],input[type=number]{border:1px solid var(--gray3);background:#fff;border-radius:var(--r);
+  padding:var(--sp-8) var(--sp-12);font:inherit;font-size:var(--fs-14);color:var(--gray7)}
+.fld{display:flex;flex-direction:column;gap:var(--sp-6);margin-bottom:14px}
+.fld label{font-size:var(--fs-12);color:var(--gray6);font-weight:600}
+.fld .v{border:1px solid var(--gray3);border-radius:var(--r);padding:var(--sp-12) var(--sp-12);font-size:var(--fs-14)}
+
+/* оверлеи (§1.7) */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:.16s;z-index:40}
+.scrim.on{opacity:1;pointer-events:auto}
+.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-46%);background:#fff;border-radius:var(--r-14);width:min(560px,94vw);
+  box-shadow:0 20px 60px rgba(0,0,0,.24);z-index:42;opacity:0;pointer-events:none;transition:.16s;max-height:88vh;display:flex;flex-direction:column}
+.modal.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%)}
+.mo-h{padding:var(--sp-20) var(--sp-20) var(--sp-8);font-size:var(--fs-16);font-weight:600}
+.mo-b{padding:var(--sp-4) var(--sp-20) var(--sp-8);overflow:auto}
+.mo-f{padding:var(--sp-16) var(--sp-20) var(--sp-20);display:flex;gap:var(--sp-8);justify-content:flex-end}
+.drawer{position:fixed;right:0;top:0;bottom:0;width:390px;background:#fff;box-shadow:-8px 0 30px rgba(0,0,0,.14);
+  transform:translateX(100%);transition:.18s;z-index:41;display:flex;flex-direction:column}
+.drawer.on{transform:none}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;background:var(--gray9);color:#fff;padding:var(--sp-12) var(--sp-16);
+  border-radius:var(--r);font-size:var(--fs-14);opacity:0;transition:.18s;z-index:50;max-width:80vw;text-align:center}
+.toast.on{opacity:1}
+
+/* адаптив каркаса */
+@media (max-width:1280px){
+  .side{width:58px}
+  .side .side-top div,.side .switch,.side .nav h4,.side .nav a span,.side .nav .cnt,
+  .side .side-user div,.side .side-user>span{display:none}
+  .side .nav a{justify-content:center;padding:var(--sp-12) 0}
+  .side .side-top{padding:var(--sp-16) var(--sp-12);justify-content:center}
+  .side-user{justify-content:center;padding:var(--sp-12) 0}
+}
+@media (max-width:900px){ .hide-sm{display:none} }
+
+/* всплывающая подсказка (тултип) — общий компонент, см. _tip.js */
+.tipbox{position:fixed;z-index:60;background:var(--gray9);color:#fff;border-radius:var(--r-8);padding:var(--sp-12) var(--sp-12);
+  font-size:var(--fs-14);line-height:1.5;max-width:340px;box-shadow:0 10px 30px rgba(0,0,0,.28);display:none;pointer-events:none}
+.tipbox.on{display:block}
+.tipbox .h{font-size:var(--fs-12);text-transform:uppercase;letter-spacing:.05em;color:#adb5bd;margin-bottom:6px}
+.tipbox .q{color:#dee2e6;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #495057}
+.tipbox .a{display:flex;gap:var(--sp-8);margin-top:3px}
+.tipbox .a span:first-child{color:#adb5bd;flex:none;width:96px}
+.tipbox .a.bad span:last-child{color:#ffa8a8}
+.tipbox .a.good span:last-child{color:#b2f2bb}
+.tipbox .note{margin-top:8px;padding-top:8px;border-top:1px solid #495057;color:#adb5bd;font-size:var(--fs-12)}
