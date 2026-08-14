@@ -268,8 +268,9 @@ function checklist(x){
      href:'03-ktp.html', act:'Открыть КТП'},
     {ok:!x.manual || !!(x.run && x.run.teacher), t:'Преподаватель набора назначен',
      s:!x.manual ? 'в курсе нет заданий с ручной проверкой — не требуется'
-        : (x.run && x.run.teacher ? x.run.teacher : 'в курсе есть задания с ручной проверкой'),
-     href:'21-staff.html', act:'Сотрудники'}
+        : (x.run && x.run.teacher ? x.run.teacher
+           : 'в курсе есть задания с ручной проверкой — преподаватель указывается в диалоге запуска набора, здесь же'),
+     href:'', act:''}
   ];
 }
 function canPub(x){ return checklist(x).every(function(p){ return p.ok; }); }

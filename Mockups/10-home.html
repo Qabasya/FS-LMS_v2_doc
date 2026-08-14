@@ -133,7 +133,7 @@
           <option value="edu">Адм. учебной части</option>
           <option value="fin">Финансовый администратор</option>
           <option value="owner">Владелец</option>
-          <option value="custom">Кастомная роль «Куратор набора»</option>
+          <option value="custom">Кастомная роль «Наставник группы»</option>
         </select></label>
       <label class="demo">день <i>(демо)</i>
         <select id="dayMode" onchange="render()" style="padding:var(--sp-4) var(--sp-8);font-size:var(--fs-12)">
@@ -177,7 +177,7 @@ var ROLES = {
             perms:['finance','read_all']},
   owner:   {name:'Владельцев О.', ava:'ВО', role:'Владелец',
             perms:['org','finance','admission','groups','supervise','review','read_all']},
-  custom:  {name:'Кураторов К.', ava:'КК', role:'Куратор набора',
+  custom:  {name:'Наставников Н.', ava:'НН', role:'Наставник группы',
             perms:['review','students.watch']}
 };
 var P = [];                                   /* права текущего пользователя */
