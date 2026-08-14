@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Журнал — FS-LMS 2.0</title>
 <link rel="stylesheet" href="_shared.css">
+<script src="_nav.js"></script>
 <style>
   /* ═══ ШИРИНЫ КОЛОНОК ЖУРНАЛА — правьте эти значения (§4.4) ═══ */
   :root{
@@ -50,7 +51,7 @@
   .stu-in .n{color:var(--gray5);font-size:var(--fs-12);min-width:16px}
   .stu-in .av{width:26px;height:26px;border-radius:50%;background:var(--blue-l);color:var(--blue);display:grid;
     place-items:center;font-size:var(--fs-12);font-weight:700;flex:none}
-  .stu-in .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+  .stu-in .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;color:inherit;text-decoration:none}
   .stu-in .nm:hover{color:var(--blue);text-decoration:underline}
 
   .cell{height:46px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--sp-4);cursor:pointer;
@@ -101,7 +102,7 @@
       <div style="flex:1"><b>Шаг в будущее</b><small>Управление</small></div>
       <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')">⟨</button>
     </div>
-    <div class="switch"><button>Обучение</button><button class="on">Управление</button></div>
+    <div class="switch"><a href="11-student-home.html" title="Пространство «Обучение»: свои курсы и учёба">Обучение</a><button class="on">Управление</button></div>
     <nav class="nav">
       <h4>Моя работа</h4>
       <a href="#"><i class="ic">◱</i><span>Главная</span></a>
@@ -127,6 +128,7 @@
       <div class="fld" style="margin:0"><div class="v" style="display:flex;gap:var(--sp-12);align-items:center;padding:var(--sp-8) var(--sp-12)">
         <span style="width:26px;height:26px;border-radius:var(--r-6);background:var(--violet);color:#fff;font-size:var(--fs-12);display:grid;place-items:center;font-weight:700">МЕГЭ</span>
         МЕГЭ-1 · Математика <span style="color:var(--gray5)">▾</span></div></div>
+      <a class="btn btn-s" href="20-group.html#g=0" title="Карточка группы">Карточка группы</a>
       <div class="mo"><button class="btn btn-s">‹</button><span>Сентябрь 2026</span><button class="btn btn-s">›</button></div>
       <div class="sp"></div>
       <span class="muted" id="stat">—</span>
@@ -265,7 +267,7 @@ function render(){
     var ini = name.split(' ').map(function(w){ return w[0]; }).join('');
     html += '<tr><td class="stu"><div class="stu-in"><span class="n">'+(si+1)+'</span>' +
       '<span class="av">'+ini+'</span>' +
-      '<span class="nm" onclick="location.href=\'07-student.html\'" title="Сводка по ученику">'+name+'</span></div></td>';
+      '<a class="nm" href="07-student.html#s='+si+'" title="Сводка по ученику">'+name+'</a></div></td>';
     state[si].forEach(function(c, li){
       var cls = c.att==='p' ? 'p' : (c.att==='a' ? 'a' : 'empty');
       var att = c.att==='p' ? '+' : (c.att==='a' ? 'Н' : '·');

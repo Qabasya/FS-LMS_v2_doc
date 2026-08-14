@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Настройки системы — FS-LMS 2.0</title>
+<link rel="stylesheet" href="_shared.css">
+<script src="_tip.js"></script>
+<script src="_nav.js"></script>
+<style>
+  .body{flex:1;overflow:auto;padding:var(--sp-16) var(--sp-20) var(--user-h)}
+  .card{background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);box-shadow:var(--sh)}
+  .sec{padding:var(--sp-16) var(--sp-20);margin-bottom:14px}
+  .sec-h{display:flex;align-items:center;gap:var(--sp-12);margin-bottom:12px;flex-wrap:wrap}
+  .sec-h h3{margin:0;font-size:var(--fs-14)}
+
+  .tabs{display:flex;gap:var(--sp-4);margin-bottom:var(--sp-16);border-bottom:1px solid var(--gray2);flex-wrap:wrap}
+  .tabs button{border:0;background:none;padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);color:var(--gray6);
+    border-bottom:2px solid transparent;margin-bottom:-1px}
+  .tabs button:hover{color:var(--gray9)}
+  .tabs button.on{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
+
+  table.t{width:100%;border-collapse:collapse;font-size:var(--fs-14)}
+  table.t th{text-align:left;font-size:var(--fs-12);letter-spacing:.04em;text-transform:uppercase;color:var(--gray5);
+    font-weight:700;padding:var(--sp-8) var(--sp-12);border-bottom:1px solid var(--gray2);white-space:nowrap}
+  table.t td{padding:var(--sp-8) var(--sp-12);border-bottom:1px solid var(--gray1);vertical-align:middle}
+  table.t tr:last-child td{border-bottom:0}
+  table.t tbody tr:hover{background:var(--gray0)}
+  .num{color:var(--gray5);font-size:var(--fs-12)}
+  .dt{font-variant-numeric:tabular-nums;color:var(--gray7);white-space:nowrap}
+  .link{color:var(--blue);text-decoration:none} .link:hover{text-decoration:underline}
+  .empty{color:var(--gray5);font-size:var(--fs-14);padding:var(--sp-20) 0;text-align:center}
+  .mono{font-family:ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+
+  .badge{display:inline-block;font-size:var(--fs-12);font-weight:600;padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4)}
+  .b-now{background:var(--green-l);color:#2b8a3e}
+  .b-old{background:var(--gray1);color:var(--gray6)}
+  .b-warn{background:var(--orange-l);color:#d9480f}
+  .b-info{background:var(--blue-l);color:#1864ab}
+  .b-vio{background:var(--violet-l);color:#5f3dc4}
+  .b-red{background:var(--red-l);color:#c92a2a}
+  .rowact{border:0;background:none;color:var(--gray5);font-size:var(--fs-16);line-height:1;
+    padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4)}
+  .rowact:hover{background:var(--gray2);color:var(--gray9)}
+
+  /* строки настроек */
+  .set{display:flex;gap:var(--sp-16);align-items:flex-start;padding:var(--sp-16) 0;border-top:1px solid var(--gray1)}
+  .set:first-of-type{border-top:0}
+  .set .txt{flex:1;min-width:0}
+  .set b{font-size:var(--fs-14);display:block}
+  .set .sub{font-size:var(--fs-12);color:var(--gray6);margin-top:3px;line-height:1.5}
+  .set .ctl{flex:none;min-width:var(--col-300);display:flex;flex-direction:column;gap:var(--sp-8)}
+  .set .ctl.narrow{min-width:var(--col-220)}
+  .set input,.set select,.set textarea{width:100%;border:1px solid var(--gray3);border-radius:var(--r);
+    padding:var(--sp-8) var(--sp-12);font-size:var(--fs-14);font-family:inherit}
+  .set .row{display:flex;gap:var(--sp-8)}
+  .sw{display:inline-flex;align-items:center;gap:var(--sp-8);font-size:var(--fs-14);cursor:pointer}
+  .sw input{width:auto}
+
+  .fld{margin-bottom:12px}
+  .fld label{display:block;font-size:var(--fs-12);color:var(--gray6);margin-bottom:5px;font-weight:600}
+  .fld input,.fld select,.fld textarea{width:100%;border:1px solid var(--gray3);border-radius:var(--r);
+    padding:var(--sp-8) var(--sp-12);font-size:var(--fs-14);font-family:inherit}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-12)}
+  .hint2{font-size:var(--fs-12);color:var(--gray6);margin-top:6px;line-height:1.45}
+  .warnbox{background:var(--orange-l);border:1px solid #ffd8a8;color:#d9480f;border-radius:var(--r-8);
+    padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);margin-bottom:14px}
+  .infobox{background:var(--blue-l);border:1px solid #a5d8ff;color:#1864ab;border-radius:var(--r-8);
+    padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);margin-bottom:14px}
+  .lockbox{background:var(--gray0);border:1px solid var(--gray2);color:var(--gray6);border-radius:var(--r-8);
+    padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);margin-bottom:14px}
+  .demo{display:flex;align-items:center;gap:var(--sp-8);font-size:var(--fs-12);color:var(--gray6)}
+
+  /* документы и версии */
+  .doc{border:1px solid var(--gray2);border-radius:var(--r-8);padding:var(--sp-12) var(--sp-16);margin-bottom:12px}
+  .doc .top{display:flex;align-items:center;gap:var(--sp-12);flex-wrap:wrap}
+  .doc b{font-size:var(--fs-14)}
+  .doc .met{margin-left:auto;font-size:var(--fs-12);color:var(--gray6)}
+  .vers{margin-top:10px;border-top:1px solid var(--gray1)}
+  .ver{display:flex;gap:var(--sp-12);align-items:center;padding:var(--sp-8) 0;border-bottom:1px solid var(--gray1);
+    font-size:var(--fs-14)}
+  .ver:last-child{border-bottom:0}
+  .ver .v{width:var(--col-92);flex:none;font-weight:600;font-variant-numeric:tabular-nums}
+  .ver .when{width:var(--col-220);flex:none;color:var(--gray6);font-size:var(--fs-12)}
+  .ver .cnt{flex:1;color:var(--gray6);font-size:var(--fs-12)}
+
+  /* модули */
+  .mods{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--sp-12)}
+  .mod{border:1px solid var(--gray2);border-radius:var(--r-8);padding:var(--sp-12) var(--sp-16)}
+  .mod.on{border-color:var(--green);background:var(--green-l)}
+  .mod .top{display:flex;align-items:center;gap:var(--sp-8)}
+  .mod b{font-size:var(--fs-14)}
+  .mod .sub{font-size:var(--fs-12);color:var(--gray6);margin-top:4px;line-height:1.45}
+  .mod .acts{margin-top:8px;display:flex;gap:var(--sp-8);flex-wrap:wrap}
+
+  @media (max-width:1150px){ .mods{grid-template-columns:1fr} .set{flex-direction:column}
+    .set .ctl{min-width:0;width:100%} }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-top">
+      <div class="logo">ШБ</div>
+      <div style="flex:1"><b>Шаг в будущее</b><small>Управление</small></div>
+      <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')">⟨</button>
+    </div>
+    <nav class="nav">
+      <h4>Настройки</h4>
+      <a href="26-settings-learning.html"><i class="ic">⚙</i><span>Настройки обучения</span></a>
+      <a href="27-settings-system.html" class="on"><i class="ic">⚒</i><span>Настройки системы</span></a>
+      <h4>Люди</h4>
+      <a href="21-staff.html"><i class="ic">◇</i><span>Сотрудники и роли</span></a>
+      <a href="23-admission.html"><i class="ic">◔</i><span>Приём</span></a>
+    </nav>
+    <div class="side-user">
+      <div class="ava" id="userIni">ТР</div>
+      <div style="flex:1"><b style="font-size:var(--fs-14);display:block" id="userName">Техадминов Р.</b>
+        <small style="font-size:var(--fs-12);color:var(--gray6)" id="userRole">Технический администратор</small></div>
+      <span style="color:var(--gray5)">⚙</span>
+    </div>
+  </aside>
+
+  <div class="app">
+    <header class="head">
+      <div>
+        <div class="crumbs">Управление · Настройки</div>
+        <h1>Настройки системы</h1>
+      </div>
+      <div class="sp"></div>
+      <label class="demo">роль <i>(демо)</i>
+        <select id="role" onchange="setRole(this.value)" style="padding:var(--sp-4) var(--sp-8);font-size:var(--fs-12)">
+          <option value="tech">Технический администратор</option>
+          <option value="owner">Владелец</option>
+        </select></label>
+      <button class="btn btn-p" onclick="toast('Сохранено')">Сохранить</button>
+    </header>
+
+    <div class="body">
+      <div class="tabs" id="tabs"></div>
+      <div id="pane"></div>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" onclick="closeAll()"></div>
+
+<!-- новая версия документа -->
+<div class="modal" id="mVer">
+  <div class="mo-h" id="verTitle">Новая редакция документа</div>
+  <div class="mo-b">
+    <div class="infobox">Действующие ученики остаются на своей редакции — той, которую приняли. Новая применяется
+      к заявкам и договорам, оформленным после публикации.</div>
+    <div class="fld"><label>Текст редакции</label>
+      <textarea rows="6">Настоящим подтверждаю согласие на обработку персональных данных…</textarea></div>
+    <div class="row2">
+      <div class="fld"><label>Номер редакции</label><input type="text" id="verNum" value="4" disabled></div>
+      <div class="fld"><label>Действует с</label><input type="date" value="2026-09-15"></div>
+    </div>
+    <div class="hint2">Опубликованная редакция не редактируется: правка — это следующая редакция. Так по номеру
+      всегда видно, под каким текстом подписался конкретный человек.</div>
+  </div>
+  <div class="mo-f"><button class="btn" onclick="closeAll()">Отмена</button>
+    <button class="btn btn-p" onclick="doVer()">Опубликовать редакцию</button></div>
+</div>
+
+<!-- смена байпас-кода -->
+<div class="modal" id="mOtp">
+  <div class="mo-h">Сменить код обхода подтверждения</div>
+  <div class="mo-b">
+    <div class="warnbox">Код один на школу и позволяет завершить регистрацию без письма на почту. Смена кода
+      не трогает прошлые заявки: у каждой остаётся отметка, каким кодом она была подтверждена.</div>
+    <div class="fld"><label>Новый код</label><input type="text" class="mono" value="7391-KLMN"></div>
+    <div class="hint2">Прежний код перестаёт работать сразу после смены.</div>
+  </div>
+  <div class="mo-f"><button class="btn" onclick="closeAll()">Отмена</button>
+    <button class="btn btn-p" onclick="doOtp()">Сменить</button></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* Технические настройки инстанса. Профильная роль — технический администратор;
+   подключение и отключение модулей — решение владельца, потому что меняет условия подписки
+   (01-product §3.4). Поэтому вкладка модулей у техадмина доступна только на чтение параметров. */
+var TABS = [
+  {k:'conf',  t:'Конфигурация'},
+  {k:'cons',  t:'Согласия и оферта'},
+  {k:'mail',  t:'Шаблоны писем'},
+  {k:'mods',  t:'Модули'},
+  {k:'log',   t:'Журналы'}
+];
+var ROLES = {
+  tech: {n:'Техадминов Р.',  t:'Технический администратор', ini:'ТР', mods:false, logs:false},
+  owner:{n:'Владельцев В.',  t:'Владелец',                  ini:'ВВ', mods:true,  logs:true}
+};
+var role = 'tech', tab = 0;
+function R(){ return ROLES[role]; }
+
+var OTP = {code:'4820-QRST', since:'01.09.2026', used:3,
+  past:[{code:'1150-ABCD', from:'01.06.2026', to:'01.09.2026', used:7}]};
+
+var DOCS = [
+  {n:'Согласие на обработку персональных данных', need:'при регистрации и в заявке',
+   vers:[{v:'3', from:'01.09.2026', n:42, now:true},
+         {v:'2', from:'12.03.2026', n:118},
+         {v:'1', from:'01.09.2025', n:203}]},
+  {n:'Оферта на оказание образовательных услуг', need:'при зачислении и покупке с витрины',
+   vers:[{v:'2', from:'20.08.2026', n:57, now:true},
+         {v:'1', from:'01.09.2025', n:264}]},
+  {n:'Согласие на фото- и видеосъёмку', need:'необязательное, спрашивается в анкете',
+   vers:[{v:'1', from:'01.09.2025', n:311, now:true}]}
+];
+
+var MAILS = [
+  {n:'Приглашение представителю (JOIN-ссылка)', ev:'выпуск ссылки', on:true},
+  {n:'Временный пароль',                        ev:'выдача пароля', on:true},
+  {n:'Зачисление в группу',                     ev:'создание записи', on:true},
+  {n:'Работа проверена',                        ev:'вердикт проверяющего', on:true},
+  {n:'Напоминание о задолженности',             ev:'по кнопке в финансах', on:true},
+  {n:'Открылся новый урок',                     ev:'открытие урока расписанием', on:false}
+];
+
+var MODS = [
+  {n:'Кампус',        on:true,  d:'Занятия, кабинеты, посещаемость, замены'},
+  {n:'Школа',         on:true,  d:'Представители, JOIN-связывание, поля «школа» и «класс»'},
+  {n:'ЭДО',           on:false, d:'Документы, договоры, приказы, сертификаты'},
+  {n:'Ручная проверка',on:true, d:'Задания с проверкой человеком, очередь и карточка проверки'},
+  {n:'Витрина',       on:true,  d:'Карточки курсов, наборы, публикация в каталоге'},
+  {n:'Маркетинг',     on:false, d:'Воронка лидов, промокоды, отзывы, рассылки'},
+  {n:'ЕГЭ',           on:false, d:'Разметка по номерам, первичные баллы, перевод во вторичные'},
+  {n:'Видеохранилище',on:false, d:'Загрузка видео в S3 вместо ссылок на внешние сервисы'}
+];
+
+var LOGS = [
+  {d:'14.08 11:41', who:'Владельцев В.', what:'Назначена роль «Методист»', obj:'Кэбс М.', k:'roles'},
+  {d:'14.08 10:03', who:'Приёмщикова А.', what:'Зачисление в группу МЕГЭ-3', obj:'Новиков Егор', k:'edu'},
+  {d:'14.08 09:40', who:'Считалова О.', what:'Сторно начисления 950 ₽', obj:'Волков Артём', k:'money'},
+  {d:'13.08 18:12', who:'Техадминов Р.', what:'Смена кода обхода подтверждения', obj:'конфигурация', k:'conf'},
+  {d:'13.08 16:55', who:'вендор', what:'Вход в инстанс по обращению №312', obj:'—', k:'vendor'},
+  {d:'12.08 12:30', who:'Приёмщикова А.', what:'Выдан временный пароль', obj:'Абрамов Кирилл', k:'access'},
+  {d:'11.08 09:02', who:'Владельцев В.', what:'Опубликована редакция 3 согласия на обработку ПД', obj:'документы', k:'docs'}
+];
+var LOGK = {roles:'роли', edu:'учебный процесс', money:'финансы', conf:'конфигурация',
+  vendor:'доступ вендора', access:'доступ', docs:'документы'};
+
+function setRole(v){
+  role = v;
+  document.getElementById('userIni').textContent = R().ini;
+  document.getElementById('userName').textContent = R().n;
+  document.getElementById('userRole').textContent = R().t;
+  render();
+  toast(R().t + ': ' + (R().mods ? 'подключает модули' : 'настраивает параметры модулей, но не подключает их'));
+}
+function setTab(i){ tab = i; render(); }
+
+function render(){
+  document.getElementById('tabs').innerHTML = TABS.map(function(t, i){
+    return '<button class="' + (i === tab ? 'on' : '') + '" onclick="setTab(' + i + ')">' + t.t + '</button>';
+  }).join('');
+  var k = TABS[tab].k;
+  document.getElementById('pane').innerHTML =
+    k === 'conf' ? paneConf() : k === 'cons' ? paneCons() :
+    k === 'mail' ? paneMail() : k === 'mods' ? paneMods() : paneLog();
+}
+
+function set(t, s, ctl, narrow){
+  return '<div class="set"><div class="txt"><b>' + t + '</b><div class="sub">' + s + '</div></div>' +
+    '<div class="ctl' + (narrow ? ' narrow' : '') + '">' + ctl + '</div></div>';
+}
+
+function paneConf(){
+  return '<div class="card sec"><div class="sec-h"><h3>Режим инстанса</h3></div>' +
+    set('Тестовое окружение',
+        'Платежи идут в тестовом режиме провайдера, письма не уходят наружу, данные помечены как демонстрационные. ' +
+        'Включают при переносе школы и при обучении сотрудников.',
+        '<label class="sw"><input type="checkbox" onchange="toast(this.checked ? \'Тестовый режим включён: письма и платежи не уходят наружу\' : \'Боевой режим\')"> тестовый режим</label>') +
+    set('Часовой пояс', 'Время занятий, дедлайнов и таймеров экзамена показывается в нём.',
+        '<select><option>Europe/Moscow (UTC+3)</option><option>Asia/Yekaterinburg (UTC+5)</option>' +
+        '<option>Europe/Kaliningrad (UTC+2)</option></select>', true) +
+    set('Рабочее время', 'Границы сетки расписания и индивидуальных занятий; шаг сетки 30 минут.',
+        '<div class="row"><input type="text" value="8:00"><input type="text" value="20:00"></div>', true) +
+    '</div>' +
+
+    '<div class="card sec"><div class="sec-h"><h3>Организация</h3>' +
+      '<span class="muted">подставляется в договоры, приказы и печатные формы</span></div>' +
+    set('Название', 'Полное и краткое — как в уставе.',
+        '<input type="text" value="ЧОУ ДО «Шаг в будущее»"><input type="text" value="Шаг в будущее">') +
+    set('Реквизиты', 'ИНН, ОГРН, адрес, банковские реквизиты.',
+        '<input type="text" value="ИНН 7712345678"><input type="text" value="г. Москва, ул. Примерная, 1">') +
+    set('Лицензия', 'Номер и дата — печатаются в договоре и на сертификатах.',
+        '<input type="text" value="№ Л035-01298 от 12.04.2024">') +
+    set('Подписант', 'Кто подписывает договоры и приказы.',
+        '<input type="text" value="Директор Владельцев В. В.">') +
+    '</div>' +
+
+    '<div class="card sec"><div class="sec-h"><h3>Оформление</h3></div>' +
+    set('Логотип школы', 'Показывается в шапке кабинетов, на публичных страницах и в письмах.',
+        '<button class="btn btn-s" onclick="toast(\'Загрузка логотипа\')">Загрузить файл</button>', true) +
+    set('Цветовая палитра',
+        'Применяется к публичным страницам и письмам. Кабинеты, плеер и управление выглядят одинаково у всех школ — ' +
+        'из клиентского там только логотип. Смена палитры — заявка вендору.',
+        '<button class="btn btn-s" onclick="toast(\'Заявка вендору на смену палитры\')">Запросить смену</button>', true) +
+    '</div>' +
+
+    '<div class="card sec"><div class="sec-h"><h3>Подтверждение почты</h3></div>' +
+    set('Код обхода подтверждения',
+        'Один код на школу для случая, когда ученик не может получить письмо: администратор диктует его, ' +
+        'и регистрация завершается без кода из почты. В заявке остаётся отметка, каким кодом она подтверждена — ' +
+        'по ней потом видно, кто заходил в обход.',
+        '<div class="row"><input type="text" class="mono" value="' + OTP.code + '" disabled>' +
+        '<button class="btn btn-s" onclick="show(\'mOtp\')">Сменить</button></div>' +
+        '<div class="hint2">действует с ' + OTP.since + ' · по нему заполнено заявок: ' + OTP.used + '</div>') +
+    '<div class="sec-h" style="margin:8px 0"><h3>Прежние коды</h3></div>' +
+    '<table class="t"><thead><tr><th style="width:var(--col-220)">Код</th>' +
+      '<th style="width:var(--col-300)">Действовал</th><th>Заявок подтверждено</th></tr></thead><tbody>' +
+      OTP.past.map(function(p){
+        return '<tr><td class="mono">' + p.code + '</td><td class="dt">' + p.from + ' — ' + p.to + '</td>' +
+          '<td>' + p.used + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+}
+
+function paneCons(){
+  return '<div class="infobox">Документ один на всех, редакции нумеруются. Заявка привязывается к той редакции, ' +
+      'которая действовала в момент акцепта, и остаётся на ней навсегда — при разборе видно, под чем именно ' +
+      'подписался человек.</div>' +
+    '<div class="card sec"><div class="sec-h"><h3>Документы</h3>' +
+      '<div style="flex:1"></div>' +
+      '<button class="btn btn-s btn-p" onclick="openVer()">Новая редакция</button></div>' +
+    DOCS.map(function(d, i){
+      var now = d.vers[0];
+      return '<div class="doc"><div class="top"><b>' + d.n + '</b>' +
+        '<span class="badge b-now">редакция ' + now.v + '</span>' +
+        '<span class="met">' + d.need + '</span></div>' +
+        '<div class="vers">' + d.vers.map(function(v){
+          return '<div class="ver"><span class="v">ред. ' + v.v + '</span>' +
+            '<span class="when">с ' + v.from + (v.now ? ' · действует' : '') + '</span>' +
+            '<span class="cnt">принято: ' + v.n + '</span>' +
+            '<a class="link" href="#" onclick="event.preventDefault();toast(\'Текст редакции ' + v.v + '\')">текст</a></div>';
+        }).join('') + '</div></div>';
+    }).join('') + '</div>';
+}
+
+function paneMail(){
+  return '<div class="card sec"><div class="sec-h"><h3>Шаблоны писем</h3>' +
+      '<span class="muted">сервисные письма не отключаются</span></div>' +
+    '<table class="t"><thead><tr><th>Шаблон</th><th style="width:var(--col-300)">Событие</th>' +
+      '<th style="width:var(--col-220)">Отправка</th><th style="width:var(--col-160)"></th></tr></thead><tbody>' +
+    MAILS.map(function(m){
+      return '<tr><td><b>' + m.n + '</b></td><td>' + m.ev + '</td>' +
+        '<td>' + (m.on ? '<span class="badge b-now">включена</span>' : '<span class="badge b-old">выключена</span>') + '</td>' +
+        '<td style="text-align:right"><button class="btn btn-s" onclick="toast(\'Редактор шаблона: текст и переменные\')">Изменить</button></td></tr>';
+    }).join('') + '</tbody></table>' +
+    '<div class="hint2" style="margin-top:10px">Палитра писем берётся из оформления. Переменные подставляются ' +
+      'из события: имя, группа, дата, ссылка.</div></div>';
+}
+
+function paneMods(){
+  return (R().mods ? '' :
+    '<div class="lockbox">Подключение и отключение модулей — решение владельца: оно меняет условия подписки. ' +
+    'Технический администратор настраивает параметры уже подключённых.</div>') +
+    '<div class="card sec"><div class="sec-h"><h3>Модули</h3>' +
+      '<span class="muted">' + MODS.filter(function(m){ return m.on; }).length + ' из ' + MODS.length + ' подключено</span></div>' +
+    '<div class="mods">' + MODS.map(function(m, i){
+      return '<div class="mod' + (m.on ? ' on' : '') + '"><div class="top"><b>' + m.n + '</b>' +
+        (m.on ? '<span class="badge b-now">подключён</span>' : '<span class="badge b-old">не подключён</span>') + '</div>' +
+        '<div class="sub">' + m.d + '</div>' +
+        '<div class="acts">' +
+          (m.on ? '<button class="btn btn-s" onclick="toast(\'Параметры модуля ' + m.n + '\')">Параметры</button>' : '') +
+          (R().mods
+            ? '<button class="btn btn-s" onclick="toggleMod(' + i + ')">' + (m.on ? 'Отключить' : 'Подключить') + '</button>'
+            : (m.on ? '' : '<span class="num">подключает владелец</span>')) +
+        '</div></div>';
+    }).join('') + '</div></div>';
+}
+
+function paneLog(){
+  return '<div class="card sec"><div class="sec-h"><h3>Журналы</h3>' +
+      '<span class="muted">роли, доступы, деньги, документы и входы вендора</span>' +
+      '<div style="flex:1"></div>' +
+      (R().logs
+        ? '<button class="btn btn-s" onclick="toast(\'Выгрузка журнала за период\')">Выгрузить</button>'
+        : '') + '</div>' +
+    (R().logs ? '' : '<div class="lockbox">Просмотр и выгрузку журналов открывает владелец.</div>') +
+    (R().logs
+      ? '<table class="t"><thead><tr><th style="width:var(--col-220)">Когда</th>' +
+        '<th style="width:var(--col-260)">Кто</th><th>Что</th>' +
+        '<th style="width:var(--col-300)">Объект</th><th style="width:var(--col-220)">Область</th></tr></thead><tbody>' +
+        LOGS.map(function(l){
+          return '<tr><td class="dt">' + l.d + '</td>' +
+            '<td>' + l.who + (l.k === 'vendor' ? ' <span class="badge b-vio">вендор</span>' : '') + '</td>' +
+            '<td>' + l.what + '</td><td>' + l.obj + '</td>' +
+            '<td><span class="badge ' + (l.k === 'money' ? 'b-warn' : l.k === 'vendor' ? 'b-vio' : 'b-info') + '">' +
+              LOGK[l.k] + '</span></td></tr>';
+        }).join('') + '</tbody></table>'
+      : '') + '</div>';
+}
+
+/* ── действия ── */
+function openVer(){
+  document.getElementById('verTitle').textContent = 'Новая редакция: ' + DOCS[0].n;
+  document.getElementById('verNum').value = (+DOCS[0].vers[0].v + 1);
+  show('mVer');
+}
+function doVer(){
+  var d = DOCS[0];
+  d.vers[0].now = false;
+  d.vers.unshift({v:String(+d.vers[0].v + 1), from:'15.09.2026', n:0, now:true});
+  closeAll(); render();
+  toast('Редакция ' + d.vers[0].v + ' опубликована: действует для новых заявок, прежние остались на своих');
+}
+function doOtp(){
+  OTP.past.unshift({code:OTP.code, from:OTP.since, to:'15.09.2026', used:OTP.used});
+  OTP.code = '7391-KLMN'; OTP.since = '15.09.2026'; OTP.used = 0;
+  closeAll(); render();
+  toast('Код сменён: прежний больше не работает, отметки в заявках сохранены');
+}
+function toggleMod(i){
+  var m = MODS[i];
+  m.on = !m.on; render();
+  toast(m.on ? 'Модуль «' + m.n + '» подключён: его экраны и права появились у ролей'
+             : 'Модуль «' + m.n + '» отключён: экраны скрыты, данные сохранены');
+}
+
+function show(id){ document.getElementById('scrim').classList.add('on'); document.getElementById(id).classList.add('on'); }
+function closeAll(){
+  document.getElementById('scrim').classList.remove('on');
+  ['mVer','mOtp'].forEach(function(id){ document.getElementById(id).classList.remove('on'); });
+}
+
+var tt;
+function toast(m){
+  var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3600);
+}
+
+render();
+</script>
+</body>
+</html>

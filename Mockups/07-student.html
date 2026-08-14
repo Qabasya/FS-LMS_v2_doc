@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="_shared.css">
 <script src="_icons.js"></script>
 <script src="_tip.js"></script>
+<script src="_nav.js"></script>
 <style>
   .body{flex:1;overflow:auto;padding:var(--sp-16) var(--sp-20) var(--user-h)}
   .card{background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);box-shadow:var(--sh)}
@@ -78,7 +79,7 @@
   .pk .lead{color:var(--gray6);font-size:var(--fs-14);margin:0 0 var(--sp-20)}
   .pk-f{display:flex;gap:var(--sp-8);margin-bottom:var(--sp-16);flex-wrap:wrap}
   .pk-list{border:1px solid var(--gray2);border-radius:var(--r-8);overflow:hidden}
-  .pk-row{display:flex;gap:var(--sp-12);align-items:center;padding:var(--sp-12) var(--sp-16);
+  .pk-row{display:flex;gap:var(--sp-12);align-items:center;padding:var(--sp-12) var(--sp-16);color:inherit;text-decoration:none;box-sizing:border-box;
     border-top:1px solid var(--gray1);cursor:pointer;font-size:var(--fs-14);width:100%;background:#fff;border-left:0;border-right:0;border-bottom:0;text-align:left}
   .pk-row:first-child{border-top:0}
   .pk-row:hover{background:var(--gray0)}
@@ -88,22 +89,28 @@
   .pk-row .sub{font-size:var(--fs-12);color:var(--gray6)}
 
   /* группа: та же сводка, что была на главной, плюс раскрытие в список учеников */
+  .g-line{display:flex;align-items:stretch;border-top:1px solid var(--gray2);background:#fff}
+  .g-line:first-child{border-top:0}
   .g-row{display:flex;gap:var(--sp-12);align-items:center;padding:var(--sp-12) var(--sp-16);
-    border-top:1px solid var(--gray2);cursor:pointer;background:#fff;width:100%;text-align:left;
-    border-left:0;border-right:0;border-bottom:0}
-  .g-row:first-child{border-top:0}
+    cursor:pointer;background:#fff;flex:1;min-width:0;text-align:left;color:inherit;text-decoration:none;border:0}
   .g-row:hover{background:var(--gray0)}
+  .g-toggle{width:46px;flex:none;border:0;border-left:1px solid var(--gray1);background:#fff;color:var(--gray5);
+    display:grid;place-items:center;padding:0}
+  .g-toggle:hover{background:var(--gray0);color:var(--gray9)}
+  .g-toggle .chev{font-size:var(--fs-16);line-height:1;transition:.12s;display:block}
+  .g-toggle.open .chev{transform:rotate(90deg)}
+  .g-toggle.open{background:var(--gray0)}
   .g-row .code{width:36px;height:36px;border-radius:var(--r-8);color:#fff;display:grid;place-items:center;
     font-size:var(--fs-12);font-weight:700;flex:none}
   .g-row .nm{flex:1;min-width:0}
   .g-row .nm b{font-size:var(--fs-14);display:block}
+  .g-row:hover .nm b{color:var(--blue);text-decoration:underline}
+  .g-row.plain:hover .nm b{color:inherit;text-decoration:none}
   .g-row .nm .sub{font-size:var(--fs-12);color:var(--gray6)}
   .g-row .met{display:flex;gap:var(--sp-16);font-size:var(--fs-12);text-align:right}
-  .g-row .met div{min-width:56px}
+  .g-row .met > span{min-width:56px;display:block}
   .g-row .met b{display:block;font-size:var(--fs-14);font-variant-numeric:tabular-nums}
   .g-row .met span{color:var(--gray6)}
-  .g-row .chev{color:var(--gray5);font-size:var(--fs-12);width:16px;text-align:center;transition:.12s}
-  .g-row.open .chev{transform:rotate(90deg)}
   .g-body{display:none;border-top:1px solid var(--gray2)}
   .g-body.on{display:block}
   .g-tbl{background:transparent}
@@ -163,7 +170,7 @@
   .kind{font-size:var(--fs-12);color:var(--gray6)}
   .kind.ind{color:var(--violet)}
   .score{font-weight:700;font-variant-numeric:tabular-nums}
-  .link{color:var(--blue);cursor:pointer} .link:hover{text-decoration:underline}
+  .link{color:var(--blue);cursor:pointer;text-decoration:none} .link:hover{text-decoration:underline}
 
   /* ── прогресс по урокам ── */
   /* один урок — одна строка: название · шаги · работы · процент */
@@ -204,7 +211,7 @@
       <div style="flex:1"><b>Шаг в будущее</b><small>Управление</small></div>
       <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')">⟨</button>
     </div>
-    <div class="switch"><button>Обучение</button><button class="on">Управление</button></div>
+    <div class="switch"><a href="11-student-home.html" title="Пространство «Обучение»: свои курсы и учёба">Обучение</a><button class="on">Управление</button></div>
     <nav class="nav">
       <h4>Моя работа</h4>
       <a href="#"><i class="ic">◱</i><span>Главная</span></a>
@@ -240,6 +247,7 @@
         <select id="role" onchange="setRole()" style="padding:var(--sp-4) var(--sp-8);font-size:var(--fs-12)">
           <option value="teacher">Преподаватель</option>
           <option value="method">Методист</option>
+          <option value="adm">Адм. учебной части</option>
         </select></label>
 
       <button class="btn btn-s ctx" onclick="step(-1)">‹</button>
@@ -344,7 +352,8 @@
             <div class="modes"><button class="on">Все</button><button onclick="toast('Фильтр: только несданные')">Несданные</button>
               <button onclick="toast('Фильтр: только итоговые')">Итоговые</button></div></div>
           <table class="t"><thead><tr>
-            <th style="width:var(--col-110)">Тип</th><th>Работа</th><th style="width:var(--col-260)">Урок</th><th style="width:var(--col-110)">Срок</th>
+            <th style="width:var(--col-92)">Тип</th><th style="width:var(--col-110)">Дата урока</th>
+            <th style="width:var(--col-260)">Тема урока</th><th>Работа</th><th style="width:var(--col-110)">Срок сдачи</th>
             <th style="width:var(--col-160)">Статус</th><th style="width:var(--col-92)">Попыток</th><th style="width:var(--col-110)">Балл</th>
           </tr></thead><tbody id="works"></tbody></table>
         </div>
@@ -391,14 +400,16 @@ var ENROLL = [
 ];
 var ROLE = 'teacher', curEnc = 0;
 function myEnc(){
-  return ENROLL.filter(function(e){ return ROLE === 'method' || e.teacher === ME; });
+  /* преподаватель видит направления, где ведёт сам; методист и администратор — все */
+  return ENROLL.filter(function(e){ return ROLE !== 'teacher' || e.teacher === ME; });
 }
 function setRole(){
   ROLE = document.getElementById('role').value;
   if(myEnc().indexOf(ENROLL[curEnc]) < 0) curEnc = ENROLL.indexOf(myEnc()[0]);
   closeEnc(); render();
-  toast(ROLE === 'method'
-    ? 'Методист: видны все направления ученика'
+  if(document.getElementById('picker').classList.contains('on')) renderPicker();
+  toast(ROLE === 'adm' ? 'Адм. учебной части: из списка открывается карточка группы'
+    : ROLE === 'method' ? 'Методист: видны все направления ученика, карточка группы — не его область'
     : 'Преподаватель: видны только направления, где ведёт он сам');
 }
 function renderEnc(){
@@ -425,9 +436,7 @@ function openEnc(ev){
       '<span class="code" style="background:'+x.color+'">'+x.code+'</span>' +
       '<span style="flex:1">'+x.name+'<small>'+(alien ? 'ведёт '+x.teacher : 'ведёте вы')+'</small></span></button>';
   }).join('') +
-  (ROLE === 'teacher'
-    ? '<div class="note">Показаны только ваши направления. Статистика по другим группам ученика доступна их преподавателю и методисту.</div>'
-    : '<div class="note">Методист видит все направления ученика.</div>');
+  (ROLE === 'teacher' ? '<div class="note">Показаны только ваши направления.</div>' : '');
   p.classList.add('on');
   var r = ev.currentTarget.getBoundingClientRect();
   p.style.left = Math.min(r.left, innerWidth - 300) + 'px';
@@ -446,17 +455,17 @@ var meIdx = 0;
 /* занятия: att — p был / a не был / null не отмечено / undefined впереди */
 var LESSONS = [
   {mo:'Сентябрь', d:'01.09', kind:'g', topic:'Повторение: дроби',        att:'p', steps:6,  works:[]},
-  {mo:'Сентябрь', d:'04.09', kind:'g', topic:'Проценты и пропорции',     att:'p', steps:7,  works:[{l:'ДЗ',max:5,  st:'graded', sc:4, tries:1, due:'07.09'}]},
+  {mo:'Сентябрь', d:'04.09', kind:'g', topic:'Проценты и пропорции',     att:'p', steps:7,  works:[{l:'ДЗ',max:5,  st:'graded', sc:4, tries:1, due:'07.09', name:'Проценты: базовые задачи'}]},
   {mo:'Сентябрь', d:'08.09', kind:'g', topic:'Линейные уравнения',       att:'a', steps:5,  works:[]},
   {mo:'Сентябрь', d:'10.09', kind:'i', topic:'Отработка: линейные уравнения', att:'p', steps:4, works:[]},
-  {mo:'Сентябрь', d:'11.09', kind:'g', topic:'Системы уравнений',        att:'p', steps:8,  works:[{l:'СР',max:10, st:'graded', sc:8, tries:1, due:'11.09'},{l:'ДЗ',max:5, st:'graded', sc:5, tries:2, due:'14.09'}]},
+  {mo:'Сентябрь', d:'11.09', kind:'g', topic:'Системы уравнений',        att:'p', steps:8,  works:[{l:'СР',max:10, st:'graded', sc:8, tries:1, due:'11.09', name:'Системы: два способа решения'},{l:'ДЗ',max:5, st:'graded', sc:5, tries:2, due:'14.09', name:'Системы: тренировка'}]},
   {mo:'Сентябрь', d:'15.09', kind:'g', topic:'Квадратные уравнения',     att:'p', steps:9,  works:[]},
-  {mo:'Сентябрь', d:'18.09', kind:'g', topic:'Неравенства',              att:'p', steps:7,  works:[{l:'КР',max:20, st:'graded', sc:15, tries:1, due:'18.09', fin:true}]},
-  {mo:'Сентябрь', d:'22.09', kind:'g', topic:'Функции и графики',        att:'a', steps:8,  works:[{l:'СР',max:10, st:'late',   sc:null, tries:0, due:'22.09'},{l:'ДЗ',max:5, st:'review', sc:null, tries:1, due:'25.09'}]},
-  {mo:'Сентябрь', d:'25.09', kind:'g', topic:'Степени и корни',          att:null,steps:6,  works:[{l:'ДЗ',max:5,  st:'none',   sc:null, tries:0, due:'28.09'}]},
-  {mo:'Октябрь',  d:'02.10', kind:'g', topic:'Прогрессии',               att:'p', steps:7,  works:[{l:'СР',max:10, st:'review', sc:null, tries:1, due:'02.10'}]},
+  {mo:'Сентябрь', d:'18.09', kind:'g', topic:'Неравенства',              att:'p', steps:7,  works:[{l:'КР',max:20, st:'graded', sc:15, tries:1, due:'18.09', fin:true, name:'Уравнения и неравенства'}]},
+  {mo:'Сентябрь', d:'22.09', kind:'g', topic:'Функции и графики',        att:'a', steps:8,  works:[{l:'СР',max:10, st:'late',   sc:null, tries:0, due:'22.09', name:'Графики: чтение и построение'},{l:'ДЗ',max:5, st:'review', sc:null, tries:1, due:'25.09', name:'Функции: домашняя'}]},
+  {mo:'Сентябрь', d:'25.09', kind:'g', topic:'Степени и корни',          att:null,steps:6,  works:[{l:'ДЗ',max:5,  st:'none',   sc:null, tries:0, due:'28.09', name:'Степени и корни: тренировка'}]},
+  {mo:'Октябрь',  d:'02.10', kind:'g', topic:'Прогрессии',               att:'p', steps:7,  works:[{l:'СР',max:10, st:'review', sc:null, tries:1, due:'02.10', name:'Прогрессии: самостоятельная'}]},
   {mo:'Октябрь',  d:'06.10', kind:'g', topic:'Текстовые задачи',         steps:6,  works:[]},
-  {mo:'Октябрь',  d:'09.10', kind:'g', topic:'Итоговая по разделу',      steps:4,  works:[{l:'КР',max:20, st:'none', sc:null, tries:0, due:'09.10', fin:true}]}
+  {mo:'Октябрь',  d:'09.10', kind:'g', topic:'Итоговая по разделу',      steps:4,  works:[{l:'КР',max:20, st:'none', sc:null, tries:0, due:'09.10', fin:true, name:'Итоговая по разделу «Алгебра»'}]}
 ];
 var TERM = LESSONS, OPEN_UPTO = 10;       /* уроки с этого индекса ещё закрыты расписанием */
 var TYPES = ['text','video','task','work','exam','live'];
@@ -618,7 +627,7 @@ function render(){
 
     return '<tr><td class="dt">'+l.d+'</td>' +
       '<td><span class="kind '+(l.kind==='i'?'ind':'')+'">'+(l.kind==='i'?'◆ индивид.':'◱ групповое')+'</span></td>' +
-      '<td><span class="link" onclick="location.href=\'08-lesson.html\'" title="Урок по группе">'+l.topic+'</span></td>' +
+      '<td><a class="link" href="08-lesson.html#t='+encodeURIComponent(l.topic)+'" title="Урок по группе">'+l.topic+'</a></td>' +
       '<td><div class="steps">'+sq+'</div></td>' +
       '<td>'+att+'</td><td>'+works+'</td></tr>';
   }).join('');
@@ -633,16 +642,18 @@ function render(){
     else if(w.st==='review') st = '<span class="badge b-info">на проверке</span>';
     else st = '<span class="muted">не сдано</span>';
     var pct = w.st==='graded' ? Math.round(w.sc/w.max*100) : null;
+    /* порядок колонок повторяет ход занятия: сначала когда и о чём был урок, потом что задали */
     return '<tr><td><span class="lb '+lbCls(w)+'">'+w.l+'</span></td>' +
-      '<td><span class="link" onclick="location.href=\'09-work.html\'" title="Работа по группе">' +
-        w.l+' · '+x.l.topic+'</span>'+(w.fin?' <span class="muted">(итоговая)</span>':'')+'</td>' +
-      '<td class="muted">'+x.l.topic+'</td>' +
+      '<td class="dt">'+x.l.d+'</td>' +
+      '<td><a class="link" href="08-lesson.html#t='+encodeURIComponent(x.l.topic)+'" title="Урок по группе">'+x.l.topic+'</a></td>' +
+      '<td><a class="link" href="09-work.html#n='+encodeURIComponent(w.name || w.l)+'" title="Работа по группе">'+(w.name || w.l)+'</a>' +
+        (w.fin?' <span class="muted">(итоговая)</span>':'')+'</td>' +
       '<td class="dt">'+w.due+'</td><td>'+st+'</td>' +
       '<td class="dt">'+(w.tries||'—')+'</td>' +
       '<td>'+(pct===null ? '<span class="muted">—</span>'
         : '<span class="score">'+w.sc+'/'+w.max+'</span> <span class="muted">'+pct+'%</span>')+'</td>' +
       '</tr>';
-  }).join('') || '<tr><td colspan="7" class="empty">Работ пока нет</td></tr>';
+  }).join('') || '<tr><td colspan="8" class="empty">Работ пока нет</td></tr>';
 
   document.getElementById('navPos').textContent = (meIdx+1)+' из '+GROUP.length;
   document.getElementById('hName').textContent = GROUP[meIdx];
@@ -695,18 +706,30 @@ function renderPicker(){
       '<th style="width:var(--col-110)"></th></tr></thead><tbody>' +
       GROUP.map(function(n, i){
         var f = g.flags[i];
+        /* строка кликается целиком, а имя — настоящая ссылка: её можно открыть в новой вкладке */
         return '<tr onclick="pickStudent('+i+')" title="Открыть профиль"><td class="num">'+(i+1)+'</td>' +
-          '<td><b style="font-weight:600">'+n+'</b></td>' +
+          '<td><a class="as-text" href="07-student.html#s='+i+'" style="font-weight:600" ' +
+            'onclick="event.stopPropagation();if(sameTab(event)) pickStudent('+i+')">'+n+'</a></td>' +
           '<td>'+(f ? '<span class="bad">'+f+'</span>' : '')+'</td>' +
           '<td style="text-align:right"><span class="go">открыть ›</span></td></tr>';
       }).join('') + '</tbody></table>';
-    return '<button class="g-row'+(gi===openGrp?' open':'')+'" onclick="toggleGrp('+gi+')">' +
-        '<span class="chev">›</span>' +
-        '<span class="code" style="background:'+g.color+'">'+g.code+'</span>' +
-        '<span class="nm"><b>'+g.n+'</b><span class="sub">'+GROUP.length+' учеников · ' +
-          (g.bad ? '<span class="bad">'+g.bad+' требуют внимания</span>' : 'вопросов нет') + '</span></span>' +
-        '<span class="met"><div><b class="'+pcCls(g.att)+'">'+g.att+'%</b><span>посещ.</span></div>' +
-        '<div><b class="'+pcCls(g.works)+'">'+g.works+'%</b><span>работы</span></div></span></button>' +
+    /* Карточка группы — область администратора учебной части (01-product §3.4): состав, зачисление,
+       кабинеты и замены. Преподаватель и методист группу видят, но не ведут, поэтому строка у них
+       не ссылка, а раскрытие состава — вести в экран, где всё запрещено, значит обещать несуществующее. */
+    var card = ROLE === 'adm';
+    return '<div class="g-line">' +
+        (card
+          ? '<a class="g-row" href="20-group.html#g='+gi+'" title="Карточка группы">'
+          : '<button class="g-row plain" onclick="toggleGrp('+gi+')" title="Показать состав">') +
+          '<span class="code" style="background:'+g.color+'">'+g.code+'</span>' +
+          '<span class="nm"><b>'+g.n+'</b><span class="sub">'+GROUP.length+' учеников · ' +
+            (g.bad ? '<span class="bad">'+g.bad+' требуют внимания</span>' : 'вопросов нет') + '</span></span>' +
+          '<span class="met"><span><b class="'+pcCls(g.att)+'">'+g.att+'%</b><span>посещ.</span></span>' +
+          '<span><b class="'+pcCls(g.works)+'">'+g.works+'%</b><span>работы</span></span></span>' +
+          (card ? '</a>' : '</button>') +
+        '<button class="g-toggle'+(gi===openGrp?' open':'')+'" onclick="toggleGrp('+gi+')" ' +
+          'title="'+(gi===openGrp?'Свернуть состав':'Показать состав')+'"><span class="chev">›</span></button>' +
+      '</div>' +
       '<div class="g-body'+(gi===openGrp?' on':'')+'">'+rows+'</div>';
   }).join('');
 }
@@ -744,7 +767,10 @@ var tt;
 function toast(m){ var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
   clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3200); }
 render();
-if(needPick()) openPicker();
+/* адрес ученика живёт в хеше: 07-student.html#s=3 открывается в новой вкладке как обычная ссылка */
+var sHash = location.hash.match(/(?:^|[#&])s=(\d+)/);
+if(sHash && GROUP[+sHash[1]]) pickStudent(+sHash[1]);
+else if(needPick()) openPicker();
 </script>
 </body>
 </html>

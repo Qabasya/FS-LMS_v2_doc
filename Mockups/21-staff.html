@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Сотрудники и роли — FS-LMS 2.0</title>
+<link rel="stylesheet" href="_shared.css">
+<script src="_tip.js"></script>
+<script src="_nav.js"></script>
+<style>
+  .body{flex:1;overflow:auto;padding:var(--sp-16) var(--sp-20) var(--user-h)}
+  .card{background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);box-shadow:var(--sh)}
+  .sec{padding:var(--sp-16) var(--sp-20);margin-bottom:14px}
+  .sec-h{display:flex;align-items:center;gap:var(--sp-12);margin-bottom:12px;flex-wrap:wrap}
+  .sec-h h3{margin:0;font-size:var(--fs-14)}
+
+  .filters{display:flex;gap:var(--sp-8);align-items:center;flex-wrap:wrap;margin-bottom:14px}
+  .filters select,.filters input{border:1px solid var(--gray3);border-radius:var(--r);padding:var(--sp-8) var(--sp-12);
+    font-size:var(--fs-14);font-family:inherit}
+  .filters input{min-width:var(--col-260)}
+  .chipf{border:1px solid var(--gray3);background:#fff;border-radius:var(--r-pill);padding:var(--sp-6) var(--sp-12);
+    font-size:var(--fs-12);color:var(--gray7)}
+  .chipf.on{background:var(--blue-l);border-color:var(--blue);color:var(--blue);font-weight:600}
+
+  table.t{width:100%;border-collapse:collapse;font-size:var(--fs-14)}
+  table.t th{text-align:left;font-size:var(--fs-12);letter-spacing:.04em;text-transform:uppercase;color:var(--gray5);
+    font-weight:700;padding:var(--sp-8) var(--sp-12);border-bottom:1px solid var(--gray2);white-space:nowrap}
+  table.t td{padding:var(--sp-8) var(--sp-12);border-bottom:1px solid var(--gray1);vertical-align:middle}
+  table.t tr:last-child td{border-bottom:0}
+  table.t tbody tr:hover{background:var(--gray0)}
+  table.t tbody tr.clickable{cursor:pointer}
+  .who{display:flex;gap:var(--sp-12);align-items:center;min-width:0}
+  .av{width:30px;height:30px;border-radius:50%;background:var(--blue-l);color:var(--blue);display:grid;
+    place-items:center;font-size:var(--fs-12);font-weight:700;flex:none}
+  .who .nm{min-width:0}
+  .who .nm a{font-weight:600;color:inherit;text-decoration:none;display:block}
+  .who .nm a:hover{color:var(--blue);text-decoration:underline}
+  .who .nm small{display:block;color:var(--gray6);font-size:var(--fs-12)}
+  .num{color:var(--gray5);font-size:var(--fs-12)}
+  .dt{font-variant-numeric:tabular-nums;color:var(--gray7);white-space:nowrap}
+  .load{font-size:var(--fs-14);line-height:1.5}
+  .load small{display:block;color:var(--gray6);font-size:var(--fs-12)}
+  .empty{color:var(--gray5);font-size:var(--fs-14);padding:var(--sp-20) 0;text-align:center}
+
+  .rl{display:inline-block;font-size:var(--fs-12);font-weight:600;padding:var(--sp-4) var(--sp-8);
+    border-radius:var(--r-4);background:var(--gray1);color:var(--gray6);margin:1px 3px 1px 0;white-space:nowrap}
+  .rl.teach{background:var(--blue-l);color:#1864ab}
+  .rl.meth{background:var(--violet-l);color:#5f3dc4}
+  .rl.adm{background:var(--teal-l);color:#0b7285}
+  .rl.fin{background:var(--green-l);color:#2b8a3e}
+  .rl.own{background:var(--orange-l);color:#d9480f}
+  .rl.ext{background:#fff;border:1px dashed var(--gray3);color:var(--gray6)}
+  .rl.custom{background:#f3f0ff;color:#5f3dc4;border:1px solid #d0bfff}
+  .badge{display:inline-block;font-size:var(--fs-12);font-weight:600;padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4)}
+  .b-ok{background:var(--green-l);color:#2b8a3e}
+  .b-gray{background:var(--gray1);color:var(--gray6)}
+  .b-warn{background:var(--orange-l);color:#d9480f}
+  .b-info{background:var(--blue-l);color:#1864ab}
+  .warn{color:#d9480f}
+  .rowact{border:0;background:none;color:var(--gray5);font-size:var(--fs-16);line-height:1;
+    padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4)}
+  .rowact:hover{background:var(--gray2);color:var(--gray9)}
+
+  /* ── карточка сотрудника ── */
+  .top{padding:var(--sp-16) var(--sp-20);display:grid;grid-template-columns:1fr 300px;gap:var(--sp-20);
+    align-items:start;margin-bottom:14px}
+  .top-h{display:flex;gap:var(--sp-12);align-items:center}
+  .ava-l{width:52px;height:52px;border-radius:50%;background:var(--blue-l);color:var(--blue);display:grid;
+    place-items:center;font-size:var(--fs-16);font-weight:700;flex:none}
+  .top-h b{font-size:var(--fs-16);display:block;line-height:1.25}
+  .top-h small{color:var(--gray6);font-size:var(--fs-12)}
+  .chips{display:flex;flex-wrap:wrap;gap:var(--sp-6);margin-top:11px}
+  .rows{font-size:var(--fs-14);display:grid;grid-template-columns:1fr 1fr;gap:0 22px;margin-top:14px}
+  .rows .r{display:flex;gap:var(--sp-12);padding:var(--sp-6) 0;border-top:1px solid var(--gray1)}
+  .rows .r:nth-child(1),.rows .r:nth-child(2){border-top:0}
+  .rows .r span:first-child{color:var(--gray6);width:118px;flex:none}
+  .rows .r span:last-child{flex:1;min-width:0}
+  .aside{background:var(--gray0);border:1px solid var(--gray2);border-radius:var(--r-8);padding:var(--sp-12) var(--sp-16)}
+  .aside h5{margin:0 0 var(--sp-8);font-size:var(--fs-12);letter-spacing:.05em;text-transform:uppercase;
+    color:var(--gray5);font-weight:700}
+  .aside .r{display:flex;align-items:center;gap:var(--sp-8);padding:var(--sp-4) 0;font-size:var(--fs-14)}
+  .aside .r span:first-child{color:var(--gray6);width:96px;flex:none}
+  .aside .btn{width:100%;margin-top:9px}
+  .aside .hint{font-size:var(--fs-12);color:var(--gray5);margin-top:9px;line-height:1.45}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:var(--sp-16)}
+  .kpi{padding:var(--sp-16);display:flex;flex-direction:column;color:inherit;text-decoration:none}
+  .kpi:hover{border-color:var(--blue)}
+  .kpi .lab{font-size:var(--fs-12);color:var(--gray6);font-weight:600}
+  .kpi .big{font-size:var(--fs-26);font-weight:700;line-height:1.25;margin:var(--sp-6) 0 var(--sp-4)}
+  .kpi .sub{font-size:var(--fs-12);color:var(--gray6);line-height:1.45}
+  .kpi .big.warn{color:#d9480f}
+
+  .tabs{display:flex;gap:var(--sp-4);margin:var(--sp-16) 0 0;border-bottom:1px solid var(--gray2);flex-wrap:wrap}
+  .tabs button{border:0;background:none;padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);color:var(--gray6);
+    border-bottom:2px solid transparent;margin-bottom:-1px}
+  .tabs button:hover{color:var(--gray9)}
+  .tabs button.on{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
+  .tabs .cnt{font-size:var(--fs-12);font-weight:700;background:var(--gray1);color:var(--gray6);border-radius:var(--r-8);
+    padding:var(--sp-4) var(--sp-8);margin-left:6px}
+  .tabs button.on .cnt{background:var(--blue-l);color:var(--blue)}
+  .pane{display:none;padding-top:14px} .pane.on{display:block}
+
+  .note{background:var(--blue-l);border:1px solid #a5d8ff;color:#1864ab;border-radius:var(--r-8);
+    padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);margin-bottom:14px}
+  .warnbox{background:var(--orange-l);border:1px solid #ffd8a8;color:#d9480f;border-radius:var(--r-8);
+    padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);margin-bottom:14px}
+
+  /* роли и доступ */
+  .roleset{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--sp-12)}
+  .rolebox{border:1px solid var(--gray2);border-radius:var(--r-8);padding:var(--sp-12) var(--sp-16);display:flex;
+    gap:var(--sp-12);align-items:flex-start}
+  .rolebox.on{border-color:var(--blue);background:var(--blue-l)}
+  .rolebox.locked{background:var(--gray0);color:var(--gray6)}
+  .rolebox input{margin-top:3px}
+  .rolebox b{font-size:var(--fs-14);display:block}
+  .rolebox small{font-size:var(--fs-12);color:var(--gray6);display:block;line-height:1.45;margin-top:2px}
+
+  .hist{position:relative;padding-left:var(--sp-20)}
+  .hist:before{content:'';position:absolute;left:5px;top:6px;bottom:6px;width:1px;background:var(--gray2)}
+  .hev{position:relative;padding:var(--sp-8) 0 var(--sp-8) var(--sp-8);font-size:var(--fs-14)}
+  .hev:before{content:'';position:absolute;left:-19px;top:14px;width:9px;height:9px;border-radius:50%;
+    background:var(--gray3);border:2px solid #fff}
+  .hev.add:before{background:var(--green)} .hev.del:before{background:var(--red)} .hev.log:before{background:var(--blue)}
+  .hev b{font-weight:600}
+  .hev .meta{font-size:var(--fs-12);color:var(--gray6);margin-top:2px}
+
+  .demo{display:flex;align-items:center;gap:var(--sp-8);font-size:var(--fs-12);color:var(--gray6)}
+  .fld{margin-bottom:12px}
+  .fld label{display:block;font-size:var(--fs-12);color:var(--gray6);margin-bottom:5px;font-weight:600}
+  .fld input,.fld select{width:100%;border:1px solid var(--gray3);border-radius:var(--r);
+    padding:var(--sp-8) var(--sp-12);font-size:var(--fs-14);font-family:inherit}
+  .hint2{font-size:var(--fs-12);color:var(--gray6);margin-top:6px;line-height:1.45}
+
+  /* переключение «список ↔ карточка» */
+  body.card-mode .list-only{display:none}
+  body:not(.card-mode) .card-only{display:none}
+
+  @media (max-width:1360px){ .kpis{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:1150px){ .top{grid-template-columns:1fr} .rows{grid-template-columns:1fr}
+    .rows .r:nth-child(2){border-top:1px solid var(--gray1)} .roleset{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-top">
+      <div class="logo">ШБ</div>
+      <div style="flex:1"><b>Шаг в будущее</b><small>Управление</small></div>
+      <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')">⟨</button>
+    </div>
+    <nav class="nav">
+      <h4>Моя работа</h4>
+      <a href="10-home.html"><i class="ic">◱</i><span>Главная</span></a>
+      <a href="04-journal.html"><i class="ic">▦</i><span>Журнал</span></a>
+      <a href="07-student.html#pick"><i class="ic">◉</i><span>Группы</span></a>
+      <h4>Люди</h4>
+      <a href="#"><i class="ic">◍</i><span>Ученики</span></a>
+      <a href="#"><i class="ic">◔</i><span>Приём</span></a>
+      <a href="21-staff.html" class="on"><i class="ic">◇</i><span>Сотрудники и роли</span></a>
+    </nav>
+    <div class="side-user">
+      <div class="ava">ВВ</div>
+      <div style="flex:1"><b style="font-size:var(--fs-14);display:block">Владельцев В.</b>
+        <small style="font-size:var(--fs-12);color:var(--gray6)">Владелец</small></div>
+      <span style="color:var(--gray5)">⚙</span>
+    </div>
+  </aside>
+
+  <div class="app">
+    <header class="head">
+      <div>
+        <div class="crumbs">Управление · Люди · <span id="hCrumb">Сотрудники</span></div>
+        <h1 id="hTitle">Сотрудники и роли</h1>
+      </div>
+      <div class="sp"></div>
+      <button class="btn card-only" onclick="backToList()">← К списку</button>
+      <button class="btn btn-p list-only" onclick="openAdd()">Добавить сотрудника</button>
+    </header>
+
+    <div class="body">
+
+      <!-- ── СПИСОК ── -->
+      <div class="list-only">
+        <div class="filters">
+          <input type="text" placeholder="Поиск по фамилии или почте" oninput="setSearch(this.value)">
+          <select id="fRole" onchange="render()">
+            <option value="">Все роли</option>
+            <option value="teacher">Преподаватель</option>
+            <option value="method">Методист</option>
+            <option value="adm">Адм. учебной части</option>
+            <option value="fin">Финансовый администратор</option>
+            <option value="tech">Технический администратор</option>
+            <option value="marketer">Маркетолог</option>
+            <option value="reviewer">Проверяющий</option>
+            <option value="custom">Кастомные роли</option>
+          </select>
+          <select id="fState" onchange="render()">
+            <option value="">Любое состояние</option>
+            <option value="active">Доступ активен</option>
+            <option value="off">Доступ отключён</option>
+          </select>
+          <button class="chipf" id="fNoMeth" onclick="toggleNoMeth()">Преподаватели без методиста</button>
+          <div style="flex:1"></div>
+          <button class="btn btn-s" onclick="toast('Выгрузка списка сотрудников в XLSX')">Выгрузить</button>
+        </div>
+
+        <div class="card sec">
+          <div class="sec-h"><h3>Сотрудники</h3><span class="muted" id="listSum"></span></div>
+          <table class="t"><thead><tr>
+            <th style="width:var(--col-92)">№</th>
+            <th style="width:var(--col-300)">Сотрудник</th>
+            <th style="width:var(--col-260)">Роли</th>
+            <th>Нагрузка</th>
+            <th style="width:var(--col-160)">Доступ</th>
+            <th style="width:var(--col-160)">Последний вход</th>
+            <th style="width:var(--col-92)"></th>
+          </tr></thead><tbody id="staffRows"></tbody></table>
+        </div>
+
+      </div>
+
+      <!-- ── КАРТОЧКА ── -->
+      <div class="card-only" id="cardBox"></div>
+
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" onclick="closeAll()"></div>
+
+<!-- добавление сотрудника: заводим вручную, самостоятельной регистрации у сотрудников нет -->
+<div class="modal" id="mAdd">
+  <div class="mo-h">Добавить сотрудника</div>
+  <div class="mo-b">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-12)">
+      <div class="fld"><label>Фамилия и инициалы</label><input type="text" placeholder="Иванова М. С."></div>
+      <div class="fld"><label>Почта</label><input type="text" placeholder="ivanova@fs.ru"></div>
+    </div>
+    <div class="fld"><label>Роль</label>
+      <select id="addRole">
+        <option>Преподаватель</option><option>Методист</option><option>Адм. учебной части</option>
+        <option>Финансовый администратор</option><option>Технический администратор</option><option>Маркетолог</option>
+      </select>
+      <div class="hint2">Остальные роли добавляются в карточке.</div></div>
+    <div class="fld"><label>Доступ</label>
+      <select><option>Выдать временный пароль сейчас</option><option>Создать без пароля — выдам позже</option></select>
+      <div class="hint2">Пароль показывается один раз и меняется при первом входе.</div></div>
+  </div>
+  <div class="mo-f"><button class="btn" onclick="closeAll()">Отмена</button>
+    <button class="btn btn-p" onclick="doAdd()">Добавить</button></div>
+</div>
+
+<!-- закрепление преподавателя -->
+<div class="modal" id="mBind">
+  <div class="mo-h">Закрепить преподавателя</div>
+  <div class="mo-b">
+    <div class="fld"><label>Преподаватель</label>
+      <select id="bindWho"></select></div>
+    <div class="hint2">У преподавателя ровно один методист: если он закреплён за другим, закрепление переедет —
+      прежний методист перестанет видеть его группы и журналы.</div>
+  </div>
+  <div class="mo-f"><button class="btn" onclick="closeAll()">Отмена</button>
+    <button class="btn btn-p" onclick="doBind()">Закрепить</button></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── роли: ключ, название, класс метки, пояснение ── */
+var ROLE_DEF = {
+  teacher:  {t:'Преподаватель',              c:'teach', d:'Свои группы, журнал, проверка работ, материалы урока'},
+  method:   {t:'Методист',                   c:'meth',  d:'Курсы и библиотеки, планирование КТП, надзор за закреплёнными преподавателями'},
+  adm:      {t:'Адм. учебной части',         c:'adm',   d:'Приём, зачисление и отчисление, группы, кабинеты и замены'},
+  fin:      {t:'Финансовый администратор',   c:'fin',   d:'Цены, начисления и платежи, финансовая отчётность'},
+  tech:     {t:'Технический администратор',  c:'',      d:'Шаблоны писем, структура публичных страниц, параметры модулей'},
+  marketer: {t:'Маркетолог',                 c:'',      d:'Карточки курсов, публичные страницы, маркетинговая статистика'},
+  reviewer: {t:'Проверяющий',                c:'ext',   d:'Только работы назначенных групп; внештатная роль, не совмещается'},
+  owner:    {t:'Владелец',                   c:'own',   d:'Все области, назначение ролей, подключение модулей'}
+};
+
+/* ── сотрудники ── */
+var STAFF = [
+  {n:'Училков И. П.',    m:'uchilkov@fs.ru',    roles:['teacher'], state:'active', last:'сегодня, 09:12',
+   groups:['МЕГЭ-1','МЕГЭ-2','ИНФ-1','Подготовка 9 класс'], students:78, review:7, hours:14, method:'Кэбс М.'},
+  {n:'Замещалов П. С.',  m:'zam@fs.ru',         roles:['teacher'], state:'active', last:'вчера, 18:40',
+   groups:['ИНФ-2','Робототехника'], students:31, review:3, hours:6, method:null, subs:1},
+  {n:'Кэбс М.',          m:'kebs@fs.ru',        roles:['method','teacher'], state:'active', last:'сегодня, 08:55',
+   groups:['Подарочный гит'], students:9, review:1, hours:3,
+   courses:6, drafts:2, teachers:['Училков И. П.','Училкова Н. В.','Проверялкин Д.'], unplanned:2},
+  {n:'Училкова Н. В.',   m:'uchilkova@fs.ru',   roles:['teacher'], state:'active', last:'три дня назад',
+   groups:['Математика 8 класс'], students:16, review:0, hours:4, method:'Кэбс М.'},
+  {n:'Приёмщикова А.',   m:'priem@fs.ru',       roles:['adm'], state:'active', last:'сегодня, 10:03',
+   apps:4, contracts:2, groupsAll:12},
+  {n:'Считалова О.',     m:'schet@fs.ru',       roles:['fin'], state:'active', last:'сегодня, 09:40',
+   debtors:6, debt:-48200},
+  {n:'Маркетова Л.',     m:'market@fs.ru',      roles:['marketer'], state:'active', last:'вчера, 16:20',
+   cards:9, launches:2},
+  {n:'Проверялкин Д.',   m:'checker@fs.ru',     roles:['reviewer'], state:'active', last:'вчера, 21:05',
+   review:12, groupsAssigned:3},
+  {n:'Техадминов Р.',    m:'tech@fs.ru',        roles:['tech'], state:'off', last:'месяц назад'},
+  {n:'Кураторова Е.',    m:'kurator@fs.ru',     roles:['custom'], customName:'Куратор направления', state:'active',
+   last:'сегодня, 11:15', groupsWatch:5, students:64},
+  {n:'Владельцев В.',    m:'owner@fs.ru',       roles:['owner'], state:'active', last:'сегодня, 11:41'}
+];
+
+var CHANGES = [
+  {k:'add', t:'Назначена роль «Преподаватель»',   m:'02.09.2026 · Владельцев В.'},
+  {k:'log', t:'Закреплён за методистом Кэбс М.',  m:'02.09.2026 · Владельцев В.'},
+  {k:'log', t:'Выдан временный пароль',           m:'12.09.2026 · Приёмщикова А. · вход выполнен в тот же день'},
+  {k:'add', t:'Учётная запись создана',           m:'28.08.2026 · приглашение по почте'}
+];
+
+var search = '', noMeth = false, cur = -1, tab = 0;
+
+function plural(n, one, few, many){
+  var a = n % 10, b = n % 100;
+  return n + ' ' + (a === 1 && b !== 11 ? one : a >= 2 && a <= 4 && (b < 12 || b > 14) ? few : many);
+}
+function ini(n){ return n.split(' ').slice(0,2).map(function(w){ return w[0]; }).join(''); }
+function money(v){ return (v<0?'−':'') + Math.abs(v).toLocaleString('ru-RU') + ' ₽'; }
+function isTeacher(s){ return s.roles.indexOf('teacher') >= 0; }
+function isMethod(s){ return s.roles.indexOf('method') >= 0; }
+/* Методисту, который сам ведёт группу, закрепление за собой не нужно: свои группы он видит всегда,
+   независимо от закреплений (01-product §3.4). Поэтому совмещённый в «без методиста» не попадает. */
+function noMethod(s){ return isTeacher(s) && !isMethod(s) && !s.method; }
+
+function roleTags(s){
+  return s.roles.map(function(r){
+    if(r === 'custom') return '<span class="rl custom" title="Роль собрана вендором по заявке школы">' + s.customName + '</span>';
+    var d = ROLE_DEF[r];
+    return '<span class="rl ' + d.c + '">' + d.t + '</span>';
+  }).join('');
+}
+
+/* Нагрузка — одна колонка, а не столбец на каждую роль: у совмещённого сотрудника
+   в ней просто две строки, и таблица не расползается на пятнадцать полей ради четырёх ролей. */
+function loadLines(s){
+  var out = [];
+  if(isTeacher(s)) out.push('<b>' + plural(s.groups.length, 'группа', 'группы', 'групп') + '</b> · ' +
+    plural(s.students, 'ученик', 'ученика', 'учеников') +
+    (s.review ? ' · <span class="warn">' + s.review + ' на проверке</span>' : '') +
+    '<small>' + s.hours + ' ч в неделю' + (s.subs ? ' · замещает 1 группу' : '') + '</small>');
+  if(isMethod(s)) out.push('<b>' + plural(s.courses, 'курс', 'курса', 'курсов') + '</b> · ' +
+    plural(s.teachers.length, 'преподаватель', 'преподавателя', 'преподавателей') +
+    '<small>' + s.drafts + ' в работе' + (s.unplanned ? ' · ' + s.unplanned + ' уроков без даты' : '') + '</small>');
+  if(s.roles.indexOf('adm') >= 0) out.push('<b>' + plural(s.apps, 'заявка', 'заявки', 'заявок') + '</b> · ' +
+    s.groupsAll + ' групп школы' +
+    '<small>' + s.contracts + ' договора без подписи</small>');
+  if(s.roles.indexOf('fin') >= 0) out.push('<b>' + plural(s.debtors, 'должник', 'должника', 'должников') + '</b> · ' + money(s.debt) +
+    '<small>по всем группам</small>');
+  if(s.roles.indexOf('marketer') >= 0) out.push('<b>' + s.cards + ' карточек</b> · ' + s.launches + ' открытых набора');
+  if(s.roles.indexOf('reviewer') >= 0) out.push('<b>' + plural(s.review, 'работа', 'работы', 'работ') + '</b> в очереди' +
+    '<small>назначено групп: ' + s.groupsAssigned + '</small>');
+  if(s.roles.indexOf('custom') >= 0) out.push('<b>' + plural(s.groupsWatch, 'группа', 'группы', 'групп') +
+    '</b> под наблюдением · ' + plural(s.students, 'ученик', 'ученика', 'учеников'));
+  if(s.roles.indexOf('tech') >= 0) out.push('<span class="muted">настройки и модули</span>');
+  if(s.roles.indexOf('owner') >= 0) out.push('<span class="muted">все области</span>');
+  return out.join('<div style="height:6px"></div>');
+}
+
+/* ── список ── */
+function visible(){
+  var r = document.getElementById('fRole').value, st = document.getElementById('fState').value;
+  return STAFF.filter(function(s){
+    if(r && s.roles.indexOf(r) < 0) return false;
+    if(st && (st === 'active') !== (s.state === 'active')) return false;
+    if(noMeth && !noMethod(s)) return false;
+    if(search && (s.n + ' ' + s.m).toLowerCase().indexOf(search.toLowerCase()) < 0) return false;
+    return true;
+  });
+}
+function render(){
+  if(cur >= 0){ renderCard(); return; }
+  var vis = visible();
+  document.getElementById('listSum').innerHTML = vis.length + ' из ' + STAFF.length +
+    (STAFF.filter(noMethod).length
+      ? ' · <span class="warn">' + plural(STAFF.filter(noMethod).length,
+          'преподаватель', 'преподавателя', 'преподавателей') + ' без методиста</span>' : '');
+  document.getElementById('staffRows').innerHTML = vis.length ? vis.map(function(s){
+    var i = STAFF.indexOf(s);
+    return '<tr class="clickable" onclick="openCard(' + i + ')">' +
+      '<td class="num">' + (i+1) + '</td>' +
+      '<td><div class="who"><span class="av">' + ini(s.n) + '</span><div class="nm">' +
+        '<a href="21-staff.html#u=' + i + '" onclick="event.stopPropagation()">' + s.n + '</a>' +
+        '<small>' + s.m + '</small></div></div></td>' +
+      '<td>' + roleTags(s) +
+        (noMethod(s) ? '<div class="num warn">без методиста</div>' : '') + '</td>' +
+      '<td class="load">' + loadLines(s) + '</td>' +
+      '<td>' + (s.state === 'active'
+        ? '<span class="badge b-ok">активен</span>'
+        : '<span class="badge b-gray">отключён</span>') + '</td>' +
+      '<td class="dt">' + s.last + '</td>' +
+      '<td style="text-align:right"><button class="rowact" title="Роли и доступ" ' +
+        'onclick="event.stopPropagation();openCard(' + i + ',1)">⋯</button></td></tr>';
+  }).join('') : '<tr><td colspan="7" class="empty">Никто не подошёл под фильтры</td></tr>';
+}
+function setSearch(v){ search = v; render(); }
+function toggleNoMeth(){
+  noMeth = !noMeth;
+  document.getElementById('fNoMeth').classList.toggle('on', noMeth);
+  render();
+  if(noMeth) toast('Преподаватель без методиста при включённой настройке «методист видит только закреплённых» выпадает из надзора');
+}
+
+/* ── карточка ── */
+function openCard(i, t){
+  cur = i; tab = t || 0;
+  document.body.classList.add('card-mode');
+  location.hash = 'u=' + i;
+  renderCard();
+}
+function backToList(){
+  cur = -1;
+  document.body.classList.remove('card-mode');
+  location.hash = '';
+  document.getElementById('hCrumb').textContent = 'Сотрудники';
+  document.getElementById('hTitle').textContent = 'Сотрудники и роли';
+  render();
+}
+function setTab(t){ tab = t; renderCard(); }
+
+function renderCard(){
+  var s = STAFF[cur];
+  document.getElementById('hCrumb').innerHTML = '<a class="link" href="21-staff.html" onclick="event.preventDefault();backToList()">Сотрудники</a> · ' + s.n;
+  document.getElementById('hTitle').textContent = s.n;
+
+  /* вкладки собираются по ролям: «Преподаватели» есть только у методиста */
+  var tabs = [{k:'load', t:'Нагрузка'}];
+  if(isMethod(s)) tabs.push({k:'bind', t:'Закреплённые преподаватели', c:s.teachers.length});
+  tabs.push({k:'roles', t:'Роли и доступ'});
+  tabs.push({k:'hist', t:'История'});
+  if(tab >= tabs.length) tab = 0;
+
+  document.getElementById('cardBox').innerHTML =
+    cardTop(s) + '<div class="kpis">' + cardKpis(s) + '</div>' +
+    '<div class="tabs">' + tabs.map(function(t, i){
+      return '<button class="' + (i === tab ? 'on' : '') + '" onclick="setTab(' + i + ')">' + t.t +
+        (t.c ? '<span class="cnt">' + t.c + '</span>' : '') + '</button>';
+    }).join('') + '</div>' +
+    '<div class="pane on">' + paneFor(tabs[tab].k, s) + '</div>';
+}
+
+function cardTop(s){
+  return '<div class="card top"><div>' +
+      '<div class="top-h"><span class="ava-l">' + ini(s.n) + '</span>' +
+      '<div style="min-width:0"><b>' + s.n + '</b><small>' + s.m + '</small>' +
+      '<div class="chips">' + roleTags(s) +
+        (s.state === 'active' ? '' : '<span class="rl">доступ отключён</span>') + '</div></div></div>' +
+      '<div class="rows">' +
+        row('Роли', s.roles.map(function(r){ return r === 'custom' ? s.customName : ROLE_DEF[r].t; }).join(', ')) +
+        row('Последний вход', s.last) +
+        row('Учётная запись', 'создана 28.08.2026 · приглашение по почте') +
+        row('Методист', isTeacher(s)
+          ? (s.method ? s.method : '<span class="warn">не закреплён</span>')
+          : '<span class="muted">не применимо</span>') +
+      '</div></div>' +
+      '<div class="aside">' +
+        '<h5>Доступ</h5>' +
+        '<div class="r"><span>Состояние</span><span>' + (s.state === 'active'
+          ? '<span class="badge b-ok">активен</span>' : '<span class="badge b-gray">отключён</span>') + '</span></div>' +
+        '<div class="r"><span>Двухфакторка</span><span>не включена</span></div>' +
+        '<button class="btn" onclick="toast(\'Временный пароль показан один раз; смена при первом входе\')">Выдать временный пароль</button>' +
+        '<button class="btn" onclick="toast(\'' + (s.state === 'active'
+          ? 'Доступ отключён: вход закрыт, данные и история сохранены'
+          : 'Доступ восстановлен') + '\')">' + (s.state === 'active' ? 'Отключить доступ' : 'Включить доступ') + '</button>' +
+        '<div class="hint">Сотрудника не удаляют: он автор занятий, проверок и приказов. Отключение закрывает вход, оставляя историю на месте.</div>' +
+      '</div></div>';
+}
+function row(k, v){ return '<div class="r"><span>' + k + '</span><span>' + v + '</span></div>'; }
+
+function cardKpis(s){
+  var out = [];
+  if(isTeacher(s)){
+    out.push(kpi('Группы', s.groups.length, 'ведёт сейчас', '07-student.html#pick'));
+    out.push(kpi('Ученики', s.students, 'во всех группах', ''));
+    out.push(kpi('На проверке', s.review, s.review ? 'ждут его' : 'очередь пуста', '05-review.html', s.review > 5));
+    out.push(kpi('Часов в неделю', s.hours, 'по расписанию', '06-individual.html'));
+  }
+  if(isMethod(s)){
+    out.push(kpi('Курсы', s.courses, s.drafts + ' в работе', '01-course-builder.html'));
+    out.push(kpi('Преподаватели', s.teachers.length, 'закреплены за ним', ''));
+    out.push(kpi('Уроки без даты', s.unplanned, 'не увидят ученики', '03-ktp.html', s.unplanned > 0));
+  }
+  if(s.roles.indexOf('adm') >= 0){
+    out.push(kpi('Заявки', s.apps, 'ждут проверки', ''));
+    out.push(kpi('Договоры', s.contracts, 'без подписи', '', true));
+    out.push(kpi('Группы школы', s.groupsAll, 'все группы', '07-student.html#pick'));
+  }
+  if(s.roles.indexOf('fin') >= 0){
+    out.push(kpi('Должники', s.debtors, money(s.debt), '19-account.html', true));
+  }
+  if(s.roles.indexOf('reviewer') >= 0){
+    out.push(kpi('В очереди', s.review, 'назначено групп: ' + s.groupsAssigned, '05-review.html'));
+  }
+  if(s.roles.indexOf('custom') >= 0){
+    out.push(kpi('Под наблюдением', s.groupsWatch, s.students + ' учеников', '07-student.html#pick'));
+  }
+  return out.length ? out.join('') : kpi('Нагрузка', '—', 'роль не даёт учебной нагрузки', '');
+}
+function kpi(lab, big, sub, href, warn){
+  var inner = '<span class="lab">' + lab + '</span><span class="big' + (warn ? ' warn' : '') + '">' + big + '</span>' +
+    '<span class="sub">' + sub + '</span>';
+  return href ? '<a class="card kpi" href="' + href + '">' + inner + '</a>' : '<div class="card kpi">' + inner + '</div>';
+}
+
+function paneFor(k, s){
+  if(k === 'load') return paneLoad(s);
+  if(k === 'bind') return paneBind(s);
+  if(k === 'roles') return paneRoles(s);
+  return paneHist(s);
+}
+
+function paneLoad(s){
+  var h = '';
+  if(isTeacher(s)){
+    h += '<div class="card sec"><div class="sec-h"><h3>Группы</h3>' +
+      '<span class="muted">' + plural(s.students, 'ученик', 'ученика', 'учеников') + ' · ' + s.hours + ' ч в неделю</span></div>' +
+      '<table class="t"><thead><tr><th>Группа</th><th style="width:var(--col-220)">Роль в группе</th>' +
+      '<th style="width:var(--col-160)">Журнал</th></tr></thead><tbody>' +
+      s.groups.map(function(g, i){
+        return '<tr><td><a class="link" href="20-group.html#g=' + Math.min(i,3) + '">' + g + '</a></td>' +
+          '<td>' + (s.subs && i === 0 ? '<span class="badge b-info">замещает до 30.09</span>' : 'ведёт') + '</td>' +
+          '<td><a class="link" href="04-journal.html">открыть</a></td></tr>';
+      }).join('') + '</tbody></table></div>';
+  }
+  if(isMethod(s)){
+    h += '<div class="card sec"><div class="sec-h"><h3>Курсы</h3>' +
+      '<span class="muted">' + s.courses + ' всего · ' + s.drafts + ' в работе</span></div>' +
+      '<table class="t"><thead><tr><th>Курс</th><th style="width:var(--col-160)">Состояние</th>' +
+      '<th style="width:var(--col-220)">Группы по курсу</th></tr></thead><tbody>' +
+      [['Математика ЕГЭ — базовый','составлен',3],['Информатика ЕГЭ','составлен',2],
+       ['Математика 8 класс','составлен',1],['Подготовка 9 класс','черновик',0],
+       ['Робототехника','черновик',0],['Подарочный гит','составлен',1]].map(function(c){
+        return '<tr><td><a class="link" href="01-course-builder.html">' + c[0] + '</a></td>' +
+          '<td>' + (c[1] === 'составлен' ? '<span class="badge b-ok">составлен</span>'
+                                         : '<span class="badge b-gray">черновик</span>') + '</td>' +
+          '<td>' + (c[2] ? plural(c[2], 'группа', 'группы', 'групп') : '<span class="muted">нет групп</span>') + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+  }
+  if(!isTeacher(s) && !isMethod(s)){
+    h += '<div class="card sec"><div class="empty">У этой роли нет учебной нагрузки — её работа не измеряется группами и курсами.</div></div>';
+  }
+  return h;
+}
+
+function paneBind(s){
+  return '<div class="card sec"><div class="sec-h"><h3>Закреплённые преподаватели</h3>' +
+      '<span class="muted">' + plural(s.teachers.length, 'человек', 'человека', 'человек') + '</span>' +
+      '<div style="flex:1"></div>' +
+      '<button class="btn btn-s btn-p" onclick="openBind()">+ Закрепить</button></div>' +
+    '<table class="t"><thead><tr><th>Преподаватель</th><th style="width:var(--col-220)">Группы</th>' +
+      '<th style="width:var(--col-220)">Закреплён</th><th style="width:var(--col-160)"></th></tr></thead><tbody>' +
+    s.teachers.map(function(t){
+      var o = STAFF.filter(function(x){ return x.n === t; })[0];
+      return '<tr><td><a class="link" href="21-staff.html#u=' + STAFF.indexOf(o) + '">' + t + '</a></td>' +
+        '<td>' + (o && o.groups ? plural(o.groups.length, 'группа', 'группы', 'групп') : '—') + '</td>' +
+        '<td class="dt">02.09.2026 · Владельцев В.</td>' +
+        '<td style="text-align:right"><button class="btn btn-s" onclick="unbind(\'' + t + '\')">Открепить</button></td></tr>';
+    }).join('') + '</tbody></table></div>' +
+    (STAFF.filter(noMethod).length
+      ? '<div class="warnbox"><b>Без методиста:</b> ' +
+        STAFF.filter(noMethod).map(function(x){ return x.n; }).join(', ') + '</div>'
+      : '');
+}
+
+function paneRoles(s){
+  var keys = ['teacher','method','adm','fin','tech','marketer','reviewer','owner'];
+  return '<div class="card sec"><div class="sec-h"><h3>Роли</h3>' +
+      '<span class="muted">права складываются; совмещение разрешено</span>' +
+      '<div style="flex:1"></div>' +
+      '<button class="btn btn-s btn-p" onclick="toast(\'Изменение ролей записано в журнал доступа\')">Сохранить</button></div>' +
+    '<div class="roleset">' + keys.map(function(k){
+      var on = s.roles.indexOf(k) >= 0;
+      var lock = k === 'owner';
+      return '<label class="rolebox ' + (on ? 'on ' : '') + (lock ? 'locked' : '') + '">' +
+        '<input type="checkbox"' + (on ? ' checked' : '') + (lock ? ' disabled' : '') +
+        ' onchange="toast(\'' + ROLE_DEF[k].t + ': ' + (on ? 'снятие' : 'назначение') + ' будет записано в журнал\')">' +
+        '<span><b>' + ROLE_DEF[k].t + '</b><small>' + ROLE_DEF[k].d + '</small></span></label>';
+    }).join('') +
+    (s.roles.indexOf('custom') >= 0
+      ? '<label class="rolebox on"><input type="checkbox" checked disabled>' +
+        '<span><b>' + s.customName + '</b><small>Роль собрана вендором по заявке школы. Набор прав задаётся ' +
+        'в консоли вендора; здесь её можно назначить или снять, но не изменить состав прав.</small></span></label>'
+      : '') +
+    '</div>' +
+    '<div class="hint2" style="margin-top:12px">Ученик и представитель назначаются системой — зачислением ' +
+      'и связыванием. Владелец в инстансе один, роль не снимается.</div></div>';
+}
+
+function paneHist(){
+  return '<div class="card sec"><div class="sec-h"><h3>История доступа</h3>' +
+      '<span class="muted">назначение ролей, закрепления, выдача паролей — всё журналируется</span></div>' +
+    '<div class="hist">' + CHANGES.map(function(h){
+      return '<div class="hev ' + h.k + '"><b>' + h.t + '</b><div class="meta">' + h.m + '</div></div>';
+    }).join('') + '</div></div>';
+}
+
+/* ── закрепление ── */
+function openAdd(){ show('mAdd'); }
+function doAdd(){
+  closeAll();
+  toast('Сотрудник добавлен: роль назначена, временный пароль показан один раз');
+}
+function openBind(){
+  var free = STAFF.filter(function(x){
+    return isTeacher(x) && x !== STAFF[cur] && STAFF[cur].teachers.indexOf(x.n) < 0;
+  });
+  document.getElementById('bindWho').innerHTML = free.length
+    ? free.map(function(x){
+        return '<option>' + x.n + (x.method ? ' — сейчас у ' + x.method : ' — без методиста') + '</option>';
+      }).join('')
+    : '<option>— свободных преподавателей нет —</option>';
+  show('mBind');
+}
+function doBind(){
+  var v = document.getElementById('bindWho').value.split(' — ')[0];
+  var o = STAFF.filter(function(x){ return x.n === v; })[0];
+  if(o){ o.method = STAFF[cur].n; STAFF[cur].teachers.push(v); }
+  closeAll(); renderCard();
+  toast('Закреплён: ' + v + '. Его группы, КТП и журналы теперь видны методисту');
+}
+function unbind(t){
+  var o = STAFF.filter(function(x){ return x.n === t; })[0];
+  if(o) o.method = null;
+  STAFF[cur].teachers = STAFF[cur].teachers.filter(function(x){ return x !== t; });
+  renderCard();
+  toast('Откреплён: ' + t + '. Пока он без методиста, его группы никто не курирует');
+}
+
+function show(id){ document.getElementById('scrim').classList.add('on'); document.getElementById(id).classList.add('on'); }
+function closeAll(){
+  document.getElementById('scrim').classList.remove('on');
+  ['mBind','mAdd'].forEach(function(id){ document.getElementById(id).classList.remove('on'); });
+}
+
+var tt;
+function toast(m){
+  var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3600);
+}
+
+/* адрес сотрудника живёт в хеше: 21-staff.html#u=2 открывается в новой вкладке */
+var uHash = location.hash.match(/(?:^|[#&])u=(\d+)/);
+if(uHash && STAFF[+uHash[1]]) openCard(+uHash[1]);
+else render();
+</script>
+</body>
+</html>

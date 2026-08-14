@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Витрина: карточка курса и наборы — FS-LMS 2.0</title>
+<link rel="stylesheet" href="_shared.css">
+<script src="_tip.js"></script>
+<script src="_nav.js"></script>
+<style>
+  .body{flex:1;overflow:auto;padding:var(--sp-16) var(--sp-20) var(--user-h)}
+  .card{background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);box-shadow:var(--sh)}
+  .sec{padding:var(--sp-16) var(--sp-20);margin-bottom:14px}
+  .sec-h{display:flex;align-items:center;gap:var(--sp-12);margin-bottom:12px;flex-wrap:wrap}
+  .sec-h h3{margin:0;font-size:var(--fs-14)}
+
+  table.t{width:100%;border-collapse:collapse;font-size:var(--fs-14)}
+  table.t th{text-align:left;font-size:var(--fs-12);letter-spacing:.04em;text-transform:uppercase;color:var(--gray5);
+    font-weight:700;padding:var(--sp-8) var(--sp-12);border-bottom:1px solid var(--gray2);white-space:nowrap}
+  table.t td{padding:var(--sp-8) var(--sp-12);border-bottom:1px solid var(--gray1);vertical-align:middle}
+  table.t tr:last-child td{border-bottom:0}
+  table.t tbody tr:hover{background:var(--gray0)}
+  table.t tbody tr.clickable{cursor:pointer}
+  .nm-a{font-weight:600;color:inherit;text-decoration:none;display:block}
+  .nm-a:hover{color:var(--blue);text-decoration:underline}
+  .num{color:var(--gray5);font-size:var(--fs-12)}
+  .dt{font-variant-numeric:tabular-nums;color:var(--gray7);white-space:nowrap}
+  .money{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .link{color:var(--blue);text-decoration:none} .link:hover{text-decoration:underline}
+  .empty{color:var(--gray5);font-size:var(--fs-14);padding:var(--sp-20) 0;text-align:center}
+
+  .badge{display:inline-block;font-size:var(--fs-12);font-weight:600;padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4)}
+  .b-draft{background:var(--gray1);color:var(--gray6)}
+  .b-wait{background:var(--orange-l);color:#d9480f}
+  .b-ready{background:var(--blue-l);color:#1864ab}
+  .b-pub{background:var(--green-l);color:#2b8a3e}
+  .b-gray{background:var(--gray1);color:var(--gray6)}
+  .b-vio{background:var(--violet-l);color:#5f3dc4}
+
+  /* карточка */
+  .two{display:grid;grid-template-columns:1fr 420px;gap:var(--sp-16);align-items:start}
+  .fld{margin-bottom:12px}
+  .fld label{display:block;font-size:var(--fs-12);color:var(--gray6);margin-bottom:5px;font-weight:600}
+  .fld input,.fld select,.fld textarea{width:100%;border:1px solid var(--gray3);border-radius:var(--r);
+    padding:var(--sp-8) var(--sp-12);font-size:var(--fs-14);font-family:inherit}
+  .fld input:disabled,.fld select:disabled{background:var(--gray0);color:var(--gray6)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-12)}
+  .hint2{font-size:var(--fs-12);color:var(--gray6);margin-top:6px;line-height:1.45}
+  .lock{font-size:var(--fs-12);color:var(--gray5);margin-top:5px}
+
+  /* чек-лист публикации */
+  .chk{display:flex;gap:var(--sp-12);align-items:flex-start;padding:var(--sp-12) 0;border-top:1px solid var(--gray1)}
+  .chk:first-of-type{border-top:0}
+  .chk .mark{width:22px;height:22px;border-radius:50%;flex:none;display:grid;place-items:center;
+    font-size:var(--fs-12);font-weight:700;background:var(--gray1);color:var(--gray5);margin-top:1px}
+  .chk.ok .mark{background:var(--green);color:#fff}
+  .chk.no .mark{background:var(--orange-l);color:#d9480f;border:1px solid #ffd8a8}
+  .chk .txt{flex:1;min-width:0}
+  .chk b{font-size:var(--fs-14);display:block;font-weight:600}
+  .chk .sub{font-size:var(--fs-12);color:var(--gray6);margin-top:2px;line-height:1.45}
+  .chk.no b{color:#d9480f}
+
+  .runs .run{border:1px solid var(--gray2);border-radius:var(--r-8);padding:var(--sp-12) var(--sp-16);margin-bottom:10px}
+  .runs .run.open{border-color:var(--green);background:var(--green-l)}
+  .runs .run .top{display:flex;align-items:center;gap:var(--sp-12);flex-wrap:wrap}
+  .runs .run b{font-size:var(--fs-14)}
+  .runs .run .met{margin-left:auto;font-size:var(--fs-12);color:var(--gray6);display:flex;gap:var(--sp-16)}
+  .runs .run .met b{display:block;font-size:var(--fs-14);font-variant-numeric:tabular-nums}
+  .runs .run .sub{font-size:var(--fs-12);color:var(--gray6);margin-top:4px}
+
+  .warnbox{background:var(--orange-l);border:1px solid #ffd8a8;color:#d9480f;border-radius:var(--r-8);
+    padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);margin-bottom:14px}
+  .okbox{background:var(--green-l);border:1px solid #b2f2bb;color:#2b8a3e;border-radius:var(--r-8);
+    padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);margin-bottom:14px}
+  .demo{display:flex;align-items:center;gap:var(--sp-8);font-size:var(--fs-12);color:var(--gray6)}
+
+  /* предпросмотр витрины */
+  .prev{border:1px solid var(--gray2);border-radius:var(--r-8);overflow:hidden}
+  .prev .ph{height:110px;background:linear-gradient(135deg,#e7f5ff,#d0ebff);display:grid;place-items:center;
+    color:#1864ab;font-size:var(--fs-12)}
+  .prev .pb{padding:var(--sp-12) var(--sp-16)}
+  .prev h4{margin:0 0 4px;font-size:var(--fs-16)}
+  .prev .desc{font-size:var(--fs-12);color:var(--gray6);line-height:1.5}
+  .prev .meta{display:flex;gap:var(--sp-12);flex-wrap:wrap;margin-top:10px;font-size:var(--fs-12);color:var(--gray6)}
+  .prev .price{display:flex;align-items:center;gap:var(--sp-12);margin-top:12px}
+  .prev .price b{font-size:var(--fs-22)}
+  .prev .cta{margin-left:auto}
+
+  body.card-mode .list-only{display:none}
+  body:not(.card-mode) .card-only{display:none}
+
+  @media (max-width:1150px){ .two{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-top">
+      <div class="logo">ШБ</div>
+      <div style="flex:1"><b>Шаг в будущее</b><small>Управление</small></div>
+      <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')">⟨</button>
+    </div>
+    <nav class="nav">
+      <h4>Витрина</h4>
+      <a href="25-storefront.html" class="on"><i class="ic">▧</i><span>Карточки курсов</span></a>
+      <a href="#" onclick="toast('Лиды с лендинга')"><i class="ic">◌</i><span>Лиды</span><span class="cnt">5</span></a>
+      <a href="#" onclick="toast('Публичные страницы: блоки лендинга')"><i class="ic">▤</i><span>Страницы сайта</span></a>
+      <h4>Обучение</h4>
+      <a href="01-course-builder.html"><i class="ic">◈</i><span>Курсы</span></a>
+      <a href="07-student.html#pick"><i class="ic">◉</i><span>Группы</span></a>
+    </nav>
+    <div class="side-user">
+      <div class="ava" id="userIni">МЛ</div>
+      <div style="flex:1"><b style="font-size:var(--fs-14);display:block" id="userName">Маркетова Л.</b>
+        <small style="font-size:var(--fs-12);color:var(--gray6)" id="userRole">Маркетолог</small></div>
+      <span style="color:var(--gray5)">⚙</span>
+    </div>
+  </aside>
+
+  <div class="app">
+    <header class="head">
+      <div>
+        <div class="crumbs">Управление · Витрина · <span id="hCrumb">Карточки курсов</span></div>
+        <h1 id="hTitle">Карточки курсов</h1>
+      </div>
+      <div class="sp"></div>
+      <label class="demo">роль <i>(демо)</i>
+        <select id="role" onchange="setRole(this.value)" style="padding:var(--sp-4) var(--sp-8);font-size:var(--fs-12)">
+          <option value="mark">Маркетолог</option>
+          <option value="adm">Адм. учебной части</option>
+          <option value="fin">Финансовый администратор</option>
+          <option value="owner">Владелец</option>
+        </select></label>
+      <label class="demo"><input type="checkbox" id="edo" onchange="setEdo(this.checked)"> модуль ЭДО <i>(демо)</i></label>
+      <button class="btn card-only" onclick="backToList()">← К списку</button>
+      <a class="btn card-only" href="#" onclick="event.preventDefault();toast('Открыть карточку на публичной витрине')">Смотреть на витрине</a>
+    </header>
+
+    <div class="body">
+
+      <!-- ── СПИСОК ── -->
+      <div class="list-only">
+        <div class="card sec">
+          <div class="sec-h"><h3>Карточки курсов</h3><span class="muted" id="listSum"></span></div>
+          <table class="t"><thead><tr>
+            <th style="width:var(--col-92)">№</th>
+            <th>Курс</th>
+            <th style="width:var(--col-220)">Состояние карточки</th>
+            <th style="width:var(--col-260)">Набор</th>
+            <th style="width:var(--col-160)">Цена</th>
+            <th style="width:var(--col-160)">Записались</th>
+            <th style="width:var(--col-92)"></th>
+          </tr></thead><tbody id="rows"></tbody></table>
+        </div>
+      </div>
+
+      <!-- ── КАРТОЧКА ── -->
+      <div class="card-only" id="cardBox"></div>
+
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" onclick="closeAll()"></div>
+
+<!-- запуск набора -->
+<div class="modal" id="mRun">
+  <div class="mo-h" id="runTitle">Запустить набор</div>
+  <div class="mo-b">
+    <div class="fld"><label>Фактическая цена набора</label>
+      <input type="text" id="runPrice" value="24 900 ₽">
+      <div class="lock" id="runPriceLock"></div></div>
+    <div class="fld"><label>Преподаватель набора <span id="runTeachReq" style="color:var(--red)">*</span></label>
+      <select id="runTeacher">
+        <option value="">— не назначен —</option>
+        <option>Училков И. П.</option><option>Замещалов П. С.</option><option>Кэбс М.</option>
+      </select>
+      <div class="hint2" id="runTeachHint"></div></div>
+    <div class="row2">
+      <div class="fld"><label>Учебный период</label>
+        <select><option>2026/27 — первое полугодие</option><option>2026/27 — второе полугодие</option>
+          <option>Вне периода</option></select></div>
+      <div class="fld"><label>Доступ к материалам</label>
+        <select id="runAccess" onchange="onAccess()">
+          <option value="date">По датам расписания</option>
+          <option value="now">Доступно сразу</option>
+        </select></div>
+    </div>
+    <div class="row2" id="runDates">
+      <div class="fld"><label>Старт</label><input type="date" value="2026-10-01"></div>
+      <div class="fld"><label>Мест</label><input type="text" value="15"></div>
+    </div>
+    <div class="hint2" id="runHint">По кнопке создаётся группа-набор: с этого момента у неё есть расписание, журнал
+      и лицевые счета. Запись открывается после публикации карточки.</div>
+  </div>
+  <div class="mo-f"><button class="btn" onclick="closeAll()">Отмена</button>
+    <button class="btn btn-p" onclick="doRun()">Запустить набор</button></div>
+</div>
+
+<!-- публикация -->
+<div class="modal" id="mPub">
+  <div class="mo-h">Опубликовать карточку в каталоге</div>
+  <div class="mo-b">
+    <div id="pubBody"></div>
+  </div>
+  <div class="mo-f"><button class="btn" onclick="closeAll()">Отмена</button>
+    <button class="btn btn-p" id="pubBtn" onclick="doPub()">Опубликовать</button></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── роли: карточку ведёт маркетолог, набор запускает адм. учебной части,
+   цену набора меняет только финансовый администратор или роль выше (01-product §3.4) ── */
+var ROLES = {
+  mark: {n:'Маркетова Л.',    t:'Маркетолог',                 ini:'МЛ', card:true,  run:false, price:false},
+  adm:  {n:'Приёмщикова А.',  t:'Адм. учебной части',         ini:'ПА', card:false, run:true,  price:false},
+  fin:  {n:'Считалова О.',    t:'Финансовый администратор',   ini:'СО', card:false, run:true,  price:true},
+  owner:{n:'Владельцев В.',   t:'Владелец',                   ini:'ВВ', card:true,  run:true,  price:true}
+};
+var role = 'mark', EDO = false, cur = -1;
+function R(){ return ROLES[role]; }
+
+/* Состояние карточки вычисляется, а не выставляется руками:
+   черновик → ожидает описания → готова к публикации → опубликована. */
+var CARDS = [
+  {c:'Математика ЕГЭ — базовый', made:true,  desc:true,  price:24900, teacher:true, manual:true,
+   sched:true, pub:true,  run:{name:'МЕГЭ-3', start:'01.10', seats:15, taken:9, sched:true, teacher:'Училков И. П.'},
+   past:[{name:'МЕГЭ-1', period:'сент. 2026', taken:15}, {name:'МЕГЭ-2', period:'сент. 2026', taken:14}]},
+  {c:'Информатика ЕГЭ', made:true, desc:true, price:22900, teacher:true, manual:true,
+   sched:false, pub:false, run:{name:'ИНФ-3', start:'05.10', seats:12, taken:0, sched:false, teacher:'Замещалов П. С.'},
+   past:[{name:'ИНФ-2', period:'сент. 2026', taken:9}]},
+  {c:'Робототехника с нуля', made:true, desc:true, price:19900, teacher:false, manual:true,
+   sched:false, pub:false, run:null, past:[]},
+  {c:'Подготовка 9 класс', made:true, desc:false, price:0, teacher:false, manual:false,
+   sched:false, pub:false, run:null, past:[]},
+  {c:'Гитара с нуля', made:false, desc:false, price:0, teacher:false, manual:false,
+   sched:false, pub:false, run:null, past:[{name:'Подарочный гит', period:'сент. 2026', taken:2}]}
+];
+
+/* Метка вычисляется из чек-листа и не выставляется руками. «Готова к публикации» значит,
+   что собраны все пять пунктов; пока не хватает набора, расписания или преподавателя —
+   это отдельное состояние, иначе метка обещает то, чего нет. */
+function state(x){
+  if(!x.made) return {k:'draft', t:'В разработке', c:'b-draft'};
+  if(!x.desc || !x.price) return {k:'wait', t:'Ожидает описания', c:'b-wait'};
+  if(x.pub) return {k:'pub', t:'Опубликована', c:'b-pub'};
+  if(!canPub(x)) return {k:'run', t:'Ожидает набора', c:'b-wait'};
+  return {k:'ready', t:'Готова к публикации', c:'b-ready'};
+}
+function money(v){ return v ? v.toLocaleString('ru-RU') + ' ₽' : '—'; }
+
+/* чек-лист публикации: пять пунктов, каждый со ссылкой «куда идти» */
+function checklist(x){
+  return [
+    {ok:x.made, t:'Содержимое курса составлено',
+     s:x.made ? 'курс переведён в состояние «составлен»' : 'курс ещё в черновике',
+     href:'01-course-builder.html', act:'Открыть конструктор'},
+    {ok:x.desc && !!x.price, t:'Карточка заполнена',
+     s:(x.desc ? '' : 'нет описания и аудитории') + (x.desc || x.price ? '' : ' · ') + (x.price ? '' : 'не задана базовая цена')
+       || 'описание, аудитория, объём, базовая цена',
+     href:'', act:''},
+    {ok:!!x.run, t:'Набор запущен',
+     s:x.run ? 'группа ' + x.run.name + ' · старт ' + x.run.start : 'без набора записываться некуда',
+     href:'', act:'Запустить набор', run:true},
+    {ok:!!(x.run && x.run.sched), t:'Расписание набора утверждено',
+     s:x.run ? (x.run.sched ? 'опубликовано в КТП' : 'расписание в работе — не утверждено') : 'сначала нужен набор',
+     href:'03-ktp.html', act:'Открыть КТП'},
+    {ok:!x.manual || !!(x.run && x.run.teacher), t:'Преподаватель набора назначен',
+     s:!x.manual ? 'в курсе нет заданий с ручной проверкой — не требуется'
+        : (x.run && x.run.teacher ? x.run.teacher : 'в курсе есть задания с ручной проверкой'),
+     href:'21-staff.html', act:'Сотрудники'}
+  ];
+}
+function canPub(x){ return checklist(x).every(function(p){ return p.ok; }); }
+
+function setRole(v){
+  role = v;
+  document.getElementById('userIni').textContent = R().ini;
+  document.getElementById('userName').textContent = R().n;
+  document.getElementById('userRole').textContent = R().t;
+  render();
+  toast(R().t + ': ' + (R().card ? 'ведёт карточку' : 'карточку не правит') +
+    ' · ' + (R().run ? 'запускает набор' : 'набор не запускает') +
+    ' · ' + (R().price ? 'меняет цену набора' : 'цену набора не меняет'));
+}
+function setEdo(v){ EDO = v; render(); toast(v ? 'С модулем ЭДО: в карточке появляется сертификат' : 'Без ЭДО: поля сертификата нет'); }
+
+function render(){
+  if(cur >= 0){ renderCard(); return; }
+  var pub = CARDS.filter(function(x){ return x.pub; }).length;
+  document.getElementById('listSum').innerHTML = CARDS.length + ' карточек · ' + pub + ' в каталоге';
+  document.getElementById('rows').innerHTML = CARDS.map(function(x, i){
+    var st = state(x);
+    return '<tr class="clickable" onclick="openCard(' + i + ')">' +
+      '<td class="num">' + (i+1) + '</td>' +
+      '<td><a class="nm-a" href="25-storefront.html#c=' + i + '" onclick="event.stopPropagation()">' + x.c + '</a>' +
+        (x.past.length ? '<div class="num">прошлых наборов: ' + x.past.length + '</div>' : '') + '</td>' +
+      '<td><span class="badge ' + st.c + '">' + st.t + '</span></td>' +
+      '<td>' + (x.run
+        ? '<b>' + x.run.name + '</b> <span class="num">старт ' + x.run.start + '</span>' +
+          (x.run.sched ? '' : '<div class="num" style="color:#d9480f">расписание не утверждено</div>')
+        : '<span class="muted">набора нет</span>') + '</td>' +
+      '<td class="money">' + money(x.price) + '</td>' +
+      '<td>' + (x.run ? x.run.taken + ' из ' + x.run.seats : '—') + '</td>' +
+      '<td style="text-align:right"><span class="num">открыть ›</span></td></tr>';
+  }).join('');
+}
+
+/* ── карточка ── */
+function openCard(i){
+  cur = i;
+  document.body.classList.add('card-mode');
+  location.hash = 'c=' + i;
+  renderCard();
+}
+function backToList(){
+  cur = -1;
+  document.body.classList.remove('card-mode');
+  location.hash = '';
+  document.getElementById('hCrumb').textContent = 'Карточки курсов';
+  document.getElementById('hTitle').textContent = 'Карточки курсов';
+  render();
+}
+
+function renderCard(){
+  var x = CARDS[cur], st = state(x), list = checklist(x), left = list.filter(function(p){ return !p.ok; });
+  document.getElementById('hCrumb').innerHTML =
+    '<a class="link" href="25-storefront.html" onclick="event.preventDefault();backToList()">Карточки курсов</a> · ' + x.c;
+  document.getElementById('hTitle').textContent = x.c;
+
+  var ed = R().card;   /* карточку ведёт маркетолог (и владелец) */
+
+  document.getElementById('cardBox').innerHTML =
+    (x.pub ? '<div class="okbox"><b>Карточка в каталоге.</b> Запись открыта в набор ' + x.run.name +
+        ' · ' + x.run.taken + ' из ' + x.run.seats + ' мест.</div>' : '') +
+    '<div class="two"><div>' +
+
+      '<div class="card sec"><div class="sec-h"><h3>Витринное представление</h3>' +
+        '<span class="badge ' + st.c + '">' + st.t + '</span>' +
+        '<div style="flex:1"></div>' +
+        (ed ? '<button class="btn btn-s btn-p" onclick="toast(\'Сохранено\')">Сохранить</button>' : '') + '</div>' +
+        (ed ? '' : '<div class="lock" style="margin-bottom:10px">Карточку ведёт маркетолог — поля доступны только ему и владельцу.</div>') +
+        '<div class="fld"><label>Название на витрине</label>' +
+          '<input type="text" value="' + x.c + '"' + (ed ? '' : ' disabled') + '></div>' +
+        '<div class="fld"><label>Описание</label>' +
+          '<textarea rows="3"' + (ed ? '' : ' disabled') + '>' +
+          (x.desc ? 'Годовой курс подготовки: разбор заданий, еженедельные работы и пробники в формате экзамена.' : '') +
+          '</textarea></div>' +
+        '<div class="row2">' +
+          '<div class="fld"><label>Категория</label><select' + (ed ? '' : ' disabled') +
+            '><option>Подготовка к ЕГЭ</option><option>Школьная программа</option><option>Творчество</option></select></div>' +
+          '<div class="fld"><label>Целевая аудитория</label><input type="text" value="' +
+            (x.desc ? '10–11 класс' : '') + '"' + (ed ? '' : ' disabled') + '></div>' +
+        '</div>' +
+        '<div class="row2">' +
+          '<div class="fld"><label>Объём программы</label><input type="text" value="64 занятия · 128 часов"' +
+            (ed ? '' : ' disabled') + '>' +
+            '<div class="hint2">Считается из содержимого курса, правится вручную.</div></div>' +
+          '<div class="fld"><label>Базовая цена</label><input type="text" value="' + money(x.price) + '"' +
+            (ed ? '' : ' disabled') + '>' +
+            '<div class="hint2">Цена на витрине. Фактическую цену набора задают при запуске.</div></div>' +
+        '</div>' +
+        (EDO
+          ? '<div class="fld"><label>Сертификат <span class="badge b-vio">модуль ЭДО</span></label>' +
+            '<select' + (ed ? '' : ' disabled') + '><option>Выдаётся по окончании</option><option>Не выдаётся</option></select></div>'
+          : '') +
+      '</div>' +
+
+      '<div class="card sec"><div class="sec-h"><h3>Наборы</h3>' +
+        '<span class="muted">запись открыта максимум в один набор</span>' +
+        '<div style="flex:1"></div>' +
+        (R().run
+          ? '<button class="btn btn-s btn-p"' + (x.run ? ' disabled title="Уже есть открытый набор"' : '') +
+            ' onclick="openRun()">Запустить набор</button>'
+          : '<span class="lock">Набор запускает адм. учебной части</span>') + '</div>' +
+        '<div class="runs">' +
+          (x.run
+            ? '<div class="run open"><div class="top"><b>' + x.run.name + '</b>' +
+                '<span class="badge ' + (x.pub ? 'b-pub' : 'b-ready') + '">' +
+                  (x.pub ? 'запись открыта' : 'ждёт публикации') + '</span>' +
+                '<span class="met"><span><b>' + x.run.taken + ' / ' + x.run.seats + '</b>мест</span>' +
+                '<span><b>' + x.run.start + '</b>старт</span></span></div>' +
+                '<div class="sub">преподаватель: ' + (x.run.teacher || '<span style="color:#d9480f">не назначен</span>') +
+                ' · расписание: ' + (x.run.sched ? 'утверждено' : '<span style="color:#d9480f">в работе</span>') + '</div>' +
+                '<div style="margin-top:10px;display:flex;gap:var(--sp-8);flex-wrap:wrap">' +
+                  '<a class="btn btn-s" href="20-group.html#g=0">Карточка группы</a>' +
+                  '<a class="btn btn-s" href="03-ktp.html">Расписание</a>' +
+                  (R().run ? '<button class="btn btn-s" onclick="closeRun()">Закрыть набор</button>' : '') +
+                '</div></div>'
+            : '<div class="empty">Открытого набора нет — записываться некуда</div>') +
+          (x.past.length
+            ? '<div class="sec-h" style="margin:14px 0 8px"><h3>Прошлые наборы</h3></div>' +
+              x.past.map(function(p){
+                return '<div class="run"><div class="top"><b>' + p.name + '</b>' +
+                  '<span class="badge b-gray">завершён</span>' +
+                  '<span class="met"><span><b>' + p.taken + '</b>училось</span>' +
+                  '<span><b>' + p.period + '</b>период</span></span></div></div>';
+              }).join('')
+            : '') +
+        '</div></div>' +
+
+    '</div><div>' +
+
+      '<div class="card sec"><div class="sec-h"><h3>Публикация в каталоге</h3></div>' +
+        list.map(function(p){
+          return '<div class="chk ' + (p.ok ? 'ok' : 'no') + '">' +
+            '<span class="mark">' + (p.ok ? '✓' : '!') + '</span>' +
+            '<span class="txt"><b>' + p.t + '</b><span class="sub">' + p.s + '</span>' +
+            (!p.ok && (p.href || p.run)
+              ? '<div style="margin-top:6px">' +
+                (p.run
+                  ? (R().run ? '<button class="btn btn-s" onclick="openRun()">Запустить набор</button>' : '')
+                  : '<a class="btn btn-s" href="' + p.href + '">' + p.act + '</a>') + '</div>'
+              : '') + '</span></div>';
+        }).join('') +
+        '<div style="margin-top:14px">' +
+          (x.pub
+            ? '<button class="btn" onclick="unpub()">Снять с публикации</button>'
+            : '<button class="btn btn-p" style="width:100%"' + (canPub(x) ? '' : ' disabled') +
+              ' onclick="openPub()">Опубликовать в каталоге</button>') +
+        '</div>' +
+        (!x.pub && left.length
+          ? '<div class="hint2" style="margin-top:8px">Не собрано пунктов: ' + left.length + '</div>' : '') +
+      '</div>' +
+
+      '<div class="card sec"><div class="sec-h"><h3>Как это выглядит на витрине</h3></div>' +
+        '<div class="prev"><div class="ph">обложка курса</div><div class="pb">' +
+          '<h4>' + x.c + '</h4>' +
+          '<div class="desc">' + (x.desc
+            ? 'Годовой курс подготовки: разбор заданий, еженедельные работы и пробники в формате экзамена.'
+            : '<span style="color:#d9480f">описание не заполнено</span>') + '</div>' +
+          '<div class="meta"><span>64 занятия</span><span>10–11 класс</span>' +
+            (EDO ? '<span>сертификат</span>' : '') + '</div>' +
+          '<div class="price"><b>' + money(x.price) + '</b>' +
+            '<span class="cta">' + (x.pub
+              ? '<span class="btn btn-p btn-s">Записаться</span>'
+              : x.run
+                ? '<span class="badge b-gray">не в каталоге</span>'
+                : '<span class="badge b-gray">набор закрыт</span>') + '</span></div>' +
+        '</div></div>' +
+        '<div class="hint2">' + (x.pub
+          ? 'Карточка видна в каталоге и в поиске.'
+          : 'Пока карточка не опубликована, её видно только здесь.') + '</div>' +
+      '</div>' +
+
+    '</div></div>';
+}
+
+/* ── запуск набора ── */
+function openRun(){
+  var x = CARDS[cur];
+  document.getElementById('runTitle').textContent = 'Запустить набор: ' + x.c;
+  document.getElementById('runPrice').value = money(x.price);
+  document.getElementById('runPrice').disabled = !R().price;
+  document.getElementById('runPriceLock').textContent = R().price
+    ? 'Предзаполнена базовой ценой карточки.'
+    : 'Цену набора меняет финансовый администратор или владелец — набор запускается с базовой ценой.';
+  document.getElementById('runTeachReq').style.display = x.manual ? '' : 'none';
+  document.getElementById('runTeachHint').textContent = x.manual
+    ? 'В курсе есть задания с ручной проверкой: без преподавателя набор не опубликуется.'
+    : 'Все задания проверяются автоматически — преподаватель необязателен.';
+  document.getElementById('runTeacher').value = '';
+  document.getElementById('runAccess').value = 'date';
+  onAccess();
+  show('mRun');
+}
+function onAccess(){
+  var now = document.getElementById('runAccess').value === 'now';
+  document.getElementById('runDates').style.display = now ? 'none' : '';
+  document.getElementById('runHint').textContent = now
+    ? 'Материалы открыты с первого дня, расписание не требуется — пункт чек-листа закроется сам.'
+    : 'По кнопке создаётся группа-набор: с этого момента у неё есть расписание, журнал и лицевые счета. ' +
+      'Запись открывается после публикации карточки.';
+}
+function doRun(){
+  var x = CARDS[cur], t = document.getElementById('runTeacher').value;
+  if(x.manual && !t){ toast('Назначьте преподавателя: в курсе есть задания с ручной проверкой'); return; }
+  var now = document.getElementById('runAccess').value === 'now';
+  x.run = {name:'НАБ-' + (cur + 1), start:now ? 'сразу' : '01.11', seats:15, taken:0, sched:now, teacher:t};
+  closeAll(); renderCard();
+  toast('Набор запущен: создана группа ' + x.run.name + (now ? ', материалы открыты сразу' : ', расписание в работе'));
+}
+function closeRun(){
+  var x = CARDS[cur];
+  x.run = null; x.pub = false;
+  renderCard();
+  toast('Набор закрыт. Карточка остаётся на витрине с пометкой «набор закрыт»');
+}
+
+/* ── публикация ── */
+function openPub(){
+  var x = CARDS[cur];
+  document.getElementById('pubBody').innerHTML =
+    '<div class="okbox">Все пункты собраны — карточка попадёт в каталог и в поиск.</div>' +
+    '<div class="fld"><label>Что откроется публично</label></div>' +
+    '<div class="prev"><div class="ph">обложка курса</div><div class="pb">' +
+      '<h4>' + x.c + '</h4><div class="desc">Запись в набор ' + x.run.name + ' · старт ' + x.run.start + '</div>' +
+      '<div class="price"><b>' + money(x.price) + '</b><span class="cta">' +
+      '<span class="btn btn-p btn-s">Записаться</span></span></div></div></div>' +
+    '<div class="hint2" style="margin-top:10px">Одновременно открыта запись максимум в один набор. ' +
+      'Закрытие набора не снимает карточку с витрины: она останется с пометкой «набор закрыт» или с датой следующего.</div>';
+  show('mPub');
+}
+function doPub(){
+  CARDS[cur].pub = true;
+  closeAll(); renderCard();
+  toast('Карточка опубликована: запись в набор открыта');
+}
+function unpub(){
+  CARDS[cur].pub = false;
+  renderCard();
+  toast('Снята с публикации: запись закрыта, карточка видна только здесь');
+}
+
+function show(id){ document.getElementById('scrim').classList.add('on'); document.getElementById(id).classList.add('on'); }
+function closeAll(){
+  document.getElementById('scrim').classList.remove('on');
+  ['mRun','mPub'].forEach(function(id){ document.getElementById(id).classList.remove('on'); });
+}
+
+var tt;
+function toast(m){
+  var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3600);
+}
+
+/* адрес карточки живёт в хеше: 25-storefront.html#c=1 */
+var cHash = location.hash.match(/(?:^|[#&])c=(\d+)/);
+if(cHash && CARDS[+cHash[1]]) openCard(+cHash[1]);
+else render();
+</script>
+</body>
+</html>

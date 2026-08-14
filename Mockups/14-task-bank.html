@@ -6,6 +6,7 @@
 <title>Банк задач — FS-LMS 2.0</title>
 <link rel="stylesheet" href="_shared.css">
 <script src="_tip.js"></script>
+<script src="_nav.js"></script>
 <style>
   .filters{background:#fff;border-bottom:1px solid var(--gray2);padding:var(--sp-12) var(--sp-20);
     display:flex;gap:var(--sp-8);align-items:center;flex-wrap:wrap;flex:none}
@@ -31,7 +32,7 @@
   .t:hover{background:var(--gray0)}
   .t.on{background:var(--blue-l)}
   .t input[type=checkbox]{margin-top:var(--sp-4)}
-  .t .body{flex:1;min-width:0;cursor:pointer}
+  .t .body{flex:1;min-width:0;cursor:pointer;color:inherit;text-decoration:none;display:block}
   .t .q{font-size:var(--fs-14);line-height:1.5;color:var(--gray9);display:block}
   .t .q:hover{color:var(--blue)}
   .t .meta{display:flex;gap:var(--sp-8);flex-wrap:wrap;align-items:center;margin-top:var(--sp-6)}
@@ -60,7 +61,7 @@
       <div style="flex:1"><b>Шаг в будущее</b><small>Управление</small></div>
       <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')">⟨</button>
     </div>
-    <div class="switch"><button>Обучение</button><button class="on">Управление</button></div>
+    <div class="switch"><a href="11-student-home.html" title="Пространство «Обучение»: свои курсы и учёба">Обучение</a><button class="on">Управление</button></div>
     <nav class="nav">
       <h4>Моя работа</h4>
       <a href="10-home.html"><i class="ic">◱</i><span>Главная</span></a>
@@ -207,7 +208,7 @@ function render(){
       return '<i class="'+(d <= t.diff ? 'on' : '')+'"></i>'; }).join('') + '</span>';
     return '<div class="t '+(on?'on':'')+'">' +
       '<input type="checkbox" '+(on?'checked':'')+' onchange="toggle('+i+')">' +
-      '<span class="body" onclick="location.href=\'15-task-editor.html\'">' +
+      '<a class="body" href="15-task-editor.html">' +
         '<span class="q">'+t.q+'</span>' +
         '<span class="meta">' +
           '<span class="tag '+(t.kind==='manual'?'man':'auto')+'">'+(t.kind==='manual'?'ручная проверка':'автопроверка')+'</span>' +
@@ -217,7 +218,7 @@ function render(){
           (t.draft ? '<span class="tag draft">черновик</span>' : '') +
           '<span class="tag">'+t.author+' · '+t.date+'</span>' +
         '</span>' +
-      '</span>' +
+      '</a>' +
       '<span class="diff">'+dots+'<div>сложность</div></span>' +
       '<span class="used">' + (t.used.w + t.used.s
         ? '<b>'+(t.used.w + t.used.s)+'</b>' + t.used.w + ' работ · ' + t.used.s + ' шагов'

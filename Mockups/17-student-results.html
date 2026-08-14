@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Результаты ученика — FS-LMS 2.0</title>
+<link rel="stylesheet" href="_shared.css">
+<script src="_icons.js"></script>
+<script src="_tip.js"></script>
+<script src="_nav.js"></script>
+<style>
+  .body{flex:1;overflow:auto;padding:var(--sp-16) var(--sp-20) var(--user-h)}
+  .card{background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);box-shadow:var(--sh);margin-bottom:var(--sp-12)}
+  .sec-h{display:flex;align-items:center;gap:var(--sp-12);padding:var(--sp-12) var(--sp-16);
+    border-bottom:1px solid var(--gray2);flex-wrap:wrap}
+  .sec-h h3{margin:0;font-size:var(--fs-14)}
+
+  /* показатели */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-12);margin-bottom:var(--sp-12)}
+  .kpi{padding:var(--sp-16);background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);box-shadow:var(--sh)}
+  .kpi .lab{font-size:var(--fs-12);color:var(--gray6);font-weight:600}
+  .kpi .big{font-size:var(--fs-26);font-weight:700;margin:var(--sp-4) 0 2px}
+  .kpi .sub{font-size:var(--fs-12);color:var(--gray6)}
+  .bar{height:6px;border-radius:var(--r-4);background:var(--gray2);margin-top:var(--sp-8);overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:var(--r-4);background:var(--blue)}
+  .bar i.g{background:var(--green)} .bar i.o{background:var(--orange)} .bar i.r{background:var(--red)}
+
+  /* посещаемость */
+  .strip{display:flex;flex-wrap:wrap;gap:var(--sp-12) var(--sp-20);align-items:flex-start;padding:var(--sp-16)}
+  .mo-g{display:flex;flex-direction:column;gap:var(--sp-6);flex:none}
+  .mo-g .mo{font-size:var(--fs-12);color:var(--gray7);font-weight:600;display:flex;gap:var(--sp-6);align-items:baseline}
+  .mo-g .mp{font-size:var(--fs-12);color:var(--gray6);font-weight:400}
+  .mo-g .sqs{display:flex;gap:var(--sp-6);flex-wrap:nowrap}
+  .sq{width:var(--sq);height:var(--sq);border-radius:var(--sq-r);display:inline-grid;place-items:center;
+    color:#fff;flex:none;cursor:default}
+  .sq svg{display:block}
+  .sq.p{background:var(--green)} .sq.a{background:var(--red)} .sq.e{background:var(--gray2)}
+  .sq.ind{border-radius:50%}
+  .legend{display:flex;gap:var(--sp-12);font-size:var(--fs-12);color:var(--gray6);flex-wrap:wrap}
+  .legend i{display:inline-block;width:11px;height:11px;border-radius:var(--r-4);margin-right:var(--sp-6);vertical-align:-1px}
+  .legend i.ind{border-radius:50%}
+
+  /* таблица работ */
+  table.t{width:100%;border-collapse:collapse;font-size:var(--fs-14)}
+  table.t th{text-align:left;font-size:var(--fs-12);letter-spacing:.04em;text-transform:uppercase;color:var(--gray5);
+    font-weight:700;padding:var(--sp-8) var(--sp-16);border-bottom:1px solid var(--gray2);white-space:nowrap}
+  table.t td{padding:var(--sp-12) var(--sp-16);border-bottom:1px solid var(--gray1);vertical-align:middle}
+  table.t tr:last-child td{border-bottom:0}
+  table.t tbody tr:hover{background:var(--gray0)}
+  .lb{display:inline-block;font-size:var(--fs-12);font-weight:700;padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4);
+    background:var(--gray1);color:var(--gray6)}
+  .lb.kr{background:#ffe3e3;color:#c92a2a} .lb.sr{background:var(--blue-l);color:#1864ab} .lb.dz{background:var(--green-l);color:#2b8a3e}
+  .dt{font-variant-numeric:tabular-nums;color:var(--gray7);white-space:nowrap}
+  .score{font-weight:700;font-variant-numeric:tabular-nums}
+  .quote{font-size:var(--fs-12);color:var(--gray7);background:var(--gray0);border-left:2px solid var(--gray3);
+    padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4);margin-top:var(--sp-6);display:block}
+  .link{color:var(--blue);cursor:pointer;text-decoration:none} .link:hover{text-decoration:underline}
+
+  /* селектор в шапке — одной высоты во всех экранах, чтобы шапка была ровно --head-h */
+  .pick{display:flex;align-items:center;gap:var(--sp-8);height:38px;padding:0 var(--sp-12);
+    border:1px solid var(--gray3);border-radius:var(--r-8);font-size:var(--fs-14);color:var(--gray7);
+    background:#fff;cursor:pointer}
+  .pick:hover{background:var(--gray0)}
+  .filters{display:flex;gap:var(--sp-8);align-items:center;flex-wrap:wrap}
+  .filters select{border:1px solid var(--gray3);border-radius:var(--r-8);padding:var(--sp-6) var(--sp-12);font:inherit;font-size:var(--fs-14)}
+  .good{color:#2b8a3e} .mid{color:#d9480f} .bad{color:#c92a2a}
+  .empty{padding:var(--sp-32) var(--sp-16);text-align:center;color:var(--gray6);font-size:var(--fs-14)}
+  .demo{display:flex;align-items:center;gap:var(--sp-6);font-size:var(--fs-12);color:var(--gray6)}
+  @media (max-width:1100px){ .kpis{grid-template-columns:repeat(2,1fr)} }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-top">
+      <div class="logo">ШБ</div>
+      <div style="flex:1"><b>Шаг в будущее</b><small id="sideSub">Личный кабинет</small></div>
+      <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')">⟨</button>
+    </div>
+    <nav class="nav">
+      <h4>Меню</h4>
+      <a href="11-student-home.html"><i class="ic">◱</i><span>Главная</span></a>
+      <a href="18-student-courses.html"><i class="ic">◈</i><span>Мои курсы</span></a>
+      <a href="16-student-calendar.html" id="navCal"><i class="ic">◷</i><span>Календарь</span></a>
+      <a href="#" class="on"><i class="ic">▦</i><span>Результаты</span></a>
+      <a href="#"><i class="ic">₽</i><span>Лицевой счёт</span></a>
+    </nav>
+    <div class="side-user">
+      <div class="ava" id="ava" style="background:var(--blue)">АК</div>
+      <div style="flex:1"><b style="font-size:var(--fs-14);display:block" id="userName">Абрамов Кирилл</b>
+        <small style="font-size:var(--fs-12);color:var(--gray6)" id="userRole">Ученик</small></div>
+      <span style="color:var(--gray5)">⚙</span>
+    </div>
+  </aside>
+
+  <div class="app">
+    <header class="head">
+      <h1>Результаты</h1>
+      <button class="pick" onclick="toast('У вас две записи: МЕГЭ-1 и индивидуальные занятия')">
+        <span style="width:22px;height:22px;border-radius:var(--r-6);background:var(--violet);color:#fff;font-size:9px;display:grid;place-items:center;font-weight:700">МЕГЭ</span>
+        МЕГЭ-1 · Математика <span style="color:var(--gray5)">▾</span></button>
+      <button class="pick" id="childPick" onclick="toast('Второй ребёнок: Абрамова Полина · МЕГЭ-2')" style="display:none">
+        <span style="width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;font-size:9px;display:grid;place-items:center;font-weight:700">АК</span>
+        Кирилл <span style="color:var(--gray5)">▾</span></button>
+      <div class="sp"></div>
+      <label class="demo">роль <i>(демо)</i>
+        <select id="role" onchange="render()" style="padding:var(--sp-4) var(--sp-8);font-size:var(--fs-12)">
+          <option value="student">Ученик</option>
+          <option value="parent">Представитель</option>
+        </select></label>
+
+      <label class="demo">кабинет <i>(демо)</i>
+        <select id="mode" onchange="render()" style="padding:var(--sp-4) var(--sp-8);font-size:var(--fs-12)">
+          <option value="campus">кампус (группа)</option>
+          <option value="online">онлайн (купленные курсы)</option>
+        </select></label>
+      <span style="color:var(--gray5)">🔔</span>
+    </header>
+
+    <div class="body">
+      <div class="kpis" id="kpis"></div>
+
+      <div class="card" id="attCard">
+        <div class="sec-h">
+          <h3>Посещаемость</h3>
+          <span class="muted" id="attSum" style="font-size:var(--fs-12)"></span>
+          <div style="flex:1"></div>
+          <div class="legend">
+            <span><i style="background:var(--green)"></i>был</span>
+            <span><i style="background:var(--red)"></i>не был</span>
+            <span><i style="background:var(--gray2)"></i>не отмечено</span>
+            <span><i class="ind" style="background:var(--gray5)"></i>индивидуальное</span>
+          </div>
+        </div>
+        <div class="strip" id="strip"></div>
+      </div>
+
+      <div class="card">
+        <div class="sec-h">
+          <h3>Работы</h3>
+          <span class="muted" id="wSum" style="font-size:var(--fs-12)"></span>
+          <div style="flex:1"></div>
+          <div class="filters">
+            <select id="fType" onchange="render()">
+              <option value="">Все типы</option><option>ДЗ</option><option>СР</option><option>КР</option>
+            </select>
+            <select id="fStatus" onchange="render()">
+              <option value="">Все статусы</option>
+              <option value="graded">оценённые</option>
+              <option value="review">на проверке</option>
+              <option value="rework">на доработке</option>
+              <option value="none">не сданные</option>
+            </select>
+          </div>
+        </div>
+        <table class="t"><thead><tr>
+          <th style="width:var(--col-92)">Тип</th><th>Работа</th>
+          <th style="width:var(--col-160)">Урок</th><th style="width:var(--col-110)">Сдана</th>
+          <th style="width:var(--col-160)">Статус</th><th style="width:var(--col-110)">Балл</th>
+        </tr></thead><tbody id="works"></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* Результаты ученику показываются обязательно (01-product §3.7): прозрачность дисциплинирует.
+   Показываем то же, что видит преподаватель в сводке, минус чужие данные и служебные пометки. */
+var LESSONS = [
+  {mo:'Июль', d:'28.07', att:'p'}, {mo:'Июль', d:'31.07', att:'p'},
+  {mo:'Август', d:'01.08', att:'p'}, {mo:'Август', d:'04.08', att:'p'},
+  {mo:'Август', d:'06.08', att:'a'}, {mo:'Август', d:'08.08', att:'p'},
+  {mo:'Август', d:'10.08', att:'p', kind:'i'}, {mo:'Август', d:'11.08', att:'p'},
+  {mo:'Август', d:'12.08', att:null}
+];
+var WORKS = [
+  {t:'ДЗ', l:'Проценты и пропорции', d:'07.08', st:'graded', sc:4, max:5},
+  {t:'СР', l:'Системы уравнений', d:'11.08', st:'graded', sc:8, max:10},
+  {t:'ДЗ', l:'Системы уравнений', d:'11.08', st:'rework', sc:null, max:5,
+   note:'В задании 4 потеряна вторая ветка модуля — переделай и сдай снова.'},
+  {t:'КР', l:'Неравенства', d:'18.08', st:'graded', sc:15, max:20, fin:true},
+  {t:'СР', l:'Функции и графики', d:'—', st:'review', sc:null, max:10},
+  {t:'ДЗ', l:'Степени и корни', d:'—', st:'none', sc:null, max:5, due:'сегодня до 23:59'}
+];
+
+function cls(p){ return p >= 85 ? 'g' : p >= 70 ? 'o' : 'r'; }
+function txtCls(p){ return p >= 85 ? 'good' : p >= 70 ? 'mid' : 'bad'; }
+
+function render(){
+  var online = document.getElementById('mode').value === 'online';
+  document.getElementById('sideSub').textContent = online ? 'Онлайн-курсы' : 'Личный кабинет';
+  /* у онлайн-ученика нет группы — значит нет ни занятий, ни посещаемости */
+  document.getElementById('attCard').style.display = online ? 'none' : '';
+  document.getElementById('navCal').style.display = online ? 'none' : '';
+
+  var held = LESSONS.filter(function(l){ return l.att !== null; });
+  var was = held.filter(function(l){ return l.att === 'p'; }).length;
+  var attPct = held.length ? Math.round(was / held.length * 100) : 0;
+
+  var graded = WORKS.filter(function(w){ return w.st === 'graded'; });
+  var got = graded.reduce(function(a, w){ return a + w.sc; }, 0);
+  var max = graded.reduce(function(a, w){ return a + w.max; }, 0);
+  var avg = max ? Math.round(got / max * 100) : 0;
+  var todo = WORKS.filter(function(w){ return w.st === 'none' || w.st === 'rework'; }).length;
+
+  /* показатели */
+  var kpis = [];
+  if(!online) kpis.push({lab:'Посещаемость', big:attPct + '%', sub:was + ' из ' + held.length + ' занятий', p:attPct});
+  kpis.push({lab:'Средний балл', big:avg + '%', sub:got + ' из ' + max + ' по ' + graded.length + ' работам', p:avg});
+  kpis.push({lab:'Прогресс курса', big:'77%', sub:'46 из 60 шагов', p:77});
+  kpis.push({lab:'Нужно сделать', big:todo, sub:todo ? 'работы ждут вас' : 'всё сдано', p:null, warn:todo > 0});
+  document.getElementById('kpis').innerHTML = kpis.map(function(k){
+    return '<div class="kpi"><div class="lab">'+k.lab+'</div>' +
+      '<div class="big '+(k.warn ? 'mid' : '')+'">'+k.big+'</div><div class="sub">'+k.sub+'</div>' +
+      (k.p === null ? '' : '<div class="bar"><i class="'+cls(k.p)+'" style="width:'+Math.max(2, k.p)+'%"></i></div>') +
+      '</div>';
+  }).join('');
+  document.getElementById('kpis').style.gridTemplateColumns = 'repeat(' + kpis.length + ',1fr)';
+
+  /* посещаемость: месяцами, только прошедшие занятия */
+  var groups = [], mo = null;
+  LESSONS.forEach(function(l){
+    if(l.mo !== mo){ mo = l.mo; groups.push({mo:mo, sq:'', was:0, held:0}); }
+    var g = groups[groups.length - 1];
+    if(l.att !== null){ g.held++; if(l.att === 'p') g.was++; }
+    var c = (l.att === 'p' ? 'p' : l.att === 'a' ? 'a' : 'e') + (l.kind === 'i' ? ' ind' : '');
+    g.sq += '<div class="sq '+c+'" title="'+l.d+' · ' +
+      (l.att === 'p' ? 'был' : l.att === 'a' ? 'не был' : 'не отмечено') + '"></div>';
+  });
+  document.getElementById('strip').innerHTML = groups.map(function(g){
+    return '<div class="mo-g"><div class="mo">'+g.mo+'<span class="mp">'+g.was+' из '+g.held+'</span></div>' +
+      '<div class="sqs">'+g.sq+'</div></div>';
+  }).join('');
+  document.getElementById('attSum').innerHTML = was + ' из ' + held.length + ' · ' + attPct + '%' +
+    (held.length < LESSONS.length ? ' · 1 занятие ещё не отмечено' : '');
+
+  /* работы */
+  var fT = document.getElementById('fType').value, fS = document.getElementById('fStatus').value;
+  var list = WORKS.filter(function(w){
+    return (!fT || w.t === fT) && (!fS || w.st === fS);
+  });
+  document.getElementById('wSum').textContent = graded.length + ' оценено · ' +
+    WORKS.filter(function(w){ return w.st === 'review'; }).length + ' на проверке · ' + todo + ' нужно сделать';
+  document.getElementById('works').innerHTML = list.length ? list.map(function(w){
+    var st = w.st === 'graded' ? '<span class="badge b-ok">зачтено</span>'
+      : w.st === 'review' ? '<span class="badge b-info">на проверке</span>'
+      : w.st === 'rework' ? '<span class="badge" style="background:var(--orange-l);color:#d9480f">на доработку</span>'
+      : '<span class="muted">не сдано' + (w.due ? ' · ' + w.due : '') + '</span>';
+    var pct = w.st === 'graded' ? Math.round(w.sc / w.max * 100) : null;
+    return '<tr><td><span class="lb '+(w.fin ? 'kr' : w.t === 'ДЗ' ? 'dz' : 'sr')+'">'+w.t+'</span></td>' +
+      '<td><a class="link" href="02-player.html">'+w.t+' «'+w.l+'»</a>' +
+        (w.fin ? ' <span class="muted" style="font-size:var(--fs-12)">итоговая</span>' : '') +
+        (w.note ? '<span class="quote">«'+w.note+'»</span>' : '') + '</td>' +
+      '<td class="muted">'+w.l+'</td>' +
+      '<td class="dt">'+w.d+'</td><td>'+st+'</td>' +
+      '<td>'+(pct === null ? '<span class="muted">—</span>'
+        : '<span class="score '+txtCls(pct)+'">'+w.sc+'/'+w.max+'</span> <span class="muted">'+pct+'%</span>')+'</td></tr>';
+  }).join('') : '<tr><td colspan="6" class="empty">По этим фильтрам работ нет</td></tr>';
+  if(typeof applyRole === 'function') applyRole();
+}
+
+
+/* Представитель видит те же вкладки, что ученик, но ничего не делает за него:
+   действия остаются на месте и гаснут — так видно, что кнопка существует (01-product §3.8). */
+function isParent(){ var r = document.getElementById('role'); return r && r.value === 'parent'; }
+function applyRole(){
+  var p = isParent();
+  var nm = document.getElementById('userName'), rl = document.getElementById('userRole'), av = document.getElementById('ava');
+  if(nm) nm.textContent = p ? 'Абрамова Елена' : 'Абрамов Кирилл';
+  if(rl) rl.textContent = p ? 'Представитель' : 'Ученик';
+  if(av){ av.textContent = p ? 'АЕ' : 'АК'; av.style.background = p ? 'var(--violet)' : 'var(--blue)'; }
+  var sub = document.getElementById('sideSub');
+  if(sub && sub.textContent !== 'Онлайн-курсы') sub.textContent = p ? 'Кабинет представителя' : 'Личный кабинет';
+  var cp = document.getElementById('childPick');
+  if(cp) cp.style.display = p ? '' : 'none';
+  /* кнопки-действия ученика остаются видимыми, но выключаются */
+  [].forEach.call(document.querySelectorAll('[data-act]'), function(b){
+    /* ссылка не понимает disabled — гасим её классом, кнопку по-прежнему атрибутом */
+    if(b.tagName === 'A') b.classList.toggle('is-off', p); else b.disabled = p;
+    b.title = p ? 'Действие доступно ученику — представитель наблюдает' : '';
+  });
+}
+var tt;
+function toast(m){ var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3200); }
+render();
+applyRole();
+</script>
+</body>
+</html>

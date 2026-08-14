@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="_shared.css">
 <script src="_icons.js"></script>
 <script src="_tip.js"></script>
+<script src="_nav.js"></script>
 <style>
   .body{flex:1;overflow:auto;padding:var(--sp-16) var(--sp-20) var(--user-h)}
   .card{background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);box-shadow:var(--sh)}
@@ -115,6 +116,9 @@
 
   .empty{padding:var(--sp-32) var(--sp-16);text-align:center;color:var(--gray6);font-size:var(--fs-14)}
   .empty b{display:block;color:var(--gray9);margin-bottom:var(--sp-4)}
+  .pick{display:flex;align-items:center;gap:var(--sp-8);height:38px;padding:0 var(--sp-12);
+    border:1px solid var(--gray3);border-radius:var(--r-8);font-size:var(--fs-14);color:var(--gray7);background:#fff;cursor:pointer}
+  .pick:hover{background:var(--gray0)}
   .demo{display:flex;align-items:center;gap:var(--sp-6);font-size:var(--fs-12);color:var(--gray6)}
 
   @media (max-width:1100px){ .cols{grid-template-columns:1fr} }
@@ -137,8 +141,9 @@
       <a href="#" id="navPay"><i class="ic">₽</i><span>Лицевой счёт</span></a>
     </nav>
     <div class="side-user">
-      <div class="ava" style="background:var(--blue)">АК</div>
-      <div style="flex:1"><b style="font-size:var(--fs-14);display:block">Абрамов Кирилл</b><small style="font-size:var(--fs-12);color:var(--gray6)">Ученик</small></div>
+      <div class="ava" id="ava" style="background:var(--blue)">АК</div>
+      <div style="flex:1"><b style="font-size:var(--fs-14);display:block" id="userName">Абрамов Кирилл</b>
+        <small style="font-size:var(--fs-12);color:var(--gray6)" id="userRole">Ученик</small></div>
       <span style="color:var(--gray5)">⚙</span>
     </div>
   </aside>
@@ -146,7 +151,16 @@
   <div class="app">
     <header class="head">
       <h1>Главная</h1>
+      <button class="pick" id="childPick" onclick="toast('Второй ребёнок: Абрамова Полина · МЕГЭ-2')" style="display:none">
+        <span style="width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;font-size:9px;display:grid;place-items:center;font-weight:700">АК</span>
+        Кирилл <span style="color:var(--gray5)">▾</span></button>
       <div class="sp"></div>
+      <label class="demo">роль <i>(демо)</i>
+        <select id="role" onchange="render()" style="padding:var(--sp-4) var(--sp-8);font-size:var(--fs-12)">
+          <option value="student">Ученик</option>
+          <option value="parent">Представитель</option>
+        </select></label>
+
       <label class="demo">кабинет <i>(демо)</i>
         <select id="mode" onchange="render()" style="padding:var(--sp-4) var(--sp-8);font-size:var(--fs-12)">
           <option value="campus">кампус (группа)</option>
@@ -290,8 +304,8 @@ function render(){
         (live === 'now' ? 'Занятие идёт' : 'Занятие начнётся через 5 минут') + '</span>' +
       '<b>'+l.grp+' · '+l.topic+'</b>' +
       '<span class="sub">'+l.t1+'–'+l.t2+' · '+l.teacher+' · '+l.room+'</span></span>' +
-      '<button class="btn" onclick="location.href=\'02-player.html\'">Материалы урока</button>' +
-      '<button class="btn btn-p" onclick="toast(\'Подключение к трансляции\')">Подключиться</button>';
+      '<a class="btn" href="02-player.html">Материалы урока</a>' +
+      '<button class="btn btn-p" data-act onclick="toast(\'Подключение к трансляции\')">Подключиться</button>';
   } else {
     go.innerHTML =
       '<span class="ic-l">' + stepIcon('task', 26) + '</span>' +
@@ -300,7 +314,7 @@ function render(){
       '<span class="sub">Задача «Тренировка: подстановка» — на ней ты остановился вчера</span></span>' +
       '<span class="prog"><span class="sub" style="font-size:var(--fs-12);color:var(--gray7)">Курс пройден на 77%</span>' +
       '<span class="bar"><i style="width:77%"></i></span></span>' +
-      '<button class="btn btn-p" onclick="location.href=\'02-player.html\'">Продолжить</button>';
+      '<a class="btn btn-p" data-act href="02-player.html">Продолжить</a>';
   }
 
   /* расписание */
@@ -325,7 +339,7 @@ function render(){
           (soon?'<span class="now-b">'+(live==='soon5'?'через 5 минут':'через час')+'</span>':'')+'</b>' +
         '<span class="sub">'+l.teacher+' · '+l.room+' · '+l.topic+'</span>' +
         '<span class="acts">' +
-          '<button class="btn btn-s" onclick="location.href=\'02-player.html\'">Материалы урока</button>' +
+          '<a class="btn btn-s" href="02-player.html">Материалы урока</a>' +
         '</span></span></div>';
     }).join('') : '<div class="empty"><b>Сегодня занятий нет</b>Ближайшее — завтра в 15:00</div>';
     sum.textContent = today.length ? 'вторник, 12 августа' : '';
@@ -343,7 +357,7 @@ function render(){
       '<span class="txt"><b>'+t.ttl+'</b><span class="sub">'+t.sub+'</span>' +
       (t.quote ? '<span class="quote">«'+t.quote+'»</span>' : '') + '</span>' +
       '<span class="when '+t.cls+'">'+t.when+'</span>' +
-      '<button class="btn btn-s" onclick="location.href=\'02-player.html\'">'+t.act+'</button></div>';
+      '<a class="btn btn-s" href="02-player.html">'+t.act+'</a></div>';
   }).join('');
 
   /* курсы онлайн-кабинета */
@@ -353,7 +367,7 @@ function render(){
       '<span class="nm"><b>'+c.n+'</b><span class="sub">'+c.sub+'</span></span>' +
       '<span class="pr">'+(c.pr === 100 ? 'пройден' : 'пройдено '+c.pr+'%') +
         '<span class="bar"><i style="width:'+c.pr+'%"></i></span></span>' +
-      '<button class="btn '+(c.pr === 100 ? '' : 'btn-p')+'" onclick="location.href=\'02-player.html\'">'+c.act+'</button></div>';
+      '<a class="btn '+(c.pr === 100 ? '' : 'btn-p')+'" href="02-player.html">'+c.act+'</a></div>';
   }).join('');
 
   /* результаты */
@@ -366,6 +380,7 @@ function render(){
     return '<div class="cell"><div class="lab">'+r[0]+'</div>' +
       '<div class="v"><span class="big '+r[2]+'">'+r[1]+'</span><span class="sub">'+r[3]+'</span></div></div>';
   }).join('');
+  if(typeof applyRole === 'function') applyRole();
 }
 
 function setSch(m, el){
@@ -374,10 +389,32 @@ function setSch(m, el){
   el.classList.add('on');
   render();
 }
+
+/* Представитель видит те же вкладки, что ученик, но ничего не делает за него:
+   действия остаются на месте и гаснут — так видно, что кнопка существует (01-product §3.8). */
+function isParent(){ var r = document.getElementById('role'); return r && r.value === 'parent'; }
+function applyRole(){
+  var p = isParent();
+  var nm = document.getElementById('userName'), rl = document.getElementById('userRole'), av = document.getElementById('ava');
+  if(nm) nm.textContent = p ? 'Абрамова Елена' : 'Абрамов Кирилл';
+  if(rl) rl.textContent = p ? 'Представитель' : 'Ученик';
+  if(av){ av.textContent = p ? 'АЕ' : 'АК'; av.style.background = p ? 'var(--violet)' : 'var(--blue)'; }
+  var sub = document.getElementById('sideSub');
+  if(sub && sub.textContent !== 'Онлайн-курсы') sub.textContent = p ? 'Кабинет представителя' : 'Личный кабинет';
+  var cp = document.getElementById('childPick');
+  if(cp) cp.style.display = p ? '' : 'none';
+  /* кнопки-действия ученика остаются видимыми, но выключаются */
+  [].forEach.call(document.querySelectorAll('[data-act]'), function(b){
+    /* ссылка не понимает disabled — гасим её классом, кнопку по-прежнему атрибутом */
+    if(b.tagName === 'A') b.classList.toggle('is-off', p); else b.disabled = p;
+    b.title = p ? 'Действие доступно ученику — представитель наблюдает' : '';
+  });
+}
 var tt;
 function toast(m){ var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
   clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3200); }
 render();
+applyRole();
 </script>
 </body>
 </html>

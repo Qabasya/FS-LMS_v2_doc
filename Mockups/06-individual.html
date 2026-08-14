@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Индивидуальные занятия и Расписание — FS-LMS 2.0</title>
 <link rel="stylesheet" href="_shared.css">
+<script src="_tip.js"></script>
+<script src="_nav.js"></script>
 <style>
   :root{ --slot-min:22px; }   /* минимальная высота получасового слота */
   .navd{display:flex;align-items:center;gap:var(--sp-12);font-weight:600;font-size:var(--fs-16)}
@@ -73,7 +75,7 @@
       <div style="flex:1"><b>Шаг в будущее</b><small>Управление</small></div>
       <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')">⟨</button>
     </div>
-    <div class="switch"><button>Обучение</button><button class="on">Управление</button></div>
+    <div class="switch"><a href="11-student-home.html" title="Пространство «Обучение»: свои курсы и учёба">Обучение</a><button class="on">Управление</button></div>
     <nav class="nav" id="navMenu"></nav>
     <div class="side-user">
       <div class="ava" id="roleIni">КМ</div>
@@ -260,9 +262,9 @@ function weekView(){
         var top = (toMin(g.from) - DAY_START) / DAY_LEN * 100;
         var h = (toMin(g.to) - toMin(g.from)) / DAY_LEN * 100;
         return '<div class="ev-wrap" style="top:'+top+'%;height:calc('+h+'% - 2px)">' +
-          '<div class="ev group" onclick="event.stopPropagation();toast(\'Переход в журнал группы '+g.group+'\')">' +
-          '<div class="nm">'+g.group+'</div><div class="t">'+g.from+'–'+g.to+' · каб. '+g.room+'</div>' +
-          '<div class="sub">'+g.lesson+'</div></div></div>';
+          '<div class="ev group" onclick="event.stopPropagation();toast(\'Переход в журнал группы '+g.group+'\')"' +
+          ' onmouseenter="tipGroup(event,'+g.id+')" onmouseleave="tipHide()">' +
+          '<div class="nm">'+g.group+'</div><div class="t">'+g.from+'–'+g.to+' · каб. '+g.room+'</div></div></div>';
       }).join('');
     }
     html += EVENTS.filter(function(e){ return e.day===d2; }).map(function(e){
@@ -270,11 +272,14 @@ function weekView(){
       var h = (toMin(e.to) - toMin(e.from)) / DAY_LEN * 100;
       var mins = toMin(e.to) - toMin(e.from), compact = mins < 60;
       var cls = e.src==='makeup' ? 'ev makeup' : 'ev';
-      var inner = '<div class="'+cls+'" onclick="event.stopPropagation();openInfo('+e.id+')">' +
+      /* у преподавателя карточка занятия — две строки, тема уходит в подсказку;
+         у методиста расписание остаётся прежним: он планирует и должен видеть тему сразу */
+      var tip = role==='teacher' ? ' onmouseenter="tipInd(event,'+e.id+')" onmouseleave="tipHide()"' : '';
+      var inner = '<div class="'+cls+'" onclick="event.stopPropagation();openInfo('+e.id+')"'+tip+'>' +
         '<div class="nm">'+e.student.split(' ')[0]+' '+e.student.split(' ')[1][0]+'.' +
         (compact ? ' <span class="t">'+e.from+'</span>' : '') + '</div>' +
         (compact ? '' : '<div class="t">'+e.from+'–'+e.to+' · каб. '+e.room+'</div>' +
-                        '<div class="sub">'+(e.lesson || 'без урока')+'</div>') + '</div>';
+                        (role==='teacher' ? '' : '<div class="sub">'+(e.lesson || 'без урока')+'</div>')) + '</div>';
       var addBtn = role==='teacher' ? '' :
         '<button class="ev-add" title="Добавить ещё одно занятие в это время" ' +
         'onclick="event.stopPropagation();openAdd('+e.day+',\''+e.from+'\')">+</button>';
@@ -283,6 +288,21 @@ function weekView(){
     html += '</div>';
   }
   return html + '</div>';
+}
+
+function tipGroup(ev, id){
+  var g = GROUP_EVENTS.filter(function(x){ return x.id===id; })[0]; if(!g) return;
+  tipShow(ev, '<div class="h">'+g.group+' · '+g.from+'–'+g.to+'</div>' +
+    '<div class="a">Предмет: <b>'+g.subject+'</b></div>' +
+    '<div class="a">Тема: <b>'+g.lesson+'</b></div>' +
+    '<div class="note">каб. '+g.room+' · клик — журнал группы</div>');
+}
+function tipInd(ev, id){
+  var e = EVENTS.filter(function(x){ return x.id===id; })[0]; if(!e) return;
+  tipShow(ev, '<div class="h">'+e.student+' · '+e.from+'–'+e.to+'</div>' +
+    '<div class="a">Предмет: <b>'+e.subject+'</b></div>' +
+    '<div class="a">Тема: <b>'+(e.lesson || 'без урока — встреча с преподавателем')+'</b></div>' +
+    '<div class="note">каб. '+e.room+(e.src==='makeup' ? ' · отработка' : '')+'</div>');
 }
 
 function listView(){

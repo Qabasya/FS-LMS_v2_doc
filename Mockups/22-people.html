@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ученики и представители — FS-LMS 2.0</title>
+<link rel="stylesheet" href="_shared.css">
+<script src="_tip.js"></script>
+<script src="_nav.js"></script>
+<style>
+  .body{flex:1;overflow:auto;padding:var(--sp-16) var(--sp-20) var(--user-h)}
+  .card{background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);box-shadow:var(--sh)}
+  .sec{padding:var(--sp-16) var(--sp-20);margin-bottom:14px}
+  .sec-h{display:flex;align-items:center;gap:var(--sp-12);margin-bottom:12px;flex-wrap:wrap}
+  .sec-h h3{margin:0;font-size:var(--fs-14)}
+
+  .tabs{display:flex;gap:var(--sp-4);margin-bottom:var(--sp-16);border-bottom:1px solid var(--gray2)}
+  .tabs button{border:0;background:none;padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);color:var(--gray6);
+    border-bottom:2px solid transparent;margin-bottom:-1px}
+  .tabs button:hover{color:var(--gray9)}
+  .tabs button.on{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
+  .tabs .cnt{font-size:var(--fs-12);font-weight:700;background:var(--gray1);color:var(--gray6);border-radius:var(--r-8);
+    padding:var(--sp-4) var(--sp-8);margin-left:6px}
+  .tabs button.on .cnt{background:var(--blue-l);color:var(--blue)}
+
+  .filters{display:flex;gap:var(--sp-8);align-items:center;flex-wrap:wrap;margin-bottom:14px}
+  .filters select,.filters input{border:1px solid var(--gray3);border-radius:var(--r);padding:var(--sp-8) var(--sp-12);
+    font-size:var(--fs-14);font-family:inherit}
+  .filters input{min-width:var(--col-260)}
+  .chipf{border:1px solid var(--gray3);background:#fff;border-radius:var(--r-pill);padding:var(--sp-6) var(--sp-12);
+    font-size:var(--fs-12);color:var(--gray7)}
+  .chipf.on{background:var(--blue-l);border-color:var(--blue);color:var(--blue);font-weight:600}
+
+  table.t{width:100%;border-collapse:collapse;font-size:var(--fs-14)}
+  table.t th{text-align:left;font-size:var(--fs-12);letter-spacing:.04em;text-transform:uppercase;color:var(--gray5);
+    font-weight:700;padding:var(--sp-8) var(--sp-12);border-bottom:1px solid var(--gray2);white-space:nowrap}
+  table.t td{padding:var(--sp-8) var(--sp-12);border-bottom:1px solid var(--gray1);vertical-align:middle}
+  table.t tr:last-child td{border-bottom:0}
+  table.t tbody tr:hover{background:var(--gray0)}
+  table.t tbody tr.clickable{cursor:pointer}
+  .who{display:flex;gap:var(--sp-12);align-items:center;min-width:0}
+  .av{width:30px;height:30px;border-radius:50%;background:var(--blue-l);color:var(--blue);display:grid;
+    place-items:center;font-size:var(--fs-12);font-weight:700;flex:none}
+  .av.p{background:var(--violet-l);color:var(--violet)}
+  .who .nm{min-width:0}
+  .who .nm a{font-weight:600;color:inherit;text-decoration:none;display:block}
+  .who .nm a:hover{color:var(--blue);text-decoration:underline}
+  .who .nm small{display:block;color:var(--gray6);font-size:var(--fs-12)}
+  .num{color:var(--gray5);font-size:var(--fs-12)}
+  .dt{font-variant-numeric:tabular-nums;color:var(--gray7);white-space:nowrap}
+  .money{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .money.bad{color:var(--red);font-weight:600}
+  .link{color:var(--blue);text-decoration:none} .link:hover{text-decoration:underline}
+  .empty{color:var(--gray5);font-size:var(--fs-14);padding:var(--sp-20) 0;text-align:center}
+  .warn{color:#d9480f}
+
+  .gl{display:inline-block;font-size:var(--fs-12);font-weight:600;padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4);
+    background:var(--gray1);color:var(--gray6);margin:1px 3px 1px 0;white-space:nowrap;text-decoration:none}
+  a.gl:hover{background:var(--gray2);color:var(--gray9)}
+  .badge{display:inline-block;font-size:var(--fs-12);font-weight:600;padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4)}
+  .b-ok{background:var(--green-l);color:#2b8a3e}
+  .b-gray{background:var(--gray1);color:var(--gray6)}
+  .b-warn{background:var(--orange-l);color:#d9480f}
+  .b-info{background:var(--blue-l);color:#1864ab}
+  .b-vio{background:var(--violet-l);color:#5f3dc4}
+  .rowact{border:0;background:none;color:var(--gray5);font-size:var(--fs-16);line-height:1;
+    padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4)}
+  .rowact:hover{background:var(--gray2);color:var(--gray9)}
+
+  .note{background:var(--blue-l);border:1px solid #a5d8ff;color:#1864ab;border-radius:var(--r-8);
+    padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);margin-bottom:14px}
+  .warnbox{background:var(--orange-l);border:1px solid #ffd8a8;color:#d9480f;border-radius:var(--r-8);
+    padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);margin-bottom:14px}
+
+  /* карточка представителя */
+  .top{padding:var(--sp-16) var(--sp-20);display:grid;grid-template-columns:1fr 300px;gap:var(--sp-20);
+    align-items:start;margin-bottom:14px}
+  .top-h{display:flex;gap:var(--sp-12);align-items:center}
+  .ava-l{width:52px;height:52px;border-radius:50%;background:var(--violet-l);color:var(--violet);display:grid;
+    place-items:center;font-size:var(--fs-16);font-weight:700;flex:none}
+  .top-h b{font-size:var(--fs-16);display:block;line-height:1.25}
+  .top-h small{color:var(--gray6);font-size:var(--fs-12)}
+  .chips{display:flex;flex-wrap:wrap;gap:var(--sp-6);margin-top:11px}
+  .rows{font-size:var(--fs-14);display:grid;grid-template-columns:1fr 1fr;gap:0 22px;margin-top:14px}
+  .rows .r{display:flex;gap:var(--sp-12);padding:var(--sp-6) 0;border-top:1px solid var(--gray1)}
+  .rows .r:nth-child(1),.rows .r:nth-child(2){border-top:0}
+  .rows .r span:first-child{color:var(--gray6);width:130px;flex:none}
+  .rows .r span:last-child{flex:1;min-width:0}
+  .aside{background:var(--gray0);border:1px solid var(--gray2);border-radius:var(--r-8);padding:var(--sp-12) var(--sp-16)}
+  .aside h5{margin:0 0 var(--sp-8);font-size:var(--fs-12);letter-spacing:.05em;text-transform:uppercase;
+    color:var(--gray5);font-weight:700}
+  .aside .r{display:flex;align-items:center;gap:var(--sp-8);padding:var(--sp-4) 0;font-size:var(--fs-14)}
+  .aside .r span:first-child{color:var(--gray6);width:104px;flex:none}
+  .aside .btn{width:100%;margin-top:9px}
+  .aside .hint{font-size:var(--fs-12);color:var(--gray5);margin-top:9px;line-height:1.45}
+
+  .kid{display:flex;gap:var(--sp-12);align-items:center;padding:var(--sp-12) 0;border-top:1px solid var(--gray1)}
+  .kid:first-child{border-top:0}
+  .kid .nm{flex:1;min-width:0}
+  .kid .nm b{font-size:var(--fs-14);display:block}
+  .kid .nm .sub{font-size:var(--fs-12);color:var(--gray6)}
+  .kid .met{text-align:right;font-size:var(--fs-12);color:var(--gray6);min-width:var(--col-160)}
+  .kid .met b{display:block;font-size:var(--fs-14);font-variant-numeric:tabular-nums}
+
+  .demo{display:flex;align-items:center;gap:var(--sp-8);font-size:var(--fs-12);color:var(--gray6)}
+  .fld{margin-bottom:12px}
+  .fld label{display:block;font-size:var(--fs-12);color:var(--gray6);margin-bottom:5px;font-weight:600}
+  .fld input,.fld select{width:100%;border:1px solid var(--gray3);border-radius:var(--r);
+    padding:var(--sp-8) var(--sp-12);font-size:var(--fs-14);font-family:inherit}
+  .hint2{font-size:var(--fs-12);color:var(--gray6);margin-top:6px;line-height:1.45}
+  .code{background:var(--gray0);border:1px solid var(--gray3);border-radius:var(--r-4);padding:var(--sp-4) var(--sp-8);
+    font-family:ui-monospace,Menlo,monospace;font-size:var(--fs-12)}
+
+  body.card-mode .list-only{display:none}
+  body:not(.card-mode) .card-only{display:none}
+
+  @media (max-width:1150px){ .top{grid-template-columns:1fr} .rows{grid-template-columns:1fr}
+    .rows .r:nth-child(2){border-top:1px solid var(--gray1)} }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-top">
+      <div class="logo">ШБ</div>
+      <div style="flex:1"><b>Шаг в будущее</b><small>Управление</small></div>
+      <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')">⟨</button>
+    </div>
+    <nav class="nav">
+      <h4>Моя работа</h4>
+      <a href="10-home.html"><i class="ic">◱</i><span>Главная</span></a>
+      <a href="04-journal.html"><i class="ic">▦</i><span>Журнал</span></a>
+      <a href="07-student.html#pick"><i class="ic">◉</i><span>Группы</span></a>
+      <h4>Люди</h4>
+      <a href="22-people.html" class="on"><i class="ic">◍</i><span>Ученики</span></a>
+      <a href="23-admission.html"><i class="ic">◔</i><span>Приём</span><span class="cnt">4</span></a>
+      <a href="21-staff.html"><i class="ic">◇</i><span>Сотрудники и роли</span></a>
+    </nav>
+    <div class="side-user">
+      <div class="ava">ПА</div>
+      <div style="flex:1"><b style="font-size:var(--fs-14);display:block">Приёмщикова А.</b>
+        <small style="font-size:var(--fs-12);color:var(--gray6)">Адм. учебной части</small></div>
+      <span style="color:var(--gray5)">⚙</span>
+    </div>
+  </aside>
+
+  <div class="app">
+    <header class="head">
+      <div>
+        <div class="crumbs">Управление · Люди · <span id="hCrumb">Ученики и представители</span></div>
+        <h1 id="hTitle">Ученики и представители</h1>
+      </div>
+      <div class="sp"></div>
+      <label class="demo list-only"><input type="checkbox" id="fin" onchange="setFin(this.checked)"> право «финансы» <i>(демо)</i></label>
+      <button class="btn card-only" onclick="backToList()">← К списку</button>
+      <a class="btn list-only" href="23-admission.html">Приём и заявки</a>
+      <button class="btn btn-p list-only" onclick="toast('Импорт из файла — только при переносе школы на платформу')">Импорт при миграции</button>
+    </header>
+
+    <div class="body">
+
+      <!-- ── СПИСКИ ── -->
+      <div class="list-only">
+        <div class="tabs">
+          <button class="on" id="tb0" onclick="setTab(0)">Ученики<span class="cnt" id="cStu"></span></button>
+          <button id="tb1" onclick="setTab(1)">Представители<span class="cnt" id="cPar"></span></button>
+        </div>
+
+        <div class="filters">
+          <input type="text" placeholder="Поиск по фамилии, почте или телефону" oninput="setSearch(this.value)">
+          <select id="fGroup" onchange="render()">
+            <option value="">Все группы</option>
+            <option>МЕГЭ-1</option><option>МЕГЭ-2</option><option>ИНФ-2</option><option>Подарочный гит</option>
+          </select>
+          <select id="fState" onchange="render()">
+            <option value="">Любое состояние</option>
+            <option value="active">Обучается</option>
+            <option value="out">Отчислен</option>
+          </select>
+          <button class="chipf" id="fNoPar" onclick="toggleNoPar()">Без представителя</button>
+          <div style="flex:1"></div>
+          <button class="btn btn-s" onclick="toast('Выгрузка списка в XLSX')">Выгрузить</button>
+        </div>
+
+        <div class="card sec">
+          <div class="sec-h"><h3 id="listTitle">Ученики</h3><span class="muted" id="listSum"></span></div>
+          <table class="t"><thead><tr id="listHead"></tr></thead><tbody id="listRows"></tbody></table>
+        </div>
+
+      </div>
+
+      <!-- ── КАРТОЧКА ПРЕДСТАВИТЕЛЯ ── -->
+      <div class="card-only" id="cardBox"></div>
+
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" onclick="closeAll()"></div>
+
+<!-- связывание с представителем -->
+<div class="modal" id="mLink">
+  <div class="mo-h" id="linkTitle">Представитель ученика</div>
+  <div class="mo-b">
+    <div class="fld"><label>JOIN-ссылка для нового родителя</label>
+      <div style="display:flex;gap:var(--sp-8);align-items:center">
+        <span class="code" style="flex:1">JOIN-2NQ9-SVT4-VAAQ</span>
+        <button class="btn btn-s" onclick="toast('Ссылка скопирована')">Копировать</button>
+      </div>
+      <div class="hint2">Живёт 24 часа: по ней родитель регистрируется, связывается с ребёнком и заполняет
+        документальную часть. Истекла — выпустите новую.</div></div>
+    <div class="fld"><label>Или назначить существующего представителя</label>
+      <select id="linkWho"></select>
+      <div class="hint2">Подходит для второго ребёнка в семье: ссылка и согласия не нужны.</div></div>
+  </div>
+  <div class="mo-f"><button class="btn" onclick="closeAll()">Закрыть</button>
+    <button class="btn btn-p" onclick="doLink()">Назначить</button></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── демо-данные ──
+   Ученик и представитель — разные списки с разными колонками, но одна связь,
+   поэтому она показана в обе стороны: у ученика видно родителя, у родителя — детей. */
+var PARENTS = [
+  {n:'Абрамова Елена Петровна', m:'abramova@mail.ru', tel:'+7 926 100-11-22', kids:['Абрамов Кирилл'],
+   act:true,  docs:'полные', pays:true,  last:'сегодня, 08:20'},
+  {n:'Белов Игорь Сергеевич',   m:'belov@mail.ru',    tel:'+7 916 200-33-44', kids:['Белова Мария'],
+   act:true,  docs:'полные', pays:true,  last:'вчера, 19:10'},
+  {n:'Волкова Ирина Львовна',   m:'volkova@mail.ru',  tel:'+7 903 300-55-66', kids:['Волков Артём'],
+   act:false, docs:'нет согласий', pays:false, last:'не входил'},
+  {n:'Гусев Павел Олегович',    m:'gusev@mail.ru',    tel:'+7 985 400-77-88', kids:['Гусева Дарья','Гусев Матвей'],
+   act:true,  docs:'полные', pays:true,  last:'три дня назад'}
+];
+
+var STUDENTS = [
+  {n:'Абрамов Кирилл',  m:'abramov@fs.ru',  age:16, cls:'10 класс', groups:['МЕГЭ-1','Подарочный гит'],
+   parent:'Абрамова Елена Петровна', bal:0,      state:'active', doc:'№ 2026-114', last:'сегодня, 14:02'},
+  {n:'Белова Мария',    m:'belova@fs.ru',   age:16, cls:'10 класс', groups:['МЕГЭ-1'],
+   parent:'Белов Игорь Сергеевич',   bal:0,      state:'active', doc:'№ 2026-118', last:'вчера, 20:31'},
+  {n:'Волков Артём',    m:'volkov@fs.ru',   age:15, cls:'9 класс',  groups:['ИНФ-2'],
+   parent:'Волкова Ирина Львовна',   bal:-3800,  state:'active', doc:'№ 2026-121', last:'сегодня, 12:44'},
+  {n:'Гусева Дарья',    m:'guseva@fs.ru',   age:17, cls:'11 класс', groups:['МЕГЭ-1'],
+   parent:'Гусев Павел Олегович',    bal:0,      state:'active', doc:'№ 2026-102', last:'сегодня, 13:10'},
+  {n:'Гусев Матвей',    m:'gusevm@fs.ru',   age:14, cls:'8 класс',  groups:['ИНФ-2'],
+   parent:'Гусев Павел Олегович',    bal:1900,   state:'active', doc:'№ 2026-140', last:'вчера, 17:05'},
+  {n:'Дёмин Илья',      m:'demin@fs.ru',    age:15, cls:'9 класс',  groups:['МЕГЭ-2'],
+   parent:null,                      bal:7500,   state:'active', doc:'№ 2026-107', last:'два дня назад'},
+  {n:'Ерохина Анна',    m:'erohina@fs.ru',  age:18, cls:'выпускница', groups:['МЕГЭ-1'],
+   parent:null, adult:true,          bal:0,      state:'active', doc:'№ 2026-133', last:'сегодня, 09:58'},
+  {n:'Соколова Настя',  m:'sokolova@fs.ru', age:16, cls:'10 класс', groups:[],
+   parent:'—', bal:0, state:'out', doc:'№ 2026-090', last:'месяц назад', out:'05.09.2026 · перевод в МЕГЭ-2'}
+];
+
+var tab = 0, search = '', noPar = false, cur = -1, FIN = false;
+
+function ini(n){ return n.split(' ').slice(0,2).map(function(w){ return w[0]; }).join(''); }
+function money(v){ return (v<0?'−':'') + Math.abs(v).toLocaleString('ru-RU') + ' ₽'; }
+function plural(n, one, few, many){
+  var a = n % 10, b = n % 100;
+  return n + ' ' + (a === 1 && b !== 11 ? one : a >= 2 && a <= 4 && (b < 12 || b > 14) ? few : many);
+}
+/* совершеннолетний обходится без представителя — это не пробел, а норма */
+function needParent(s){ return !s.adult && s.state === 'active' && !s.parent; }
+function parentIdx(n){ for(var i=0;i<PARENTS.length;i++) if(PARENTS[i].n === n) return i; return -1; }
+function studentIdx(n){ for(var i=0;i<STUDENTS.length;i++) if(STUDENTS[i].n === n) return i; return -1; }
+
+function setFin(v){ FIN = v; render(); toast(v ? 'С правом «финансы»: виден баланс лицевого счёта' : 'Без права «финансы»: деньги скрыты'); }
+function setSearch(v){ search = v; render(); }
+function setTab(t){
+  tab = t;
+  document.getElementById('tb0').classList.toggle('on', t === 0);
+  document.getElementById('tb1').classList.toggle('on', t === 1);
+  document.getElementById('fNoPar').style.display = t === 0 ? '' : 'none';
+  document.getElementById('fGroup').style.display = t === 0 ? '' : 'none';
+  document.getElementById('fState').style.display = t === 0 ? '' : 'none';
+  render();
+}
+function toggleNoPar(){
+  noPar = !noPar;
+  document.getElementById('fNoPar').classList.toggle('on', noPar);
+  render();
+  if(noPar) toast('Несовершеннолетний без представителя — некому подписать согласия и договор');
+}
+
+function render(){
+  if(cur >= 0){ renderCard(); return; }
+  document.getElementById('cStu').textContent = STUDENTS.length;
+  document.getElementById('cPar').textContent = PARENTS.length;
+  tab === 0 ? renderStudents() : renderParents();
+}
+
+function renderStudents(){
+  var g = document.getElementById('fGroup').value, st = document.getElementById('fState').value;
+  var vis = STUDENTS.filter(function(s){
+    if(g && s.groups.indexOf(g) < 0) return false;
+    if(st && (st === 'active') !== (s.state === 'active')) return false;
+    if(noPar && !needParent(s)) return false;
+    if(search && (s.n + ' ' + s.m).toLowerCase().indexOf(search.toLowerCase()) < 0) return false;
+    return true;
+  });
+  var need = STUDENTS.filter(needParent).length;
+
+  document.getElementById('listTitle').textContent = 'Ученики';
+  document.getElementById('listSum').innerHTML = vis.length + ' из ' + STUDENTS.length +
+    (need ? ' · <span class="warn">' + plural(need, 'ученик', 'ученика', 'учеников') + ' без представителя</span>' : '');
+
+  document.getElementById('listHead').innerHTML =
+    '<th style="width:var(--col-92)">№</th>' +
+    '<th style="width:var(--col-300)">Ученик</th>' +
+    '<th style="width:var(--col-160)">Класс</th>' +
+    '<th>Группы</th>' +
+    '<th style="width:var(--col-300)">Представитель</th>' +
+    (FIN ? '<th style="width:var(--col-160)">Счёт</th>' : '') +
+    '<th style="width:var(--col-160)">Состояние</th>' +
+    '<th style="width:var(--col-92)"></th>';
+
+  document.getElementById('listRows').innerHTML = vis.length ? vis.map(function(s){
+    var i = STUDENTS.indexOf(s);
+    var pi = s.parent ? parentIdx(s.parent) : -1;
+    var par = s.adult
+      ? '<span class="muted">совершеннолетний</span>'
+      : pi >= 0
+        ? '<a class="link" href="22-people.html#p=' + pi + '" onclick="event.stopPropagation()">' + s.parent + '</a>' +
+          (PARENTS[pi].act ? '' : '<div class="num warn">не активировал вход</div>')
+        : s.state === 'out' ? '<span class="muted">—</span>'
+        : '<button class="btn btn-s" onclick="event.stopPropagation();openLink(' + i + ')">Пригласить</button>';
+    return '<tr class="clickable" onclick="location.href=\'07-student.html#s=' + Math.min(i,9) + '\'">' +
+      '<td class="num">' + (i+1) + '</td>' +
+      '<td><div class="who"><span class="av">' + ini(s.n) + '</span><div class="nm">' +
+        '<a href="07-student.html#s=' + Math.min(i,9) + '" onclick="event.stopPropagation()">' + s.n + '</a>' +
+        '<small>' + s.m + '</small></div></div></td>' +
+      '<td>' + s.cls + '<div class="num">' + s.age + ' лет</div></td>' +
+      '<td>' + (s.groups.length
+        ? s.groups.map(function(x, k){ return '<a class="gl" href="20-group.html#g=' + k + '" onclick="event.stopPropagation()">' + x + '</a>'; }).join('')
+        : '<span class="muted">нет групп</span>') + '</td>' +
+      '<td>' + par + '</td>' +
+      (FIN ? '<td>' + (s.bal < 0
+        ? '<span class="money bad">' + money(s.bal) + '</span>'
+        : '<span class="money">' + money(s.bal) + '</span>') + '</td>' : '') +
+      '<td>' + (s.state === 'active'
+        ? '<span class="badge b-ok">обучается</span>'
+        : '<span class="badge b-gray">отчислен</span><div class="num">' + s.out + '</div>') + '</td>' +
+      '<td style="text-align:right"><button class="rowact" title="Действия" ' +
+        'onclick="event.stopPropagation();toast(\'Действия: перевести, отчислить, выдать временный пароль\')">⋯</button></td></tr>';
+  }).join('') : '<tr><td colspan="8" class="empty">Никто не подошёл под фильтры</td></tr>';
+
+}
+
+function renderParents(){
+  var vis = PARENTS.filter(function(p){
+    return !search || (p.n + ' ' + p.m + ' ' + p.tel).toLowerCase().indexOf(search.toLowerCase()) >= 0;
+  });
+  var dead = PARENTS.filter(function(p){ return !p.act; }).length;
+
+  document.getElementById('listTitle').textContent = 'Представители';
+  document.getElementById('listSum').innerHTML = vis.length + ' из ' + PARENTS.length +
+    (dead ? ' · <span class="warn">' + plural(dead, 'не активировал', 'не активировали', 'не активировали') + ' вход</span>' : '');
+
+  document.getElementById('listHead').innerHTML =
+    '<th style="width:var(--col-92)">№</th>' +
+    '<th style="width:var(--col-300)">Представитель</th>' +
+    '<th style="width:var(--col-220)">Телефон</th>' +
+    '<th>Дети</th>' +
+    '<th style="width:var(--col-220)">Документы</th>' +
+    '<th style="width:var(--col-160)">Вход</th>' +
+    '<th style="width:var(--col-92)"></th>';
+
+  document.getElementById('listRows').innerHTML = vis.length ? vis.map(function(p){
+    var i = PARENTS.indexOf(p);
+    return '<tr class="clickable" onclick="openCard(' + i + ')">' +
+      '<td class="num">' + (i+1) + '</td>' +
+      '<td><div class="who"><span class="av p">' + ini(p.n) + '</span><div class="nm">' +
+        '<a href="22-people.html#p=' + i + '" onclick="event.stopPropagation()">' + p.n + '</a>' +
+        '<small>' + p.m + '</small></div></div></td>' +
+      '<td class="dt">' + p.tel + '</td>' +
+      '<td>' + p.kids.map(function(k){
+          var si = studentIdx(k);
+          return '<a class="gl" href="07-student.html#s=' + Math.min(si,9) + '" onclick="event.stopPropagation()">' + k + '</a>';
+        }).join('') + '</td>' +
+      '<td>' + (p.docs === 'полные'
+        ? '<span class="badge b-ok">согласия подписаны</span>'
+        : '<span class="badge b-warn">' + p.docs + '</span>') + '</td>' +
+      '<td>' + (p.act ? '<span class="dt">' + p.last + '</span>'
+                      : '<span class="badge b-gray">не входил</span>') + '</td>' +
+      '<td style="text-align:right"><button class="rowact" ' +
+        'onclick="event.stopPropagation();openCard(' + i + ')">⋯</button></td></tr>';
+  }).join('') : '<tr><td colspan="7" class="empty">Никто не подошёл под фильтры</td></tr>';
+
+}
+
+/* ── карточка представителя ── */
+function openCard(i){
+  cur = i;
+  document.body.classList.add('card-mode');
+  location.hash = 'p=' + i;
+  renderCard();
+}
+function backToList(){
+  cur = -1;
+  document.body.classList.remove('card-mode');
+  location.hash = '';
+  document.getElementById('hCrumb').textContent = 'Ученики и представители';
+  document.getElementById('hTitle').textContent = 'Ученики и представители';
+  render();
+}
+function renderCard(){
+  var p = PARENTS[cur];
+  document.getElementById('hCrumb').innerHTML =
+    '<a class="link" href="22-people.html" onclick="event.preventDefault();backToList()">Представители</a> · ' + p.n;
+  document.getElementById('hTitle').textContent = p.n;
+
+  var kids = p.kids.map(function(k){
+    var s = STUDENTS[studentIdx(k)];
+    return '<div class="kid"><span class="av">' + ini(k) + '</span>' +
+      '<div class="nm"><b><a class="link" href="07-student.html#s=' + Math.min(studentIdx(k),9) + '">' + k + '</a></b>' +
+      '<div class="sub">' + (s ? s.cls + ' · ' + (s.groups.join(', ') || 'нет групп') : '') + '</div></div>' +
+      '<div class="met">' + (s && s.bal < 0
+        ? '<b class="money bad">' + money(s.bal) + '</b>долг по счёту'
+        : '<b class="money">' + (s ? money(s.bal) : '—') + '</b>лицевой счёт') + '</div>' +
+      '<a class="btn btn-s" href="19-account.html">Счёт</a></div>';
+  }).join('');
+
+  document.getElementById('cardBox').innerHTML =
+    '<div class="card top"><div>' +
+      '<div class="top-h"><span class="ava-l">' + ini(p.n) + '</span>' +
+      '<div style="min-width:0"><b>' + p.n + '</b><small>' + p.m + ' · ' + p.tel + '</small>' +
+      '<div class="chips"><span class="badge b-vio">Представитель</span>' +
+        (p.act ? '<span class="badge b-ok">вход активирован</span>'
+               : '<span class="badge b-warn">не активировал вход</span>') +
+        (p.docs === 'полные' ? '<span class="badge b-ok">согласия подписаны</span>'
+                             : '<span class="badge b-warn">' + p.docs + '</span>') + '</div></div></div>' +
+      '<div class="rows">' +
+        row('Дети', p.kids.join(', ')) +
+        row('Оплачивает', p.pays ? 'да — операции идут от него' : 'нет') +
+        row('Последний вход', p.act ? p.last : 'ни разу') +
+        row('Связан', 'по JOIN-ссылке · 02.09.2026') +
+      '</div></div>' +
+      '<div class="aside"><h5>Доступ и документы</h5>' +
+        '<div class="r"><span>Учётная запись</span><span>' + (p.act ? 'активна' : 'создана, вход не выполнен') + '</span></div>' +
+        '<div class="r"><span>Согласия</span><span>' + (p.docs === 'полные' ? 'подписаны' : '<span class="warn">не подписаны</span>') + '</span></div>' +
+        '<button class="btn" onclick="toast(\'Временный пароль показан один раз; смена при первом входе\')">Выдать временный пароль</button>' +
+        '<button class="btn" onclick="toast(\'Печатные формы: согласие на обработку ПД, договор\')">Печатные формы</button>' +
+        '<div class="hint">В кабинете представителя — те же вкладки, что у ученика; из операций доступна оплата.</div>' +
+      '</div></div>' +
+
+    '<div class="card sec"><div class="sec-h"><h3>Дети</h3>' +
+      '<span class="muted">' + plural(p.kids.length, 'ребёнок', 'ребёнка', 'детей') + '</span>' +
+      '<div style="flex:1"></div>' +
+      '<button class="btn btn-s" onclick="toast(\'Назначение второго ребёнка: связывание без новой ссылки\')">+ Связать ещё ребёнка</button></div>' +
+      kids + '</div>' +
+
+    (p.docs === 'полные' ? '' :
+      '<div class="warnbox"><b>Согласия не подписаны</b> — договор оформить не с кем. ' +
+      'Ссылка живёт 24 часа: если истекла, выпустите новую.</div>') +
+
+    '<div class="card sec"><div class="sec-h"><h3>Кабинет представителя</h3>' +
+      '<span class="muted">то, что он видит у себя</span></div>' +
+      '<div style="display:flex;gap:var(--sp-8);flex-wrap:wrap">' +
+        '<a class="btn btn-s" href="11-student-home.html">Главная</a>' +
+        '<a class="btn btn-s" href="16-student-calendar.html">Календарь</a>' +
+        '<a class="btn btn-s" href="17-student-results.html">Результаты</a>' +
+        '<a class="btn btn-s" href="19-account.html">Лицевой счёт</a>' +
+      '</div></div>';
+}
+function row(k, v){ return '<div class="r"><span>' + k + '</span><span>' + v + '</span></div>'; }
+
+/* ── связывание ── */
+var linkIdx = 0;
+function openLink(i){
+  linkIdx = i;
+  document.getElementById('linkTitle').textContent = 'Представитель: ' + STUDENTS[i].n;
+  document.getElementById('linkWho').innerHTML = PARENTS.map(function(p){
+    return '<option>' + p.n + ' — ' + plural(p.kids.length, 'ребёнок', 'ребёнка', 'детей') + '</option>';
+  }).join('');
+  show('mLink');
+}
+function doLink(){
+  var v = document.getElementById('linkWho').value.split(' — ')[0];
+  var s = STUDENTS[linkIdx], pi = parentIdx(v);
+  s.parent = v;
+  if(pi >= 0) PARENTS[pi].kids.push(s.n);
+  closeAll(); render();
+  toast('Связано: ' + v + ' — представитель ученика ' + s.n);
+}
+
+function show(id){ document.getElementById('scrim').classList.add('on'); document.getElementById(id).classList.add('on'); }
+function closeAll(){
+  document.getElementById('scrim').classList.remove('on');
+  document.getElementById('mLink').classList.remove('on');
+}
+
+var tt;
+function toast(m){
+  var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3600);
+}
+
+/* адрес представителя живёт в хеше: 22-people.html#p=2 открывается в новой вкладке */
+var pHash = location.hash.match(/(?:^|[#&])p=(\d+)/);
+if(pHash && PARENTS[+pHash[1]]) openCard(+pHash[1]);
+else { setTab(0); }
+</script>
+</body>
+</html>

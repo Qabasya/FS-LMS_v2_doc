@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Приём — FS-LMS 2.0</title>
+<link rel="stylesheet" href="_shared.css">
+<script src="_tip.js"></script>
+<script src="_nav.js"></script>
+<style>
+  .body{flex:1;overflow:auto;padding:var(--sp-16) var(--sp-20) var(--user-h)}
+  .card{background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);box-shadow:var(--sh)}
+  .sec{padding:var(--sp-16) var(--sp-20);margin-bottom:14px}
+  .sec-h{display:flex;align-items:center;gap:var(--sp-12);margin-bottom:12px;flex-wrap:wrap}
+  .sec-h h3{margin:0;font-size:var(--fs-14)}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:var(--sp-16);margin-bottom:14px}
+  .kpi{padding:var(--sp-16);display:flex;flex-direction:column;text-align:left;border:1px solid var(--gray2);
+    background:#fff;border-radius:var(--r-12);box-shadow:var(--sh);cursor:pointer;color:inherit}
+  .kpi:hover{border-color:var(--blue)}
+  .kpi.on{border-color:var(--blue);background:var(--blue-l)}
+  .kpi .lab{font-size:var(--fs-12);color:var(--gray6);font-weight:600}
+  .kpi .big{font-size:var(--fs-26);font-weight:700;line-height:1.25;margin:var(--sp-6) 0 var(--sp-4)}
+  .kpi .big.warn{color:#d9480f}
+  .kpi .sub{font-size:var(--fs-12);color:var(--gray6);line-height:1.45}
+
+  .filters{display:flex;gap:var(--sp-8);align-items:center;flex-wrap:wrap;margin-bottom:14px}
+  .filters select,.filters input{border:1px solid var(--gray3);border-radius:var(--r);padding:var(--sp-8) var(--sp-12);
+    font-size:var(--fs-14);font-family:inherit}
+  .filters input{min-width:var(--col-260)}
+
+  table.t{width:100%;border-collapse:collapse;font-size:var(--fs-14)}
+  table.t th{text-align:left;font-size:var(--fs-12);letter-spacing:.04em;text-transform:uppercase;color:var(--gray5);
+    font-weight:700;padding:var(--sp-8) var(--sp-12);border-bottom:1px solid var(--gray2);white-space:nowrap}
+  table.t td{padding:var(--sp-8) var(--sp-12);border-bottom:1px solid var(--gray1);vertical-align:middle}
+  table.t tr:last-child td{border-bottom:0}
+  table.t tbody tr:hover{background:var(--gray0)}
+  table.t tbody tr.clickable{cursor:pointer}
+  .who{display:flex;gap:var(--sp-12);align-items:center;min-width:0}
+  .av{width:30px;height:30px;border-radius:50%;background:var(--blue-l);color:var(--blue);display:grid;
+    place-items:center;font-size:var(--fs-12);font-weight:700;flex:none}
+  .who .nm{min-width:0}
+  .who .nm a{font-weight:600;color:inherit;text-decoration:none;display:block}
+  .who .nm a:hover{color:var(--blue);text-decoration:underline}
+  .who .nm small{display:block;color:var(--gray6);font-size:var(--fs-12)}
+  .num{color:var(--gray5);font-size:var(--fs-12)}
+  .dt{font-variant-numeric:tabular-nums;color:var(--gray7);white-space:nowrap}
+  .link{color:var(--blue);text-decoration:none} .link:hover{text-decoration:underline}
+  .empty{color:var(--gray5);font-size:var(--fs-14);padding:var(--sp-20) 0;text-align:center}
+  .warn{color:#d9480f}
+
+  .badge{display:inline-block;font-size:var(--fs-12);font-weight:600;padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4)}
+  .b-ok{background:var(--green-l);color:#2b8a3e}
+  .b-gray{background:var(--gray1);color:var(--gray6)}
+  .b-warn{background:var(--orange-l);color:#d9480f}
+  .b-info{background:var(--blue-l);color:#1864ab}
+  .b-vio{background:var(--violet-l);color:#5f3dc4}
+  .b-bad{background:var(--red-l);color:#c92a2a}
+  .code{background:var(--gray0);border:1px solid var(--gray3);border-radius:var(--r-4);padding:var(--sp-4) var(--sp-8);
+    font-family:ui-monospace,Menlo,monospace;font-size:var(--fs-12);white-space:nowrap}
+  .code.dead{color:var(--gray5);text-decoration:line-through}
+  button.code{cursor:pointer;font-family:ui-monospace,Menlo,monospace}
+  button.code:hover{border-color:var(--blue);color:var(--blue)}
+  button.code.dead:hover{border-color:var(--orange);color:#d9480f}
+  .mini{border:0;background:none;color:var(--blue);font-size:var(--fs-12);padding:var(--sp-4);border-radius:var(--r-4)}
+  .mini:hover{background:var(--blue-l)}
+  .rowact{border:0;background:none;color:var(--gray5);font-size:var(--fs-16);line-height:1;
+    padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4)}
+  .rowact:hover{background:var(--gray2);color:var(--gray9)}
+
+  /* ── карточка заявки ── */
+  .two{display:grid;grid-template-columns:1fr 420px;gap:var(--sp-16);align-items:start}
+  .rows{font-size:var(--fs-14)}
+  .rows .r{display:flex;gap:var(--sp-12);padding:var(--sp-6) 0;border-top:1px solid var(--gray1)}
+  .rows .r:first-child{border-top:0}
+  .rows .r span:first-child{color:var(--gray6);width:170px;flex:none}
+  .rows .r span:last-child{flex:1;min-width:0}
+  .miss{color:var(--gray5);font-style:italic}
+
+  /* конвейер оформления */
+  .steps{position:relative;padding-left:var(--sp-24)}
+  .steps:before{content:'';position:absolute;left:9px;top:14px;bottom:14px;width:2px;background:var(--gray2)}
+  .st{position:relative;padding:var(--sp-12) 0 var(--sp-12) var(--sp-12)}
+  .st:before{content:'';position:absolute;left:-19px;top:16px;width:20px;height:20px;border-radius:50%;
+    background:#fff;border:2px solid var(--gray3)}
+  .st.done:before{background:var(--green);border-color:var(--green)}
+  .st.done:after{content:'✓';position:absolute;left:-15px;top:16px;color:#fff;font-size:var(--fs-12);line-height:20px}
+  .st.now:before{border-color:var(--blue);box-shadow:0 0 0 4px var(--blue-l)}
+  .st b{font-size:var(--fs-14);display:block}
+  .st .sub{font-size:var(--fs-12);color:var(--gray6);margin-top:2px;line-height:1.45}
+  .st .act{margin-top:8px;display:flex;gap:var(--sp-8);flex-wrap:wrap}
+  .st.wait b{color:var(--gray6)}
+
+  .warnbox{background:var(--orange-l);border:1px solid #ffd8a8;color:#d9480f;border-radius:var(--r-8);
+    padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);margin-bottom:14px}
+  .okbox{background:var(--green-l);border:1px solid #b2f2bb;color:#2b8a3e;border-radius:var(--r-8);
+    padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);margin-bottom:14px}
+
+  .demo{display:flex;align-items:center;gap:var(--sp-8);font-size:var(--fs-12);color:var(--gray6)}
+  .fld{margin-bottom:12px}
+  .fld label{display:block;font-size:var(--fs-12);color:var(--gray6);margin-bottom:5px;font-weight:600}
+  .fld input,.fld select,.fld textarea{width:100%;border:1px solid var(--gray3);border-radius:var(--r);
+    padding:var(--sp-8) var(--sp-12);font-size:var(--fs-14);font-family:inherit}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-12)}
+  .hint2{font-size:var(--fs-12);color:var(--gray6);margin-top:6px;line-height:1.45}
+  .docs{display:flex;gap:var(--sp-8);flex-wrap:wrap;margin-top:8px}
+  .doc{display:inline-flex;align-items:center;gap:var(--sp-6);border:1px solid var(--gray2);border-radius:var(--r-8);
+    padding:var(--sp-6) var(--sp-12);font-size:var(--fs-12);color:var(--gray7);background:#fff;text-decoration:none}
+  .doc:hover{border-color:var(--blue);color:var(--blue)}
+
+  body.card-mode .list-only{display:none}
+  body:not(.card-mode) .card-only{display:none}
+
+  @media (max-width:1360px){ .kpis{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:1150px){ .two{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-top">
+      <div class="logo">ШБ</div>
+      <div style="flex:1"><b>Шаг в будущее</b><small>Управление</small></div>
+      <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')">⟨</button>
+    </div>
+    <nav class="nav">
+      <h4>Моя работа</h4>
+      <a href="10-home.html"><i class="ic">◱</i><span>Главная</span></a>
+      <a href="04-journal.html"><i class="ic">▦</i><span>Журнал</span></a>
+      <a href="07-student.html#pick"><i class="ic">◉</i><span>Группы</span></a>
+      <h4>Люди</h4>
+      <a href="22-people.html"><i class="ic">◍</i><span>Ученики</span></a>
+      <a href="23-admission.html" class="on"><i class="ic">◔</i><span>Приём</span><span class="cnt" id="navCnt">6</span></a>
+      <a href="21-staff.html"><i class="ic">◇</i><span>Сотрудники и роли</span></a>
+    </nav>
+    <div class="side-user">
+      <div class="ava">ПА</div>
+      <div style="flex:1"><b style="font-size:var(--fs-14);display:block">Приёмщикова А.</b>
+        <small style="font-size:var(--fs-12);color:var(--gray6)">Адм. учебной части</small></div>
+      <span style="color:var(--gray5)">⚙</span>
+    </div>
+  </aside>
+
+  <div class="app">
+    <header class="head">
+      <div>
+        <div class="crumbs">Управление · Люди · <span id="hCrumb">Приём</span></div>
+        <h1 id="hTitle">Приём</h1>
+      </div>
+      <div class="sp"></div>
+      <label class="demo"><input type="checkbox" id="school" checked onchange="setSchool(this.checked)"> модуль «Школа» <i>(демо)</i></label>
+      <label class="demo"><input type="checkbox" id="edo" checked onchange="setEdo(this.checked)"> модуль ЭДО <i>(демо)</i></label>
+      <button class="btn card-only" onclick="backToList()">← К списку</button>
+      <button class="btn list-only" onclick="openInvite()">Ссылка на регистрацию</button>
+      <a class="btn btn-p list-only" href="22-people.html">Ученики школы</a>
+    </header>
+
+    <div class="body">
+
+      <!-- ── СПИСОК ── -->
+      <div class="list-only">
+        <div class="kpis" id="kpis"></div>
+
+        <div class="filters">
+          <input type="text" placeholder="Поиск по фамилии ученика или родителя" oninput="setSearch(this.value)">
+          <select id="fDir" onchange="render()">
+            <option value="">Все направления</option>
+            <option>Математика</option><option>Информатика</option><option>Гитара</option>
+          </select>
+          <div style="flex:1"></div>
+          <button class="btn btn-s" onclick="toast('Выгрузка заявок в XLSX')">Выгрузить</button>
+        </div>
+
+        <div class="card sec">
+          <div class="sec-h"><h3 id="listTitle">Заявки</h3><span class="muted" id="listSum"></span></div>
+          <table class="t"><thead><tr id="head"></tr></thead><tbody id="rows"></tbody></table>
+        </div>
+      </div>
+
+      <!-- ── КАРТОЧКА ЗАЯВКИ ── -->
+      <div class="card-only" id="cardBox"></div>
+
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" onclick="closeAll()"></div>
+
+<!-- ссылка на регистрацию -->
+<div class="modal" id="mInvite">
+  <div class="mo-h">Ссылка на регистрацию</div>
+  <div class="mo-b">
+    <div class="fld"><label>Публичная форма</label>
+      <div style="display:flex;gap:var(--sp-8);align-items:center">
+        <span class="code" style="flex:1">https://shag.ru/join</span>
+        <button class="btn btn-s" onclick="toast('Ссылка скопирована')">Копировать</button>
+      </div>
+      <div class="hint2">Ученик заводит себя сам: анкета, почта, пароль. Заявка появится в этом списке.</div></div>
+    <div class="fld"><label>Направление в форме</label>
+      <select><option>— не выбрано, спросим при проверке —</option>
+        <option>Математика</option><option>Информатика</option><option>Гитара</option></select>
+      <div class="hint2">Пожелание ученика, а не запись в группу: группу назначает зачисление.</div></div>
+  </div>
+  <div class="mo-f"><button class="btn" onclick="closeAll()">Закрыть</button></div>
+</div>
+
+<!-- зачисление -->
+<div class="modal" id="mEnroll">
+  <div class="mo-h" id="enTitle">Зачислить в группу</div>
+  <div class="mo-b">
+    <div class="fld"><label>Группа</label>
+      <select id="enGroup">
+        <option>МЕГЭ-1 · Математика ЕГЭ · 10 из 15 мест</option>
+        <option>МЕГЭ-2 · Математика ЕГЭ · 14 из 15 мест</option>
+        <option>ИНФ-2 · Информатика ЕГЭ · 9 из 12 мест</option>
+        <option>Индивидуальная группа — создать новую</option>
+      </select></div>
+    <div class="row2">
+      <div class="fld"><label>Дата зачисления</label><input type="date" value="2026-09-15"></div>
+      <div class="fld"><label>Схема оплаты</label>
+        <select><option>Абонемент — 7 500 ₽ / месяц</option><option>Поурочно — 950 ₽ / занятие</option></select></div>
+    </div>
+    <div id="enEdo">
+      <div class="row2">
+        <div class="fld"><label>Приказ о зачислении</label><input type="text" value="№ 128"></div>
+        <div class="fld"><label>Дата приказа</label><input type="date" value="2026-09-15"></div>
+      </div>
+    </div>
+    <div class="hint2">Начисления пойдут с даты зачисления: за прошедшие занятия оплата не насчитывается.
+      Доступ к курсу группы откроется сразу.</div>
+  </div>
+  <div class="mo-f"><button class="btn" onclick="closeAll()">Отмена</button>
+    <button class="btn btn-p" onclick="doEnroll()">Зачислить</button></div>
+</div>
+
+<!-- отклонение -->
+<div class="modal" id="mReject">
+  <div class="mo-h">Отклонить заявку</div>
+  <div class="mo-b">
+    <div class="fld"><label>Причина</label>
+      <select><option>Не подошёл возраст</option><option>Нет мест на направлении</option>
+        <option>Дубль существующей заявки</option><option>Отказ заявителя</option><option>Другое</option></select></div>
+    <div class="fld"><label>Комментарий</label><textarea rows="2" placeholder="виден только сотрудникам"></textarea></div>
+    <div class="hint2">Учётная запись ученика сохраняется: он остаётся в школе как зарегистрированный без записей
+      и может подать заявку снова.</div>
+  </div>
+  <div class="mo-f"><button class="btn" onclick="closeAll()">Отмена</button>
+    <button class="btn btn-danger" onclick="doReject()">Отклонить</button></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── состояния заявки: путь от регистрации до зачисления ──
+   join   — ученик зарегистрировался, ждём родителя по ссылке
+   dead   — ссылка истекла (24 часа), нужна новая
+   check  — данные полные, ждёт проверки анкеты
+   doc    — анкета принята, оформляется договор
+   ready  — договор подписан, можно зачислять
+   done   — зачислен
+   reject — отклонена */
+var STATES = {
+  join:   {t:'Ждёт родителя',        c:'b-warn'},
+  dead:   {t:'Ссылка истекла',       c:'b-bad'},
+  check:  {t:'Ждёт проверки',        c:'b-info'},
+  doc:    {t:'Оформляется договор',  c:'b-vio'},
+  ready:  {t:'Готова к зачислению',  c:'b-ok'},
+  done:   {t:'Зачислен',             c:'b-gray'},
+  reject: {t:'Отклонена',            c:'b-gray'}
+};
+
+var APPS = [
+  {n:'Леклер Лео Шарлевич', m:'leclerc@mail.ru', age:15, cls:'9 класс', dir:'Гитара',
+   parent:null, st:'join', link:'JOIN-2NQ9-SVT4-VAAQ', linkOk:true, created:'06.08', src:'публичная форма'},
+  {n:'Тестер Три', m:'three@mail.ru', age:14, cls:'8 класс', dir:'Математика',
+   parent:null, st:'dead', link:'JOIN-FPX8-JV2P-3U9S', linkOk:false, created:'21.07', src:'публичная форма'},
+  {n:'Новиков Егор', m:'novikov@mail.ru', age:16, cls:'10 класс', dir:'Математика',
+   parent:'Новикова Ольга Ивановна', st:'check', link:'JOIN-YFMH-5YQG-M4LB', linkOk:true, created:'12.09',
+   src:'публичная форма', docs:true},
+  {n:'Морозова Вера', m:'morozova@mail.ru', age:17, cls:'11 класс', dir:'Информатика',
+   parent:'Морозов Денис Юрьевич', st:'doc', link:'JOIN-6T8H-Z9BT-9GQM', linkOk:true, created:'10.09',
+   src:'лид с лендинга', docs:true},
+  {n:'Лебедев Тимур', m:'lebedev@mail.ru', age:16, cls:'10 класс', dir:'Математика',
+   parent:'Лебедева Мария Львовна', st:'ready', link:'JOIN-PL3K-77XC-2WQD', linkOk:true, created:'08.09',
+   src:'публичная форма', docs:true, contract:'№ 2026-158'},
+  {n:'Сидорова Алиса', m:'sidorova@mail.ru', age:18, cls:'выпускница', dir:'Информатика',
+   parent:null, adult:true, st:'ready', link:'—', linkOk:true, created:'09.09',
+   src:'покупка с витрины', docs:true, contract:'№ 2026-159'},
+  {n:'Петров Илья', m:'petrov@mail.ru', age:15, cls:'9 класс', dir:'Гитара',
+   parent:'Петрова Анна Дмитриевна', st:'done', link:'—', linkOk:true, created:'02.09',
+   src:'публичная форма', docs:true, contract:'№ 2026-140', group:'Подарочный гит'},
+  {n:'Тестер Намба Тву', m:'two@mail.ru', age:13, cls:'7 класс', dir:'Математика',
+   parent:null, st:'reject', link:'—', linkOk:true, created:'21.07', src:'публичная форма',
+   why:'не подошёл возраст'}
+];
+
+/* Модуль «Школа» приносит представителей и JOIN-связывание, ЭДО — документы, договор и приказ.
+   Без «Школы» родителей нет вовсе: ученик заводится сам, дальше зачисляет администратор. */
+var EDO = true, SCHOOL = true, filter = '', search = '', cur = -1;
+
+/* без «Школы» состояния ожидания родителя не существует — заявка сразу ждёт проверки */
+function st(a){ return (!SCHOOL && (a.st === 'join' || a.st === 'dead')) ? 'check' : a.st; }
+
+function ini(n){ return n.split(' ').slice(0,2).map(function(w){ return w[0]; }).join(''); }
+function plural(n, one, few, many){
+  var a = n % 10, b = n % 100;
+  return n + ' ' + (a === 1 && b !== 11 ? one : a >= 2 && a <= 4 && (b < 12 || b > 14) ? few : many);
+}
+function inWork(a){ return ['join','dead','check','doc','ready'].indexOf(a.st) >= 0; }
+function count(f){ return APPS.filter(f).length; }
+
+function setEdo(v){
+  EDO = v; render();
+  toast(v ? 'С модулем ЭДО: документы, договор и приказ перед зачислением'
+          : 'Без ЭДО: после проверки анкеты сразу зачисление');
+}
+function setSchool(v){
+  SCHOOL = v;
+  if(!v){ EDO = false; document.getElementById('edo').checked = false; }
+  document.getElementById('edo').disabled = !v;
+  render();
+  toast(v ? 'С модулем «Школа»: представители и JOIN-ссылки'
+          : 'Без «Школы»: представителей нет, ученика зачисляет администратор');
+}
+function setSearch(v){ search = v; render(); }
+function setFilter(f){
+  filter = (filter === f) ? '' : f;
+  render();
+}
+
+function render(){
+  if(cur >= 0){ renderCard(); return; }
+  document.getElementById('navCnt').textContent = count(inWork);
+
+  document.getElementById('kpis').innerHTML =
+    kpi('', 'Заявок в работе', count(inWork), 'от регистрации до зачисления') +
+    (SCHOOL
+      ? kpi('join', 'Ждут родителя', count(function(a){ return a.st === 'join'; }), 'ссылка отправлена, не пришёл', true) +
+        kpi('dead', 'Ссылки истекли', count(function(a){ return a.st === 'dead'; }), 'нужна новая ссылка', true)
+      : kpi('check', 'Ждут проверки', count(function(a){ return st(a) === 'check'; }), 'анкета заполнена') +
+        kpi('reject', 'Отклонённые', count(function(a){ return a.st === 'reject'; }), 'учётные записи сохранены')) +
+    kpi('ready', 'Готовы к зачислению', count(function(a){ return a.st === 'ready'; }), 'осталось выбрать группу');
+
+  var dir = document.getElementById('fDir').value;
+  var vis = APPS.filter(function(a){
+    if(filter && st(a) !== filter) return false;
+    if(dir && a.dir !== dir) return false;
+    if(search && (a.n + ' ' + (a.parent || '') + ' ' + a.m).toLowerCase().indexOf(search.toLowerCase()) < 0) return false;
+    return true;
+  });
+
+  document.getElementById('head').innerHTML =
+    '<th style="width:var(--col-92)">№</th>' +
+    '<th style="width:var(--col-300)">Ученик</th>' +
+    (SCHOOL ? '<th style="width:var(--col-260)">Представитель</th>' : '') +
+    '<th style="width:var(--col-220)">Направление</th>' +
+    '<th style="width:var(--col-260)">Состояние</th>' +
+    (SCHOOL ? '<th style="width:var(--col-300)">Ссылка</th>' : '') +
+    '<th style="width:var(--col-110)">Создана</th>' +
+    '<th style="width:var(--col-92)"></th>';
+
+  var dead = count(function(a){ return st(a) === 'dead'; });
+  document.getElementById('listSum').innerHTML = vis.length + ' из ' + APPS.length +
+    (dead ? ' · <span class="warn">' + plural(dead, 'ссылка истекла', 'ссылки истекли', 'ссылок истекло') + '</span>' : '');
+
+  document.getElementById('rows').innerHTML = vis.length ? vis.map(function(a){
+    var i = APPS.indexOf(a), s0 = st(a);
+    var par = a.adult ? '<span class="muted">совершеннолетний</span>'
+      : a.parent ? a.parent
+      : '<span class="miss">не назначен</span>';
+    return '<tr class="clickable" onclick="openCard(' + i + ')">' +
+      '<td class="num">' + (i+1) + '</td>' +
+      '<td><div class="who"><span class="av">' + ini(a.n) + '</span><div class="nm">' +
+        '<a href="23-admission.html#a=' + i + '" onclick="event.stopPropagation()">' + a.n + '</a>' +
+        '<small>' + a.cls + ' · ' + a.age + ' лет</small></div></div></td>' +
+      (SCHOOL ? '<td>' + par + '</td>' : '') +
+      '<td>' + a.dir + '<div class="num">' + a.src + '</div></td>' +
+      '<td><span class="badge ' + STATES[s0].c + '">' + STATES[s0].t + '</span>' +
+        (a.st === 'done' && a.group ? '<div class="num">' + a.group + '</div>' : '') +
+        (a.st === 'reject' && a.why ? '<div class="num">' + a.why + '</div>' : '') + '</td>' +
+      (SCHOOL ? '<td>' + linkCell(a, i) + '</td>' : '') +
+      '<td class="dt">' + a.created + '</td>' +
+      '<td style="text-align:right"><button class="rowact" ' +
+        'onclick="event.stopPropagation();openCard(' + i + ')">⋯</button></td></tr>';
+  }).join('') : '<tr><td colspan="8" class="empty">Заявок нет</td></tr>';
+}
+
+/* Ссылка сама себе кнопка: клик по живой копирует её, клик по перечёркнутой
+   выпускает новую и сразу кладёт в буфер — отдельных подписей рядом не нужно. */
+function linkCell(a, i){
+  if(a.link === '—') return '<span class="muted">—</span>';
+  return a.linkOk
+    ? '<button class="code" title="Скопировать" ' +
+      'onclick="event.stopPropagation();copyLink(' + i + ')">' + a.link + '</button>'
+    : '<button class="code dead" title="Истекла — выпустить новую и скопировать" ' +
+      'onclick="event.stopPropagation();reissue(' + i + ')">' + a.link + '</button>';
+}
+function copyLink(i){ toast('Ссылка скопирована: ' + APPS[i].link); }
+
+function kpi(f, lab, big, sub, warn){
+  return '<button class="kpi' + (filter === f && f ? ' on' : '') + '" onclick="setFilter(\'' + f + '\')">' +
+    '<span class="lab">' + lab + '</span>' +
+    '<span class="big' + (warn && big ? ' warn' : '') + '">' + big + '</span>' +
+    '<span class="sub">' + sub + '</span></button>';
+}
+
+/* ── карточка заявки ── */
+function openCard(i){
+  cur = i;
+  document.body.classList.add('card-mode');
+  location.hash = 'a=' + i;
+  renderCard();
+}
+function backToList(){
+  cur = -1;
+  document.body.classList.remove('card-mode');
+  location.hash = '';
+  document.getElementById('hCrumb').textContent = 'Приём';
+  document.getElementById('hTitle').textContent = 'Приём';
+  render();
+}
+
+function renderCard(){
+  var a = APPS[cur];
+  document.getElementById('hCrumb').innerHTML =
+    '<a class="link" href="23-admission.html" onclick="event.preventDefault();backToList()">Приём</a> · ' + a.n;
+  document.getElementById('hTitle').textContent = a.n;
+
+  document.getElementById('cardBox').innerHTML =
+    (st(a) === 'dead'
+      ? '<div class="warnbox"><b>Ссылка истекла.</b> Родитель не успел зарегистрироваться за 24 часа — ' +
+        'выпустите новую, анкета ученика сохранена.</div>' : '') +
+    (a.st === 'ready'
+      ? '<div class="okbox"><b>Всё готово к зачислению.</b> Осталось выбрать группу и дату.</div>' : '') +
+    '<div class="two">' +
+      '<div>' + anketa(a) + '</div>' +
+      '<div>' + pipeline(a) + '</div>' +
+    '</div>';
+}
+
+function anketa(a){
+  var docs = a.docs
+    ? '<div class="docs">' +
+        '<a class="doc" href="#" onclick="event.preventDefault();toast(\'Скан паспорта представителя\')">📄 Паспорт представителя</a>' +
+        '<a class="doc" href="#" onclick="event.preventDefault();toast(\'Согласие на обработку ПД\')">📄 Согласие на обработку ПД</a>' +
+        '<a class="doc" href="#" onclick="event.preventDefault();toast(\'Свидетельство о рождении\')">📄 Свидетельство о рождении</a>' +
+      '</div>'
+    : '<div class="miss" style="margin-top:8px">Документальная часть не заполнена — её вносит представитель по ссылке</div>';
+
+  return '<div class="card sec"><div class="sec-h"><h3>Анкета ученика</h3>' +
+      '<span class="muted">' + a.src + ' · ' + a.created + '</span>' +
+      '<div style="flex:1"></div>' +
+      '<button class="btn btn-s" onclick="toast(\'Правка анкеты\')">Изменить</button></div>' +
+    '<div class="rows">' +
+      row('ФИО', a.n) +
+      row('Возраст и класс', a.age + ' лет · ' + a.cls) +
+      row('Почта', a.m) +
+      row('Телефон', '+7 926 555-33-11') +
+      row('Направление', a.dir + ' <span class="muted">— пожелание, группу назначает зачисление</span>') +
+    '</div></div>' +
+
+    (SCHOOL
+      ? '<div class="card sec"><div class="sec-h"><h3>Представитель</h3>' +
+          (a.adult ? '<span class="muted">не требуется</span>' : '') +
+          '<div style="flex:1"></div>' +
+          (a.adult || a.parent ? '' :
+            '<button class="btn btn-s" onclick="toast(\'Назначить существующего представителя\')">Назначить</button>' +
+            '<button class="btn btn-s btn-p" onclick="reissue(' + cur + ')">Выпустить ссылку</button>') + '</div>' +
+        (a.adult
+          ? '<div class="muted">Ученику 18 лет: он сам подписывает договор и согласия.</div>'
+          : a.parent
+            ? '<div class="rows">' + row('ФИО', '<a class="link" href="22-people.html#p=0">' + a.parent + '</a>') +
+              row('Телефон', '+7 916 200-33-44') + row('Связан', 'по JOIN-ссылке · ' + a.created) + '</div>'
+            : '<div class="miss">Не назначен. Ссылка: ' + linkCell(a, cur) + '</div>') +
+        '</div>'
+      : '') +
+
+    (EDO
+      ? '<div class="card sec"><div class="sec-h"><h3>Документы</h3>' +
+          '<span class="badge b-vio">модуль ЭДО</span></div>' + docs +
+          (a.contract
+            ? '<div class="rows" style="margin-top:12px">' + row('Договор', a.contract + ' · подписан ' + a.created) + '</div>'
+            : '') + '</div>'
+      : '');
+}
+function row(k, v){ return '<div class="r"><span>' + k + '</span><span>' + v + '</span></div>'; }
+
+/* Конвейер: один и тот же путь у всех заявок, поэтому он показан целиком,
+   а не по шагу за раз — видно, что уже сделано и что осталось. */
+function pipeline(a){
+  /* один и тот же путь у всех заявок, поэтому показан целиком: видно сделанное и оставшееся.
+     Состав шагов задают модули — «Школа» даёт представителя, ЭДО добавляет договор. */
+  var order = ['reg'];
+  if(SCHOOL) order.push('par');
+  order.push('check');
+  if(EDO) order.push('doc');
+  order.push('enroll');
+
+  var s0 = st(a);
+  var at = s0 === 'join' || s0 === 'dead' ? 'par'
+    : s0 === 'check' ? 'check'
+    : s0 === 'doc' ? 'doc'
+    : s0 === 'ready' ? 'enroll'
+    : '';
+  if(a.adult && at === 'par') at = 'check';
+  var pos = at ? order.indexOf(at) : order.length;
+
+  var S = {
+    reg: {t:'Регистрация', s:'Ученик завёл учётную запись сам · ' + a.created, act:''},
+    par: {t:'Представитель и согласия',
+          s: a.adult ? 'Не требуется — ученик совершеннолетний'
+             : a.parent ? 'Связан: ' + a.parent
+             : a.linkOk ? 'Ссылка отправлена, ждём регистрации родителя'
+             : 'Ссылка истекла — нужна новая',
+          act: (!a.adult && !a.parent)
+             ? '<button class="btn btn-s btn-p" onclick="reissue(' + cur + ')">Выпустить ссылку</button>' +
+               '<button class="btn btn-s" onclick="toast(\'Назначить существующего представителя\')">Назначить существующего</button>'
+             : ''},
+    check:{t:'Проверка анкеты',
+           s:'Полнота данных, возраст, дубли',
+           act:'<button class="btn btn-s btn-p" onclick="accept()">Анкета в порядке</button>' +
+               '<button class="btn btn-s" onclick="show(\'mReject\')">Отклонить</button>'},
+    doc:  {t:'Договор',
+           s: a.contract ? a.contract + ' · подписан' : 'Формируется по данным анкеты',
+           act: a.contract
+             ? '<a class="btn btn-s" href="#" onclick="event.preventDefault();toast(\'Печатная форма договора\')">Печатная форма</a>'
+             : '<button class="btn btn-s btn-p" onclick="makeDoc()">Сформировать договор</button>'},
+    enroll:{t:'Зачисление' + (EDO ? ' и приказ' : ''),
+           s: a.group ? 'Зачислен в группу ' + a.group : 'Выбрать группу, дату и схему оплаты',
+           act: a.group
+             ? '<a class="btn btn-s" href="20-group.html#g=0">Карточка группы</a>' +
+               '<a class="btn btn-s" href="07-student.html#s=0">Сводка ученика</a>'
+             : '<button class="btn btn-s btn-p" onclick="openEnroll()">Зачислить</button>'}
+  };
+
+  return '<div class="card sec"><div class="sec-h"><h3>Оформление</h3>' +
+      '<span class="badge ' + STATES[s0].c + '">' + STATES[s0].t + '</span></div>' +
+    '<div class="steps">' + order.map(function(k, i){
+      var cls = a.st === 'reject' ? 'wait' : i < pos ? 'done' : i === pos ? 'now' : 'wait';
+      var x = S[k];
+      return '<div class="st ' + cls + '"><b>' + x.t + '</b><div class="sub">' + x.s + '</div>' +
+        (cls === 'now' && x.act ? '<div class="act">' + x.act + '</div>' : '') + '</div>';
+    }).join('') + '</div>' +
+    (a.st === 'reject'
+      ? '<div class="warnbox" style="margin:12px 0 0"><b>Заявка отклонена</b> — ' + a.why +
+        '. Учётная запись сохранена, можно подать заново.</div>' : '') +
+    '</div>';
+}
+
+/* ── действия ── */
+function reissue(i){
+  var a = APPS[i];
+  a.linkOk = true; a.st = 'join';
+  a.link = 'JOIN-' + ['4KTP','9WQZ','2MRD','7LXV'][i % 4] + '-' + ['5YQG','3U9S','8HTC','1ZPN'][i % 4] + '-M4LB';
+  cur >= 0 ? renderCard() : render();
+  toast('Новая ссылка выпущена и скопирована: ' + a.link + ' · живёт 24 часа');
+}
+function accept(){
+  var a = APPS[cur];
+  a.st = EDO ? 'doc' : 'ready';
+  renderCard();
+  toast(EDO ? 'Анкета принята: формируем договор' : 'Анкета принята: можно зачислять');
+}
+function makeDoc(){
+  var a = APPS[cur];
+  a.contract = '№ 2026-' + (160 + cur);
+  a.st = 'ready';
+  renderCard();
+  toast('Договор ' + a.contract + ' сформирован: печатная форма готова');
+}
+function openEnroll(){
+  document.getElementById('enTitle').textContent = 'Зачислить: ' + APPS[cur].n;
+  document.getElementById('enGroup').value = 'МЕГЭ-1 · Математика ЕГЭ · 10 из 15 мест';
+  document.getElementById('enEdo').style.display = EDO ? '' : 'none';
+  show('mEnroll');
+}
+function doEnroll(){
+  var a = APPS[cur];
+  a.group = document.getElementById('enGroup').value.split(' · ')[0];
+  a.st = 'done';
+  closeAll(); renderCard();
+  toast('Зачислен в ' + a.group + (EDO ? ': приказ сформирован, ' : ': ') + 'доступ к курсу открыт');
+}
+function doReject(){
+  var a = APPS[cur];
+  a.st = 'reject'; a.why = 'не подошёл возраст';
+  closeAll(); renderCard();
+  toast('Заявка отклонена: учётная запись ученика сохранена');
+}
+function openInvite(){ show('mInvite'); }
+
+function show(id){ document.getElementById('scrim').classList.add('on'); document.getElementById(id).classList.add('on'); }
+function closeAll(){
+  document.getElementById('scrim').classList.remove('on');
+  ['mInvite','mEnroll','mReject'].forEach(function(id){ document.getElementById(id).classList.remove('on'); });
+}
+
+var tt;
+function toast(m){
+  var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3600);
+}
+
+/* адрес заявки живёт в хеше: 23-admission.html#a=2 открывается в новой вкладке */
+var aHash = location.hash.match(/(?:^|[#&])a=(\d+)/);
+if(aHash && APPS[+aHash[1]]) openCard(+aHash[1]);
+else render();
+</script>
+</body>
+</html>

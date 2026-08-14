@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Мои курсы — FS-LMS 2.0</title>
+<link rel="stylesheet" href="_shared.css">
+<script src="_icons.js"></script>
+<script src="_tip.js"></script>
+<script src="_nav.js"></script>
+<style>
+  .body{flex:1;overflow:auto;padding:var(--sp-16) var(--sp-20) var(--user-h)}
+  .card{background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);box-shadow:var(--sh);margin-bottom:var(--sp-12)}
+  .sec-h{display:flex;align-items:center;gap:var(--sp-12);padding:var(--sp-12) var(--sp-16);
+    border-bottom:1px solid var(--gray2);flex-wrap:wrap}
+  .sec-h h3{margin:0;font-size:var(--fs-14)}
+  .sec-h .cnt{font-size:var(--fs-12);font-weight:700;background:var(--gray1);color:var(--gray6);
+    border-radius:var(--r-8);padding:var(--sp-4) var(--sp-8)}
+
+  /* карточка курса: обложка, прогресс и то, куда ученик вернётся */
+  .crs{display:flex;gap:var(--sp-20);padding:var(--sp-16);border-top:1px solid var(--gray1);align-items:center}
+  .crs:first-of-type{border-top:0}
+  .crs:hover{background:var(--gray0)}
+  .cov{width:56px;height:56px;border-radius:var(--r-12);display:grid;place-items:center;color:#fff;
+    font-size:var(--fs-16);font-weight:700;flex:none}
+  .crs .nm{flex:1;min-width:0}
+  .crs .nm b{font-size:var(--fs-16);display:block}
+  .crs .nm .sub{font-size:var(--fs-12);color:var(--gray6);margin-top:2px;display:flex;gap:var(--sp-8);flex-wrap:wrap;align-items:center}
+  .tag{font-size:var(--fs-12);padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4);background:var(--gray1);color:var(--gray6)}
+  .tag.grp{background:var(--blue-l);color:#1864ab}
+  .tag.ind{background:var(--violet-l);color:#5f3dc4}
+  .tag.own{background:var(--teal-l);color:#0b7285}
+  .crs .next{font-size:var(--fs-14);color:var(--gray7);margin-top:var(--sp-8);
+    display:flex;gap:var(--sp-8);align-items:center;min-width:0}
+  .crs .next > span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .crs .next .ic-s{width:26px;height:26px;border-radius:var(--r-6);display:grid;place-items:center;flex:none}
+  .crs .pr{width:var(--col-300);flex:none}
+  .crs .pr .row{display:flex;justify-content:space-between;align-items:baseline;
+    font-size:var(--fs-12);color:var(--gray6);margin-bottom:var(--sp-6)}
+  .crs .pr .row b{color:var(--gray9);font-size:var(--fs-16)}
+  .bar{height:10px;border-radius:var(--r-4);background:var(--gray2);overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:var(--r-4);background:var(--blue)}
+  .bar i.done{background:var(--green)}
+  .crs .act{flex:none;display:flex;flex-direction:column;gap:var(--sp-8);width:var(--col-160)}
+  .crs .act .btn{width:100%;justify-content:center}
+  .crs.fin{opacity:.75}
+
+  .filters{display:flex;gap:var(--sp-8);align-items:center;flex-wrap:wrap}
+  .filters select{border:1px solid var(--gray3);border-radius:var(--r-8);padding:var(--sp-6) var(--sp-12);font:inherit;font-size:var(--fs-14)}
+  .empty{padding:var(--sp-32) var(--sp-16);text-align:center;color:var(--gray6);font-size:var(--fs-14)}
+  .empty b{display:block;color:var(--gray9);margin-bottom:var(--sp-4)}
+  .pick{display:flex;align-items:center;gap:var(--sp-8);height:38px;padding:0 var(--sp-12);
+    border:1px solid var(--gray3);border-radius:var(--r-8);font-size:var(--fs-14);color:var(--gray7);background:#fff;cursor:pointer}
+  .pick:hover{background:var(--gray0)}
+  .demo{display:flex;align-items:center;gap:var(--sp-6);font-size:var(--fs-12);color:var(--gray6)}
+  @media (max-width:1000px){ .crs{flex-wrap:wrap} .crs .pr{width:100%} }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-top">
+      <div class="logo">ШБ</div>
+      <div style="flex:1"><b>Шаг в будущее</b><small id="sideSub">Личный кабинет</small></div>
+      <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')">⟨</button>
+    </div>
+    <nav class="nav">
+      <h4>Меню</h4>
+      <a href="11-student-home.html"><i class="ic">◱</i><span>Главная</span></a>
+      <a href="#" class="on"><i class="ic">◈</i><span>Мои курсы</span></a>
+      <a href="16-student-calendar.html" id="navCal"><i class="ic">◷</i><span>Календарь</span></a>
+      <a href="17-student-results.html" id="navRes"><i class="ic">▦</i><span>Результаты</span></a>
+      <a href="#"><i class="ic">₽</i><span>Лицевой счёт</span></a>
+    </nav>
+    <div class="side-user">
+      <div class="ava" id="ava" style="background:var(--blue)">АК</div>
+      <div style="flex:1"><b style="font-size:var(--fs-14);display:block" id="userName">Абрамов Кирилл</b>
+        <small style="font-size:var(--fs-12);color:var(--gray6)" id="userRole">Ученик</small></div>
+      <span style="color:var(--gray5)">⚙</span>
+    </div>
+  </aside>
+
+  <div class="app">
+    <header class="head">
+      <h1>Мои курсы</h1>
+      <button class="pick" id="childPick" onclick="toast('Второй ребёнок: Абрамова Полина · МЕГЭ-2')" style="display:none">
+        <span style="width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;font-size:9px;display:grid;place-items:center;font-weight:700">АК</span>
+        Кирилл <span style="color:var(--gray5)">▾</span></button>
+      <div class="sp"></div>
+      <label class="demo">роль <i>(демо)</i>
+        <select id="role" onchange="render()" style="padding:var(--sp-4) var(--sp-8);font-size:var(--fs-12)">
+          <option value="student">Ученик</option>
+          <option value="parent">Представитель</option>
+        </select></label>
+
+      <span class="muted" id="hSum">—</span>
+      <label class="demo">кабинет <i>(демо)</i>
+        <select id="mode" onchange="render()" style="padding:var(--sp-4) var(--sp-8);font-size:var(--fs-12)">
+          <option value="campus">кампус (группа)</option>
+          <option value="online">онлайн (купленные курсы)</option>
+        </select></label>
+      <span style="color:var(--gray5)">🔔</span>
+    </header>
+
+    <div class="body">
+      <div class="card">
+        <div class="sec-h">
+          <h3>Идут сейчас</h3><span class="cnt" id="activeCnt">—</span>
+          <div style="flex:1"></div>
+          <div class="filters">
+            <select id="fKind" onchange="render()">
+              <option value="">Все курсы</option>
+              <option value="grp">по группе</option>
+              <option value="ind">индивидуальные</option>
+              <option value="own">купленные</option>
+            </select>
+          </div>
+        </div>
+        <div id="active"></div>
+      </div>
+
+      <div class="card" id="doneCard">
+        <div class="sec-h"><h3>Завершённые</h3><span class="cnt" id="doneCnt">—</span>
+          <div style="flex:1"></div>
+          <span class="muted" style="font-size:var(--fs-12)">материалы остаются доступными</span></div>
+        <div id="done"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* «Мои курсы» — не витрина, а точка возврата: главное здесь не название, а место,
+   на котором ученик остановился, и одна кнопка «Продолжить» (01-product §3.7). */
+var COURSES = [
+  {n:'Математика с нуля до ЕГЭ', code:'МА', color:'var(--violet)', kind:'grp', src:'МЕГЭ-1 · Училков И. С.',
+   pr:77, steps:'46 из 60 шагов', next:{t:'task', l:'Урок 8 «Системы уравнений»', s:'шаг 4 · Тренировка: подстановка'},
+   when:'заходили вчера', campus:true},
+  {n:'Информатика · подготовка к ОГЭ', code:'ИН', color:'var(--orange)', kind:'grp', src:'ОГЭ-1 · Петрова А. В.',
+   pr:34, steps:'19 из 56 шагов', next:{t:'video', l:'Урок 5 «Циклы»', s:'шаг 2 · Разбор на примерах'},
+   when:'заходили 3 дня назад', campus:true},
+  {n:'Материалы индивидуальных занятий', code:'ИЗ', color:'var(--teal)', kind:'ind', src:'Училков И. С.',
+   pr:100, steps:'8 из 8 шагов', next:{t:'text', l:'Урок 3 «Отработка: линейные уравнения»', s:'разбор занятия 10.08'},
+   when:'заходили сегодня', campus:true},
+  {n:'Математика с нуля до ЕГЭ', code:'МА', color:'var(--violet)', kind:'own', src:'куплен 12.07 · доступ бессрочный',
+   pr:77, steps:'46 из 60 шагов', next:{t:'task', l:'Урок 8 «Системы уравнений»', s:'шаг 4 · Тренировка: подстановка'},
+   when:'заходили вчера', online:true},
+  {n:'Информатика · подготовка к ЕГЭ', code:'ИН', color:'var(--orange)', kind:'own', src:'куплен 02.08 · доступ бессрочный',
+   pr:12, steps:'7 из 58 шагов', next:{t:'text', l:'Урок 2 «Кодирование информации»', s:'шаг 1 · Лекция'},
+   when:'заходили неделю назад', online:true},
+  {n:'Английский · уровень A2', code:'АН', color:'var(--green)', kind:'own', src:'куплен 03.03 · пройден 14.07',
+   pr:100, steps:'42 из 42 шагов', fin:true, when:'пройден 14.07', online:true}
+];
+
+function render(){
+  var online = document.getElementById('mode').value === 'online';
+  var fK = document.getElementById('fKind').value;
+  document.getElementById('sideSub').textContent = online ? 'Онлайн-курсы' : 'Личный кабинет';
+  /* без группы нет ни расписания, ни посещаемости — эти пункты просто не появляются */
+  document.getElementById('navCal').style.display = online ? 'none' : '';
+  document.getElementById('navRes').style.display = online ? 'none' : '';
+
+  var mine = COURSES.filter(function(c){
+    return (online ? c.online : c.campus) && (!fK || c.kind === fK);
+  });
+  var active = mine.filter(function(c){ return !c.fin; });
+  var done = mine.filter(function(c){ return c.fin; });
+
+  document.getElementById('hSum').textContent = mine.length + ' курса · ' +
+    Math.round(mine.reduce(function(a, c){ return a + c.pr; }, 0) / (mine.length || 1)) + '% пройдено в среднем';
+  document.getElementById('activeCnt').textContent = active.length;
+  document.getElementById('doneCnt').textContent = done.length;
+  document.getElementById('doneCard').style.display = done.length ? '' : 'none';
+
+  document.getElementById('active').innerHTML = active.length ? active.map(row).join('')
+    : '<div class="empty"><b>Активных курсов нет</b>' +
+      (online ? 'Загляните в каталог — там есть открытые пробные уроки' : 'Курс появится, когда начнётся обучение в группе') + '</div>';
+  document.getElementById('done').innerHTML = done.map(row).join('');
+  if(typeof applyRole === 'function') applyRole();
+}
+
+function row(c){
+  var tagCls = c.kind === 'grp' ? 'grp' : c.kind === 'ind' ? 'ind' : 'own';
+  var tagTxt = c.kind === 'grp' ? 'по группе' : c.kind === 'ind' ? 'индивидуальный' : 'куплен';
+  var full = c.pr === 100;
+  return '<div class="crs '+(c.fin ? 'fin' : '')+'">' +
+    '<span class="cov" style="background:'+c.color+'">'+c.code+'</span>' +
+    '<span class="nm"><b>'+c.n+'</b>' +
+      '<span class="sub"><span class="tag '+tagCls+'">'+tagTxt+'</span>' +
+      '<span class="tag">'+c.src+'</span></span>' +
+      (c.next && !c.fin
+        ? '<span class="next"><span class="ic-s" style="background:'+stepBg(c.next.t)+'">' + stepIcon(c.next.t, 16) + '</span>' +
+          '<span><b style="font-weight:600">'+c.next.l+'</b> · '+c.next.s+'</span></span>'
+        : '<span class="next muted">Курс пройден целиком — материалы остаются открытыми</span>') +
+    '</span>' +
+    '<span class="pr"><span class="row"><span>'+(full ? 'пройден' : 'пройдено')+'</span><b>'+c.pr+'%</b></span>' +
+      '<span class="bar"><i class="'+(full ? 'done' : '')+'" style="width:'+c.pr+'%"></i></span>' +
+      '<span class="row" style="margin:var(--sp-6) 0 0"><span>'+c.steps+'</span></span></span>' +
+    '<span class="act">' +
+      '<a class="btn '+(c.fin ? '' : 'btn-p')+'" data-act href="02-player.html">' +
+        (c.fin ? 'Открыть' : c.pr === 0 ? 'Начать' : 'Продолжить') + '</a>' +
+      (c.fin ? '' : '<a class="btn btn-s" href="17-student-results.html">Результаты</a>') +
+    '</span></div>';
+}
+
+
+/* Представитель видит те же вкладки, что ученик, но ничего не делает за него:
+   действия остаются на месте и гаснут — так видно, что кнопка существует (01-product §3.8). */
+function isParent(){ var r = document.getElementById('role'); return r && r.value === 'parent'; }
+function applyRole(){
+  var p = isParent();
+  var nm = document.getElementById('userName'), rl = document.getElementById('userRole'), av = document.getElementById('ava');
+  if(nm) nm.textContent = p ? 'Абрамова Елена' : 'Абрамов Кирилл';
+  if(rl) rl.textContent = p ? 'Представитель' : 'Ученик';
+  if(av){ av.textContent = p ? 'АЕ' : 'АК'; av.style.background = p ? 'var(--violet)' : 'var(--blue)'; }
+  var sub = document.getElementById('sideSub');
+  if(sub && sub.textContent !== 'Онлайн-курсы') sub.textContent = p ? 'Кабинет представителя' : 'Личный кабинет';
+  var cp = document.getElementById('childPick');
+  if(cp) cp.style.display = p ? '' : 'none';
+  /* кнопки-действия ученика остаются видимыми, но выключаются */
+  [].forEach.call(document.querySelectorAll('[data-act]'), function(b){
+    /* ссылка не понимает disabled — гасим её классом, кнопку по-прежнему атрибутом */
+    if(b.tagName === 'A') b.classList.toggle('is-off', p); else b.disabled = p;
+    b.title = p ? 'Действие доступно ученику — представитель наблюдает' : '';
+  });
+}
+var tt;
+function toast(m){ var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3200); }
+render();
+applyRole();
+</script>
+</body>
+</html>

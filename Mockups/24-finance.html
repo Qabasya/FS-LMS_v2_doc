@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лицевые счета и операции — FS-LMS 2.0</title>
+<link rel="stylesheet" href="_shared.css">
+<script src="_tip.js"></script>
+<script src="_nav.js"></script>
+<style>
+  .body{flex:1;overflow:auto;padding:var(--sp-16) var(--sp-20) var(--user-h)}
+  .card{background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);box-shadow:var(--sh)}
+  .sec{padding:var(--sp-16) var(--sp-20);margin-bottom:14px}
+  .sec-h{display:flex;align-items:center;gap:var(--sp-12);margin-bottom:12px;flex-wrap:wrap}
+  .sec-h h3{margin:0;font-size:var(--fs-14)}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:var(--sp-16);margin-bottom:14px}
+  .kpi{padding:var(--sp-16);display:flex;flex-direction:column;text-align:left;border:1px solid var(--gray2);
+    background:#fff;border-radius:var(--r-12);box-shadow:var(--sh);color:inherit}
+  .kpi.act{cursor:pointer}
+  .kpi.act:hover{border-color:var(--blue)}
+  .kpi.on{border-color:var(--blue);background:var(--blue-l)}
+  .kpi .lab{font-size:var(--fs-12);color:var(--gray6);font-weight:600}
+  .kpi .big{font-size:var(--fs-26);font-weight:700;line-height:1.25;margin:var(--sp-6) 0 var(--sp-4);
+    font-variant-numeric:tabular-nums}
+  .kpi .big.bad{color:var(--red)} .kpi .big.ok{color:var(--green)}
+  .kpi .sub{font-size:var(--fs-12);color:var(--gray6);line-height:1.45}
+
+  .tabs{display:flex;gap:var(--sp-4);margin-bottom:var(--sp-16);border-bottom:1px solid var(--gray2)}
+  .tabs button{border:0;background:none;padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);color:var(--gray6);
+    border-bottom:2px solid transparent;margin-bottom:-1px}
+  .tabs button:hover{color:var(--gray9)}
+  .tabs button.on{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
+  .tabs .cnt{font-size:var(--fs-12);font-weight:700;background:var(--gray1);color:var(--gray6);border-radius:var(--r-8);
+    padding:var(--sp-4) var(--sp-8);margin-left:6px}
+  .tabs button.on .cnt{background:var(--blue-l);color:var(--blue)}
+
+  .filters{display:flex;gap:var(--sp-8);align-items:center;flex-wrap:wrap;margin-bottom:14px}
+  .filters select,.filters input{border:1px solid var(--gray3);border-radius:var(--r);padding:var(--sp-8) var(--sp-12);
+    font-size:var(--fs-14);font-family:inherit}
+  .filters input{min-width:var(--col-260)}
+  .chipf{border:1px solid var(--gray3);background:#fff;border-radius:var(--r-pill);padding:var(--sp-6) var(--sp-12);
+    font-size:var(--fs-12);color:var(--gray7)}
+  .chipf.on{background:var(--blue-l);border-color:var(--blue);color:var(--blue);font-weight:600}
+
+  table.t{width:100%;border-collapse:collapse;font-size:var(--fs-14)}
+  table.t th{text-align:left;font-size:var(--fs-12);letter-spacing:.04em;text-transform:uppercase;color:var(--gray5);
+    font-weight:700;padding:var(--sp-8) var(--sp-12);border-bottom:1px solid var(--gray2);white-space:nowrap}
+  table.t td{padding:var(--sp-8) var(--sp-12);border-bottom:1px solid var(--gray1);vertical-align:middle}
+  table.t tr:last-child td{border-bottom:0}
+  table.t tbody tr:hover{background:var(--gray0)}
+  table.t tbody tr.clickable{cursor:pointer}
+  table.t tr.sum td{background:var(--gray1);font-weight:600;border-top:2px solid var(--gray3)}
+  th.r, td.r{text-align:right}
+  .who{display:flex;gap:var(--sp-12);align-items:center;min-width:0}
+  .av{width:30px;height:30px;border-radius:50%;background:var(--blue-l);color:var(--blue);display:grid;
+    place-items:center;font-size:var(--fs-12);font-weight:700;flex:none}
+  .who .nm{min-width:0}
+  .who .nm a{font-weight:600;color:inherit;text-decoration:none;display:block}
+  .who .nm a:hover{color:var(--blue);text-decoration:underline}
+  .who .nm small{display:block;color:var(--gray6);font-size:var(--fs-12)}
+  .num{color:var(--gray5);font-size:var(--fs-12)}
+  .dt{font-variant-numeric:tabular-nums;color:var(--gray7);white-space:nowrap}
+  .money{font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+  .money.bad{color:var(--red);font-weight:600}
+  .money.ok{color:var(--green);font-weight:600}
+  .money.zero{color:var(--gray5)}
+  .link{color:var(--blue);text-decoration:none} .link:hover{text-decoration:underline}
+  .empty{color:var(--gray5);font-size:var(--fs-14);padding:var(--sp-20) 0;text-align:center}
+
+  .op{display:inline-block;font-size:var(--fs-12);font-weight:600;padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4);
+    white-space:nowrap}
+  .op.charge{background:var(--gray1);color:var(--gray7)}
+  .op.pay{background:var(--green-l);color:#2b8a3e}
+  .op.disc{background:var(--blue-l);color:#1864ab}
+  .op.ref{background:var(--orange-l);color:#d9480f}
+  .op.corr{background:var(--violet-l);color:#5f3dc4}
+  .badge{display:inline-block;font-size:var(--fs-12);font-weight:600;padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4)}
+  .b-gray{background:var(--gray1);color:var(--gray6)}
+  .b-warn{background:var(--orange-l);color:#d9480f}
+  .b-ok{background:var(--green-l);color:#2b8a3e}
+  .rev{opacity:.55}
+  .rev .money{text-decoration:line-through}
+  .rowact{border:0;background:none;color:var(--gray5);font-size:var(--fs-16);line-height:1;
+    padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4)}
+  .rowact:hover{background:var(--gray2);color:var(--gray9)}
+  .mini{border:0;background:none;color:var(--blue);font-size:var(--fs-12);padding:var(--sp-4) var(--sp-6);border-radius:var(--r-4)}
+  .mini:hover{background:var(--blue-l)}
+
+  .demo{display:flex;align-items:center;gap:var(--sp-8);font-size:var(--fs-12);color:var(--gray6)}
+  .fld{margin-bottom:12px}
+  .fld label{display:block;font-size:var(--fs-12);color:var(--gray6);margin-bottom:5px;font-weight:600}
+  .fld input,.fld select,.fld textarea{width:100%;border:1px solid var(--gray3);border-radius:var(--r);
+    padding:var(--sp-8) var(--sp-12);font-size:var(--fs-14);font-family:inherit}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-12)}
+  .hint2{font-size:var(--fs-12);color:var(--gray6);margin-top:6px;line-height:1.45}
+  .warnbox{background:var(--orange-l);border:1px solid #ffd8a8;color:#d9480f;border-radius:var(--r-8);
+    padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);margin-bottom:14px}
+  .sumbox{background:var(--gray0);border:1px solid var(--gray2);border-radius:var(--r-8);padding:var(--sp-12) var(--sp-16);
+    font-size:var(--fs-14);margin-bottom:12px}
+  .sumbox div{display:flex;justify-content:space-between;padding:var(--sp-4) 0}
+  .sumbox .tot{border-top:1px solid var(--gray2);margin-top:4px;padding-top:8px;font-weight:600}
+
+  @media (max-width:1360px){ .kpis{grid-template-columns:repeat(2,1fr)} }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-top">
+      <div class="logo">ШБ</div>
+      <div style="flex:1"><b>Шаг в будущее</b><small>Управление</small></div>
+      <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')">⟨</button>
+    </div>
+    <nav class="nav">
+      <h4>Люди</h4>
+      <a href="22-people.html"><i class="ic">◍</i><span>Ученики</span></a>
+      <a href="23-admission.html"><i class="ic">◔</i><span>Приём</span></a>
+      <h4>Финансы</h4>
+      <a href="24-finance.html" class="on"><i class="ic">₽</i><span>Лицевые счета</span><span class="cnt" id="navCnt">6</span></a>
+      <a href="24-finance.html#ops"><i class="ic">≡</i><span>Операции</span></a>
+      <a href="#" onclick="toast('Отчётность: поступления по наборам, выручка за период')"><i class="ic">▤</i><span>Отчётность</span></a>
+    </nav>
+    <div class="side-user">
+      <div class="ava">СО</div>
+      <div style="flex:1"><b style="font-size:var(--fs-14);display:block">Считалова О.</b>
+        <small style="font-size:var(--fs-12);color:var(--gray6)">Финансовый администратор</small></div>
+      <span style="color:var(--gray5)">⚙</span>
+    </div>
+  </aside>
+
+  <div class="app">
+    <header class="head">
+      <div>
+        <div class="crumbs">Управление · Финансы</div>
+        <h1>Лицевые счета</h1>
+      </div>
+      <div class="sp"></div>
+      <label class="demo"><input type="checkbox" id="prov" checked onchange="setProv(this.checked)"> платёжный провайдер <i>(демо)</i></label>
+      <select id="period" onchange="render()" style="padding:var(--sp-8) var(--sp-12);font-size:var(--fs-14);
+        border:1px solid var(--gray3);border-radius:var(--r)">
+        <option>Сентябрь 2026</option><option>Октябрь 2026</option><option>Учебный год</option>
+      </select>
+      <button class="btn" onclick="toast('Выгрузка в XLSX: остатки и обороты за период')">Выгрузить</button>
+      <button class="btn btn-p" onclick="openPay()">Отметить платёж</button>
+    </header>
+
+    <div class="body">
+      <div class="kpis" id="kpis"></div>
+
+      <div class="tabs">
+        <button class="on" id="tb0" onclick="setTab(0)">Счета<span class="cnt" id="cAcc"></span></button>
+        <button id="tb1" onclick="setTab(1)">Операции<span class="cnt" id="cOps"></span></button>
+      </div>
+
+      <div class="filters">
+        <input type="text" placeholder="Поиск по фамилии ученика" oninput="setSearch(this.value)">
+        <select id="fGroup" onchange="render()">
+          <option value="">Все группы</option>
+          <option>МЕГЭ-1</option><option>МЕГЭ-2</option><option>ИНФ-2</option>
+        </select>
+        <select id="fOp" onchange="render()" style="display:none">
+          <option value="">Все операции</option>
+          <option value="charge">Начисления</option><option value="pay">Платежи</option>
+          <option value="disc">Скидки</option><option value="ref">Возвраты</option>
+          <option value="corr">Корректировки</option>
+        </select>
+        <button class="chipf" id="fDebt" onclick="toggleDebt()">Только должники</button>
+        <div style="flex:1"></div>
+        <span class="muted" id="listSum"></span>
+      </div>
+
+      <div class="card sec">
+        <div class="sec-h"><h3 id="listTitle">Счета учеников</h3>
+          <div style="flex:1"></div>
+          <button class="btn btn-s" id="btnRemind" onclick="toast('Напоминание отправлено должникам и их представителям')">Напомнить должникам</button></div>
+        <table class="t"><thead><tr id="head"></tr></thead><tbody id="rows"></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" onclick="closeAll()"></div>
+
+<!-- платёж -->
+<div class="modal" id="mPay">
+  <div class="mo-h" id="payTitle">Отметить платёж</div>
+  <div class="mo-b">
+    <div class="fld"><label>Ученик</label>
+      <select id="payWho"></select></div>
+    <div class="row2">
+      <div class="fld"><label>Сумма</label><input type="text" id="paySum" value="7 500"></div>
+      <div class="fld"><label>Дата</label><input type="date" value="2026-09-15"></div>
+    </div>
+    <div class="fld"><label>Способ</label>
+      <select id="payWay">
+        <option>Наличные в кассе</option><option>Банковский перевод</option><option>Онлайн через провайдера</option>
+      </select>
+      <div class="hint2" id="payHint"></div></div>
+    <div class="fld"><label>Основание</label>
+      <select><option>Абонемент за сентябрь</option><option>Занятия сентября (поурочно)</option>
+        <option>Оплата вперёд за два месяца</option></select></div>
+  </div>
+  <div class="mo-f"><button class="btn" onclick="closeAll()">Отмена</button>
+    <button class="btn btn-p" onclick="doPay()">Провести</button></div>
+</div>
+
+<!-- скидка -->
+<div class="modal" id="mDisc">
+  <div class="mo-h">Скидка</div>
+  <div class="mo-b">
+    <div class="fld"><label>Ученик</label><select id="discWho"></select></div>
+    <div class="row2">
+      <div class="fld"><label>Размер</label><input type="text" value="10 %"></div>
+      <div class="fld"><label>Действует</label>
+        <select><option>Постоянно</option><option>Один месяц</option><option>До конца периода</option></select></div>
+    </div>
+    <div class="fld"><label>Причина <span style="color:var(--red)">*</span></label>
+      <select id="discWhy">
+        <option value="">— выберите —</option>
+        <option>Семейная скидка</option><option>Скидка сотруднику</option>
+        <option>Оплата вперёд</option><option>Индивидуальная договорённость</option><option>Другое</option>
+      </select>
+      <div class="hint2">Причина обязательна: скидка меняет сумму к оплате и должна объясняться при разборе.</div></div>
+  </div>
+  <div class="mo-f"><button class="btn" onclick="closeAll()">Отмена</button>
+    <button class="btn btn-p" onclick="doDisc()">Начислить скидку</button></div>
+</div>
+
+<!-- возврат -->
+<div class="modal" id="mRef">
+  <div class="mo-h">Возврат</div>
+  <div class="mo-b">
+    <div class="warnbox">Возврат отменяет уже полученные деньги. Он не отменяет начислений: если ученик перестаёт
+      учиться, сначала отчисление, потом возврат за неиспользованный период.</div>
+    <div class="fld"><label>Ученик</label><select id="refWho"></select></div>
+    <div class="row2">
+      <div class="fld"><label>Сумма</label><input type="text" value="3 750"></div>
+      <div class="fld"><label>Дата</label><input type="date" value="2026-09-15"></div>
+    </div>
+    <div class="fld"><label>Основание <span style="color:var(--red)">*</span></label>
+      <select id="refWhy">
+        <option value="">— выберите —</option>
+        <option>Отчисление до конца оплаченного периода</option>
+        <option>Отмена занятий школой</option>
+        <option>Ошибочный платёж</option>
+        <option>Другое</option>
+      </select></div>
+    <div class="sumbox">
+      <div><span>Оплачено за сентябрь</span><span class="money">7 500 ₽</span></div>
+      <div><span>Использовано занятий</span><span class="money">4 из 8</span></div>
+      <div class="tot"><span>К возврату</span><span class="money">3 750 ₽</span></div>
+    </div>
+  </div>
+  <div class="mo-f"><button class="btn" onclick="closeAll()">Отмена</button>
+    <button class="btn btn-danger" onclick="doRef()">Провести возврат</button></div>
+</div>
+
+<!-- корректировка (сторно) -->
+<div class="modal" id="mCorr">
+  <div class="mo-h">Сторнировать операцию</div>
+  <div class="mo-b">
+    <div class="warnbox">Операции не удаляются и не правятся. Ошибка исправляется обратной операцией — старая
+      остаётся в журнале зачёркнутой, новая ссылается на неё.</div>
+    <div class="sumbox" id="corrWhat"></div>
+    <div class="fld"><label>Причина <span style="color:var(--red)">*</span></label>
+      <select id="corrWhy">
+        <option value="">— выберите —</option>
+        <option>Ошибка в сумме</option><option>Начислено не тому ученику</option>
+        <option>Занятие не состоялось</option><option>Дубль операции</option><option>Другое</option>
+      </select></div>
+    <div class="fld"><label>Комментарий</label><textarea rows="2" placeholder="виден в журнале операций"></textarea></div>
+  </div>
+  <div class="mo-f"><button class="btn" onclick="closeAll()">Отмена</button>
+    <button class="btn btn-danger" onclick="doCorr()">Сторнировать</button></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── демо-данные ──
+   Журнал операций append-only (02-tech §6.6): баланс не хранится, а вычисляется
+   как платежи + скидки − начисления − возвраты. Поэтому здесь нет поля «баланс»:
+   он считается из операций, и это же правило показано на экране. */
+var OP = {
+  charge:{t:'Начисление', c:'charge', sign:-1},
+  pay:   {t:'Платёж',     c:'pay',    sign:+1},
+  disc:  {t:'Скидка',     c:'disc',   sign:+1},
+  ref:   {t:'Возврат',    c:'ref',    sign:-1},
+  corr:  {t:'Корректировка', c:'corr', sign:+1}
+};
+
+var STUDENTS = [
+  {n:'Абрамов Кирилл',  g:'МЕГЭ-1', pay:'абонемент', parent:'Абрамова Е. П.'},
+  {n:'Белова Мария',    g:'МЕГЭ-1', pay:'абонемент', parent:'Белов И. С.'},
+  {n:'Волков Артём',    g:'ИНФ-2',  pay:'поурочно',  parent:'Волкова И. Л.'},
+  {n:'Гусева Дарья',    g:'МЕГЭ-1', pay:'абонемент', parent:'Гусев П. О.'},
+  {n:'Дёмин Илья',      g:'МЕГЭ-2', pay:'абонемент', parent:null},
+  {n:'Ерохина Анна',    g:'МЕГЭ-1', pay:'абонемент', parent:null},
+  {n:'Жуков Матвей',    g:'ИНФ-2',  pay:'поурочно',  parent:'Жукова О. Н.'},
+  {n:'Зайцева Полина',  g:'МЕГЭ-1', pay:'абонемент', parent:'Зайцев Р. К.'}
+];
+
+var OPS = [
+  {d:'01.09', who:'Абрамов Кирилл', t:'charge', sum:7500, base:'абонемент · сентябрь', g:'МЕГЭ-1', by:'система'},
+  {d:'01.09', who:'Белова Мария',   t:'charge', sum:7500, base:'абонемент · сентябрь', g:'МЕГЭ-1', by:'система'},
+  {d:'01.09', who:'Гусева Дарья',   t:'charge', sum:7500, base:'абонемент · сентябрь', g:'МЕГЭ-1', by:'система'},
+  {d:'01.09', who:'Дёмин Илья',     t:'charge', sum:7500, base:'абонемент · сентябрь', g:'МЕГЭ-2', by:'система'},
+  {d:'01.09', who:'Ерохина Анна',   t:'charge', sum:7500, base:'абонемент · сентябрь', g:'МЕГЭ-1', by:'система'},
+  {d:'01.09', who:'Зайцева Полина', t:'charge', sum:7500, base:'абонемент · сентябрь', g:'МЕГЭ-1', by:'система'},
+  {d:'02.09', who:'Зайцева Полина', t:'disc',   sum:3750, base:'скидка сотруднику 50 %', g:'МЕГЭ-1', by:'Считалова О.', why:'скидка сотруднику'},
+  {d:'03.09', who:'Абрамов Кирилл', t:'pay',    sum:7500, base:'онлайн · чек 4021', g:'МЕГЭ-1', by:'провайдер', prov:true},
+  {d:'04.09', who:'Белова Мария',   t:'pay',    sum:7500, base:'банковский перевод', g:'МЕГЭ-1', by:'Считалова О.'},
+  {d:'05.09', who:'Волков Артём',   t:'charge', sum:950,  base:'занятие 05.09 · поурочно', g:'ИНФ-2', by:'система'},
+  {d:'08.09', who:'Волков Артём',   t:'charge', sum:950,  base:'занятие 08.09 · поурочно', g:'ИНФ-2', by:'система'},
+  {d:'09.09', who:'Гусева Дарья',   t:'pay',    sum:7500, base:'онлайн · чек 4033', g:'МЕГЭ-1', by:'провайдер', prov:true},
+  {d:'10.09', who:'Жуков Матвей',   t:'charge', sum:950,  base:'занятие 10.09 · поурочно', g:'ИНФ-2', by:'система'},
+  {d:'10.09', who:'Жуков Матвей',   t:'pay',    sum:2850, base:'наличные в кассе', g:'ИНФ-2', by:'Считалова О.'},
+  {d:'11.09', who:'Волков Артём',   t:'charge', sum:950,  base:'занятие 11.09 · поурочно', g:'ИНФ-2', by:'система'},
+  {d:'12.09', who:'Ерохина Анна',   t:'pay',    sum:7500, base:'онлайн · чек 4048', g:'МЕГЭ-1', by:'провайдер', prov:true},
+  {d:'12.09', who:'Волков Артём',   t:'charge', sum:950,  base:'занятие 12.09 · поурочно', g:'ИНФ-2', by:'система', rev:true},
+  {d:'12.09', who:'Волков Артём',   t:'corr',   sum:950,  base:'сторно начисления 12.09', g:'ИНФ-2', by:'Считалова О.', why:'занятие не состоялось'},
+  {d:'14.09', who:'Дёмин Илья',     t:'pay',    sum:15000, base:'онлайн · чек 4052 · оплата вперёд', g:'МЕГЭ-2', by:'провайдер', prov:true},
+  {d:'15.09', who:'Зайцева Полина', t:'pay',    sum:3750, base:'банковский перевод', g:'МЕГЭ-1', by:'Считалова О.'}
+];
+
+var tab = 0, search = '', onlyDebt = false, PROV = true, corrIdx = -1;
+
+function ini(n){ return n.split(' ').slice(0,2).map(function(w){ return w[0]; }).join(''); }
+function money(v){ return (v < 0 ? '−' : '') + Math.abs(v).toLocaleString('ru-RU') + ' ₽'; }
+function plural(n, one, few, many){
+  var a = n % 10, b = n % 100;
+  return n + ' ' + (a === 1 && b !== 11 ? one : a >= 2 && a <= 4 && (b < 12 || b > 14) ? few : many);
+}
+/* Баланс вычисляется, а не хранится, и считается по всем операциям, включая сторнированные:
+   при append-only ошибочная запись остаётся в журнале, а исправляет её обратная операция.
+   Пометка «сторнировано» — визуальная, из расчёта строку она не выбрасывает, иначе компенсация
+   учлась бы дважды. */
+function balance(name){
+  return OPS.filter(function(o){ return o.who === name; })
+    .reduce(function(a, o){ return a + OP[o.t].sign * o.sum; }, 0);
+}
+function totals(){
+  var t = {charge:0, pay:0, disc:0, ref:0, corr:0};
+  OPS.forEach(function(o){ if(t[o.t] !== undefined) t[o.t] += o.sum; });
+  t.charge -= t.corr;   /* корректировки в демо компенсируют начисления */
+  return t;
+}
+function debtors(){ return STUDENTS.filter(function(s){ return balance(s.n) < 0; }); }
+
+function setProv(v){
+  PROV = v; render();
+  toast(v ? 'С платёжным провайдером: онлайн-оплата, чеки и автоматическое зачисление платежа'
+          : 'Без провайдера: платежи отмечаются вручную, чеков в системе нет');
+}
+function setSearch(v){ search = v; render(); }
+function toggleDebt(){
+  onlyDebt = !onlyDebt;
+  document.getElementById('fDebt').classList.toggle('on', onlyDebt);
+  render();
+}
+function setTab(t){
+  tab = t;
+  document.getElementById('tb0').classList.toggle('on', t === 0);
+  document.getElementById('tb1').classList.toggle('on', t === 1);
+  document.getElementById('fOp').style.display = t === 1 ? '' : 'none';
+  document.getElementById('fDebt').style.display = t === 0 ? '' : 'none';
+  document.getElementById('btnRemind').style.display = t === 0 ? '' : 'none';
+  document.getElementById('listTitle').textContent = t === 0 ? 'Счета учеников' : 'Журнал операций';
+  render();
+}
+
+function render(){
+  var T = totals(), debt = debtors();
+  var debtSum = debt.reduce(function(a, s){ return a + balance(s.n); }, 0);
+  document.getElementById('navCnt').textContent = debt.length;
+  document.getElementById('cAcc').textContent = STUDENTS.length;
+  document.getElementById('cOps').textContent = OPS.length;
+
+  document.getElementById('kpis').innerHTML =
+    kpi('Начислено за месяц', money(T.charge), 'по абонементам и занятиям', '') +
+    kpi('Оплачено', money(T.pay), PROV ? 'из них онлайн ' + money(37500) : 'все платежи отмечены вручную', 'ok') +
+    kpi('Задолженность', money(debtSum), plural(debt.length, 'ученик', 'ученика', 'учеников') + ' с долгом', 'bad') +
+    kpi('Скидки и возвраты', money(T.disc + T.ref), 'скидок ' + money(T.disc) + ' · возвратов ' + money(T.ref), '');
+
+  tab === 0 ? renderAccounts() : renderOps();
+}
+function kpi(lab, big, sub, cls){
+  return '<div class="kpi"><span class="lab">' + lab + '</span>' +
+    '<span class="big ' + (cls || '') + '">' + big + '</span>' +
+    '<span class="sub">' + sub + '</span></div>';
+}
+
+function renderAccounts(){
+  var g = document.getElementById('fGroup').value;
+  var vis = STUDENTS.filter(function(s){
+    if(g && s.g !== g) return false;
+    if(onlyDebt && balance(s.n) >= 0) return false;
+    if(search && s.n.toLowerCase().indexOf(search.toLowerCase()) < 0) return false;
+    return true;
+  });
+
+  document.getElementById('head').innerHTML =
+    '<th style="width:var(--col-92)">№</th>' +
+    '<th style="width:var(--col-300)">Ученик</th>' +
+    '<th style="width:var(--col-160)">Группа</th>' +
+    '<th class="r" style="width:var(--col-160)">Начислено</th>' +
+    '<th class="r" style="width:var(--col-160)">Оплачено</th>' +
+    '<th class="r" style="width:var(--col-110)">Скидки</th>' +
+    '<th class="r" style="width:var(--col-160)">Баланс</th>' +
+    '<th style="width:var(--col-220)">Плательщик</th>' +
+    '<th style="width:var(--col-160)"></th>';
+
+  var sc = 0, sp = 0, sd = 0, sb = 0;
+  document.getElementById('rows').innerHTML = (vis.length ? vis.map(function(s, i){
+    var ch = OPS.filter(function(o){ return o.who === s.n && o.t === 'charge'; })
+      .reduce(function(a, o){ return a + o.sum; }, 0) -
+      OPS.filter(function(o){ return o.who === s.n && o.t === 'corr'; })
+      .reduce(function(a, o){ return a + o.sum; }, 0);
+    /* платежи и скидки разведены: скидка уменьшает долг, но деньгами в кассу не приходит */
+    var pd = OPS.filter(function(o){ return o.who === s.n && o.t === 'pay'; })
+      .reduce(function(a, o){ return a + o.sum; }, 0);
+    var ds = OPS.filter(function(o){ return o.who === s.n && o.t === 'disc'; })
+      .reduce(function(a, o){ return a + o.sum; }, 0);
+    var b = balance(s.n);
+    sc += ch; sp += pd; sd += ds; sb += b;
+    return '<tr class="clickable" onclick="location.href=\'19-account.html\'">' +
+      '<td class="num">' + (i+1) + '</td>' +
+      '<td><div class="who"><span class="av">' + ini(s.n) + '</span><div class="nm">' +
+        '<a href="19-account.html" onclick="event.stopPropagation()">' + s.n + '</a>' +
+        '<small>лицевой счёт</small></div></div></td>' +
+      '<td><a class="link" href="20-group.html#g=0" onclick="event.stopPropagation()">' + s.g + '</a>' +
+        '<div class="num">' + s.pay + '</div></td>' +
+      '<td class="money">' + money(ch) + '</td>' +
+      '<td class="money">' + money(pd) + '</td>' +
+      '<td class="money">' + (ds ? money(ds) : '<span class="zero">—</span>') + '</td>' +
+      '<td class="money ' + (b < 0 ? 'bad' : b > 0 ? 'ok' : 'zero') + '">' + money(b) + '</td>' +
+      '<td>' + (s.parent
+        ? '<a class="link" href="22-people.html#p=0" onclick="event.stopPropagation()">' + s.parent + '</a>'
+        : '<span class="muted">сам ученик</span>') + '</td>' +
+      '<td style="text-align:right">' +
+        '<button class="mini" onclick="event.stopPropagation();openPay(\'' + s.n + '\')">платёж</button>' +
+        '<button class="rowact" onclick="event.stopPropagation();openMore(\'' + s.n + '\')">⋯</button></td></tr>';
+  }).join('') : '<tr><td colspan="9" class="empty">Никто не подошёл под фильтры</td></tr>') +
+  (vis.length ? '<tr class="sum"><td colspan="3">Итого по ' + plural(vis.length, 'ученику', 'ученикам', 'ученикам') + '</td>' +
+    '<td class="money">' + money(sc) + '</td><td class="money">' + money(sp) + '</td>' +
+    '<td class="money">' + money(sd) + '</td>' +
+    '<td class="money ' + (sb < 0 ? 'bad' : 'ok') + '">' + money(sb) + '</td><td colspan="2"></td></tr>' : '');
+
+  document.getElementById('listSum').innerHTML = vis.length + ' из ' + STUDENTS.length +
+    ' · долг ' + money(debtors().reduce(function(a, s){ return a + balance(s.n); }, 0));
+}
+
+function renderOps(){
+  var f = document.getElementById('fOp').value, g = document.getElementById('fGroup').value;
+  var vis = OPS.filter(function(o){
+    if(f && o.t !== f) return false;
+    if(g && o.g !== g) return false;
+    if(search && o.who.toLowerCase().indexOf(search.toLowerCase()) < 0) return false;
+    return true;
+  }).slice().reverse();
+
+  document.getElementById('head').innerHTML =
+    '<th style="width:var(--col-110)">Дата</th>' +
+    '<th style="width:var(--col-300)">Ученик</th>' +
+    '<th style="width:var(--col-160)">Операция</th>' +
+    '<th>Основание</th>' +
+    '<th style="width:var(--col-160)">Группа</th>' +
+    '<th class="r" style="width:var(--col-160)">Сумма</th>' +
+    '<th style="width:var(--col-220)">Кто провёл</th>' +
+    '<th style="width:var(--col-110)"></th>';
+
+  document.getElementById('rows').innerHTML = vis.length ? vis.map(function(o){
+    var i = OPS.indexOf(o), d = OP[o.t];
+    return '<tr' + (o.rev ? ' class="rev"' : '') + '>' +
+      '<td class="dt">' + o.d + '</td>' +
+      '<td><a class="link" href="19-account.html">' + o.who + '</a></td>' +
+      '<td><span class="op ' + d.c + '">' + d.t + '</span></td>' +
+      '<td>' + o.base + (o.why ? '<div class="num">причина: ' + o.why + '</div>' : '') +
+        (o.rev ? '<div class="num">сторнировано</div>' : '') + '</td>' +
+      '<td>' + o.g + '</td>' +
+      '<td class="money ' + (d.sign > 0 ? 'ok' : '') + '">' + (d.sign > 0 ? '+' : '−') + money(o.sum) + '</td>' +
+      '<td>' + o.by + (o.prov && !PROV ? ' <span class="badge b-gray">архив</span>' : '') + '</td>' +
+      '<td style="text-align:right">' + (o.rev || o.t === 'corr' ? ''
+        : '<button class="mini" onclick="openCorr(' + i + ')">сторно</button>') + '</td></tr>';
+  }).join('') : '<tr><td colspan="8" class="empty">Операций нет</td></tr>';
+
+  var T = totals();
+  document.getElementById('listSum').innerHTML = vis.length + ' из ' + OPS.length +
+    ' · начислено ' + money(T.charge) + ' · оплачено ' + money(T.pay);
+}
+
+/* ── операции ── */
+function fillWho(id, pick){
+  document.getElementById(id).innerHTML = STUDENTS.map(function(s){
+    return '<option' + (pick === s.n ? ' selected' : '') + '>' + s.n + ' · ' + s.g +
+      ' · баланс ' + money(balance(s.n)) + '</option>';
+  }).join('');
+  if(pick) document.getElementById(id).value = pick + ' · ' +
+    STUDENTS.filter(function(s){ return s.n === pick; })[0].g + ' · баланс ' + money(balance(pick));
+}
+function openPay(who){
+  fillWho('payWho', who);
+  document.getElementById('payTitle').textContent = who ? 'Платёж: ' + who : 'Отметить платёж';
+  document.getElementById('payWay').innerHTML = PROV
+    ? '<option>Онлайн через провайдера</option><option>Наличные в кассе</option><option>Банковский перевод</option>'
+    : '<option>Наличные в кассе</option><option>Банковский перевод</option>';
+  document.getElementById('payHint').textContent = PROV
+    ? 'Онлайн-платёж приходит сам и создаёт чек; вручную отмечают только офлайн-оплату.'
+    : 'Без платёжного модуля все платежи отмечаются вручную: система хранит факт, чек выдаёт школа.';
+  show('mPay');
+}
+function openMore(who){
+  fillWho('discWho', who); fillWho('refWho', who);
+  toast('Действия по счёту: скидка, возврат, корректировка');
+  show('mDisc');
+}
+function openCorr(i){
+  corrIdx = i;
+  var o = OPS[i], d = OP[o.t];
+  document.getElementById('corrWhat').innerHTML =
+    '<div><span>Операция</span><span>' + d.t + ' · ' + o.d + '</span></div>' +
+    '<div><span>Ученик</span><span>' + o.who + '</span></div>' +
+    '<div><span>Основание</span><span>' + o.base + '</span></div>' +
+    '<div class="tot"><span>Сумма</span><span class="money">' + money(o.sum) + '</span></div>';
+  document.getElementById('corrWhy').value = '';
+  show('mCorr');
+}
+
+function doPay(){
+  var who = document.getElementById('payWho').value.split(' · ')[0];
+  var sum = parseInt(document.getElementById('paySum').value.replace(/\D/g, ''), 10) || 0;
+  OPS.push({d:'15.09', who:who, t:'pay', sum:sum, base:document.getElementById('payWay').value,
+            g:STUDENTS.filter(function(s){ return s.n === who; })[0].g, by:'Считалова О.'});
+  closeAll(); render();
+  toast('Платёж проведён: ' + who + ' · ' + money(sum) + ' · баланс ' + money(balance(who)));
+}
+function doDisc(){
+  var why = document.getElementById('discWhy').value;
+  if(!why){ toast('Укажите причину — без неё скидка не проводится'); return; }
+  var who = document.getElementById('discWho').value.split(' · ')[0];
+  OPS.push({d:'15.09', who:who, t:'disc', sum:750, base:'скидка 10 %',
+            g:STUDENTS.filter(function(s){ return s.n === who; })[0].g, by:'Считалова О.', why:why.toLowerCase()});
+  closeAll(); render();
+  toast('Скидка начислена: ' + who + ' · баланс ' + money(balance(who)));
+}
+function doRef(){
+  var why = document.getElementById('refWhy').value;
+  if(!why){ toast('Укажите основание — без него возврат не проводится'); return; }
+  var who = document.getElementById('refWho').value.split(' · ')[0];
+  OPS.push({d:'15.09', who:who, t:'ref', sum:3750, base:'возврат',
+            g:STUDENTS.filter(function(s){ return s.n === who; })[0].g, by:'Считалова О.', why:why.toLowerCase()});
+  closeAll(); render();
+  toast('Возврат проведён: ' + who + ' · ' + money(3750) + ' · баланс ' + money(balance(who)));
+}
+function doCorr(){
+  var why = document.getElementById('corrWhy').value;
+  if(!why){ toast('Укажите причину — без неё корректировка не проводится'); return; }
+  var o = OPS[corrIdx];
+  o.rev = true;
+  OPS.push({d:'15.09', who:o.who, t:'corr', sum:o.sum, base:'сторно ' + OP[o.t].t.toLowerCase() + ' от ' + o.d,
+            g:o.g, by:'Считалова О.', why:why.toLowerCase()});
+  closeAll(); render();
+  toast('Сторнировано: исходная операция осталась в журнале, баланс пересчитан');
+}
+
+function show(id){ document.getElementById('scrim').classList.add('on'); document.getElementById(id).classList.add('on'); }
+function closeAll(){
+  document.getElementById('scrim').classList.remove('on');
+  ['mPay','mDisc','mRef','mCorr'].forEach(function(id){ document.getElementById(id).classList.remove('on'); });
+}
+
+var tt;
+function toast(m){
+  var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3600);
+}
+
+setTab(location.hash.indexOf('ops') >= 0 ? 1 : 0);
+</script>
+</body>
+</html>

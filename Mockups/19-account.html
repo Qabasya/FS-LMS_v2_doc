@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лицевой счёт — FS-LMS 2.0</title>
+<link rel="stylesheet" href="_shared.css">
+<script src="_tip.js"></script>
+<script src="_nav.js"></script>
+<style>
+  .body{flex:1;overflow:auto;padding:var(--sp-16) var(--sp-20) var(--user-h)}
+  .card{background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);box-shadow:var(--sh);margin-bottom:var(--sp-12)}
+  .sec-h{display:flex;align-items:center;gap:var(--sp-12);padding:var(--sp-12) var(--sp-16);
+    border-bottom:1px solid var(--gray2);flex-wrap:wrap}
+  .sec-h h3{margin:0;font-size:var(--fs-14)}
+
+  .cols{display:grid;grid-template-columns:1fr var(--col-300);gap:var(--sp-12);align-items:start}
+
+  /* баланс — первое, что нужно понять: должен я или нет */
+  .bal{padding:var(--sp-20);display:flex;gap:var(--sp-20);align-items:center;flex-wrap:wrap}
+  .bal .sum{font-size:var(--fs-32);font-weight:700;line-height:1.1}
+  .bal .sum.debt{color:#c92a2a}
+  .bal .sum.ok{color:#2b8a3e}
+  .bal .t{flex:1;min-width:200px}
+  .bal .lab{font-size:var(--fs-12);color:var(--gray6);font-weight:600}
+  .bal .note{font-size:var(--fs-14);color:var(--gray7);margin-top:var(--sp-6)}
+  .bal .acts{display:flex;gap:var(--sp-8);flex-wrap:wrap}
+  .warnbox{background:var(--orange-l);border:1px solid #ffd8a8;color:#d9480f;border-radius:var(--r-8);
+    padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);margin:0 var(--sp-20) var(--sp-20)}
+
+  /* лента операций */
+  table.t{width:100%;border-collapse:collapse;font-size:var(--fs-14)}
+  table.t th{text-align:left;font-size:var(--fs-12);letter-spacing:.04em;text-transform:uppercase;color:var(--gray5);
+    font-weight:700;padding:var(--sp-8) var(--sp-16);border-bottom:1px solid var(--gray2);white-space:nowrap}
+  table.t td{padding:var(--sp-12) var(--sp-16);border-bottom:1px solid var(--gray1);vertical-align:middle}
+  table.t tr:last-child td{border-bottom:0}
+  table.t tbody tr:hover{background:var(--gray0)}
+  .dt{font-variant-numeric:tabular-nums;color:var(--gray7);white-space:nowrap}
+  .amt{font-variant-numeric:tabular-nums;font-weight:700;text-align:right;white-space:nowrap}
+  .amt.in{color:#2b8a3e} .amt.out{color:var(--gray9)}
+  .kind{display:inline-flex;align-items:center;gap:var(--sp-6);font-size:var(--fs-12);
+    padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4)}
+  .k-charge{background:var(--gray1);color:var(--gray7)}
+  .k-pay{background:var(--green-l);color:#2b8a3e}
+  .k-disc{background:var(--violet-l);color:#5f3dc4}
+  .k-ref{background:var(--orange-l);color:#d9480f}
+  .doc{color:var(--blue);cursor:pointer;font-size:var(--fs-12)}
+  .doc:hover{text-decoration:underline}
+
+  /* правая колонка */
+  .row{display:flex;justify-content:space-between;gap:var(--sp-12);padding:var(--sp-12) var(--sp-16);
+    border-top:1px solid var(--gray1);font-size:var(--fs-14)}
+  .row:first-of-type{border-top:0}
+  .row b{font-variant-numeric:tabular-nums}
+  .row .k{color:var(--gray6);font-size:var(--fs-12)}
+  .plan{padding:var(--sp-16);font-size:var(--fs-14);line-height:1.6;color:var(--gray7)}
+  .plan b{display:block;font-size:var(--fs-14);color:var(--gray9)}
+
+  .filters{display:flex;gap:var(--sp-8);align-items:center;flex-wrap:wrap}
+  .filters select{border:1px solid var(--gray3);border-radius:var(--r-8);padding:var(--sp-6) var(--sp-12);font:inherit;font-size:var(--fs-14)}
+  .pick{display:flex;align-items:center;gap:var(--sp-8);height:38px;padding:0 var(--sp-12);
+    border:1px solid var(--gray3);border-radius:var(--r-8);font-size:var(--fs-14);color:var(--gray7);background:#fff;cursor:pointer}
+  .pick:hover{background:var(--gray0)}
+  .empty{padding:var(--sp-32) var(--sp-16);text-align:center;color:var(--gray6);font-size:var(--fs-14)}
+  .demo{display:flex;align-items:center;gap:var(--sp-6);font-size:var(--fs-12);color:var(--gray6)}
+  @media (max-width:1100px){ .cols{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-top">
+      <div class="logo">ШБ</div>
+      <div style="flex:1"><b>Шаг в будущее</b><small id="sideSub">Личный кабинет</small></div>
+      <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')">⟨</button>
+    </div>
+    <nav class="nav">
+      <h4>Меню</h4>
+      <a href="11-student-home.html"><i class="ic">◱</i><span>Главная</span></a>
+      <a href="18-student-courses.html"><i class="ic">◈</i><span>Мои курсы</span></a>
+      <a href="16-student-calendar.html"><i class="ic">◷</i><span>Календарь</span></a>
+      <a href="17-student-results.html"><i class="ic">▦</i><span>Результаты</span></a>
+      <a href="#" class="on"><i class="ic">₽</i><span>Лицевой счёт</span></a>
+    </nav>
+    <div class="side-user">
+      <div class="ava" id="ava" style="background:var(--blue)">АК</div>
+      <div style="flex:1"><b style="font-size:var(--fs-14);display:block" id="userName">Абрамов Кирилл</b>
+        <small style="font-size:var(--fs-12);color:var(--gray6)" id="userRole">Ученик</small></div>
+      <span style="color:var(--gray5)">⚙</span>
+    </div>
+  </aside>
+
+  <div class="app">
+    <header class="head">
+      <h1>Лицевой счёт</h1>
+      <button class="pick" id="childPick" onclick="toast('Второй ребёнок: Абрамова Полина · МЕГЭ-2')" style="display:none">
+        <span style="width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;font-size:9px;display:grid;place-items:center;font-weight:700">АК</span>
+        Кирилл <span style="color:var(--gray5)">▾</span></button>
+      <div class="sp"></div>
+      <label class="demo">роль <i>(демо)</i>
+        <select id="role" onchange="render()" style="padding:var(--sp-4) var(--sp-8);font-size:var(--fs-12)">
+          <option value="student">Ученик</option>
+          <option value="parent">Представитель</option>
+        </select></label>
+      <label class="demo">баланс <i>(демо)</i>
+        <select id="state" onchange="render()" style="padding:var(--sp-4) var(--sp-8);font-size:var(--fs-12)">
+          <option value="debt">есть долг</option>
+          <option value="ok">оплачено</option>
+        </select></label>
+      <span style="color:var(--gray5)">🔔</span>
+    </header>
+
+    <div class="body">
+      <div class="card" id="balCard"></div>
+
+      <div class="cols">
+        <div class="card">
+          <div class="sec-h">
+            <h3>Операции</h3>
+            <span class="muted" id="opsSum" style="font-size:var(--fs-12)"></span>
+            <div style="flex:1"></div>
+            <div class="filters">
+              <select id="fKind" onchange="render()">
+                <option value="">Все операции</option>
+                <option value="charge">начисления</option>
+                <option value="pay">платежи</option>
+                <option value="disc">скидки</option>
+                <option value="ref">возвраты</option>
+              </select>
+              <select onchange="toast('Период: '+this.value)">
+                <option>За всё время</option><option>За 3 месяца</option><option>За месяц</option>
+              </select>
+            </div>
+          </div>
+          <table class="t"><thead><tr>
+            <th style="width:var(--col-110)">Дата</th>
+            <th style="width:var(--col-160)">Операция</th>
+            <th>За что</th>
+            <th style="width:var(--col-160)">Документ</th>
+            <th style="width:var(--col-160)">Сумма</th>
+          </tr></thead><tbody id="ops"></tbody></table>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="sec-h"><h3>Итоги</h3></div>
+            <div id="totals"></div>
+          </div>
+          <div class="card">
+            <div class="sec-h"><h3>Как считается оплата</h3></div>
+            <div class="plan" id="plan"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" onclick="closePay()"></div>
+<div class="modal" id="mPay">
+  <div class="mo-h">Оплата обучения</div>
+  <div class="mo-b">
+    <div class="fld"><label>Сумма</label>
+      <input type="text" value="4 500 ₽" style="width:100%;border:1px solid var(--gray3);border-radius:var(--r-8);padding:var(--sp-8) var(--sp-12);font:inherit;font-size:var(--fs-16)">
+      <div class="muted" style="font-size:var(--fs-12);margin-top:var(--sp-6)">Можно оплатить часть — остаток останется на счёте как долг.</div></div>
+    <div class="fld" style="margin-top:var(--sp-16)"><label>Способ</label>
+      <select style="width:100%;border:1px solid var(--gray3);border-radius:var(--r-8);padding:var(--sp-8) var(--sp-12);font:inherit;font-size:var(--fs-14)">
+        <option>Банковская карта</option><option>СБП</option>
+      </select></div>
+    <div class="muted" style="font-size:var(--fs-12);margin-top:var(--sp-16);line-height:1.5">
+      После оплаты чек придёт на почту и появится в этой таблице. Оплата обрабатывается платёжным провайдером — карта в системе не хранится.</div>
+  </div>
+  <div class="mo-f">
+    <button class="btn" onclick="closePay()">Отмена</button>
+    <button class="btn btn-p" onclick="closePay();toast('Переход к платёжному провайдеру')">Оплатить</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* Лицевой счёт кабинета — у ученика и представителя один экран.
+   Разница только в правах: представитель платит, ученик чаще только смотрит (01-product §3.7–3.8). */
+var OPS = [
+  {d:'12.08', k:'charge', n:'Занятие 12.08 · МЕГЭ-1', doc:'', sum:-1500},
+  {d:'11.08', k:'charge', n:'Занятие 11.08 · МЕГЭ-1', doc:'', sum:-1500},
+  {d:'10.08', k:'pay',    n:'Оплата картой ····6411', doc:'Чек № 4821', sum:12000},
+  {d:'08.08', k:'charge', n:'Занятие 08.08 · МЕГЭ-1', doc:'', sum:-1500},
+  {d:'06.08', k:'disc',   n:'Скидка «второй ребёнок» · 10%', doc:'Приказ № 14', sum:1200},
+  {d:'04.08', k:'charge', n:'Занятие 04.08 · МЕГЭ-1', doc:'', sum:-1500},
+  {d:'02.08', k:'charge', n:'Индивидуальное занятие 02.08', doc:'', sum:-2000},
+  {d:'01.08', k:'charge', n:'Абонемент · август · МЕГЭ-1', doc:'Договор № 219', sum:-9000},
+  {d:'28.07', k:'ref',    n:'Возврат за отменённое занятие', doc:'Заявление от 27.07', sum:1500},
+  {d:'25.07', k:'pay',    n:'Оплата СБП', doc:'Чек № 4713', sum:8000}
+];
+var NAMES = {charge:'Начисление', pay:'Платёж', disc:'Скидка', ref:'Возврат'};
+
+function money(v){
+  var s = Math.abs(v).toLocaleString('ru-RU');
+  return (v > 0 ? '+' : v < 0 ? '−' : '') + s + ' ₽';
+}
+
+function render(){
+  var parent = document.getElementById('role').value === 'parent';
+  var debt = document.getElementById('state').value === 'debt';
+
+  /* представитель: свой профиль в сайдбаре и переключатель детей в шапке */
+  document.getElementById('userName').textContent = parent ? 'Абрамова Елена' : 'Абрамов Кирилл';
+  document.getElementById('userRole').textContent = parent ? 'Представитель' : 'Ученик';
+  document.getElementById('ava').textContent = parent ? 'АЕ' : 'АК';
+  document.getElementById('ava').style.background = parent ? 'var(--violet)' : 'var(--blue)';
+  document.getElementById('childPick').style.display = parent ? '' : 'none';
+  document.getElementById('sideSub').textContent = parent ? 'Кабинет представителя' : 'Личный кабинет';
+
+  var bal = debt ? -4500 : 3200;
+
+  /* баланс */
+  document.getElementById('balCard').innerHTML =
+    '<div class="bal">' +
+      '<div class="t"><div class="lab">' + (debt ? 'К оплате' : 'Баланс счёта') + '</div>' +
+        '<div class="sum ' + (debt ? 'debt' : 'ok') + '">' + money(bal) + '</div>' +
+        '<div class="note">' + (debt
+          ? 'Долг с 08 августа. Ближайшее начисление — 15 августа, 1 500 ₽ за занятие.'
+          : 'Переплата пойдёт в счёт следующих занятий. Ближайшее начисление — 15 августа, 1 500 ₽.') + '</div></div>' +
+      '<div class="acts">' +
+        '<button class="btn btn-p" onclick="openPay()">Оплатить</button>' +
+        '<button class="btn" onclick="toast(\'Квитанция сформирована — её можно распечатать или оплатить в банке\')">Квитанция</button>' +
+      '</div>' +
+    '</div>' +
+    (debt ? '<div class="warnbox"><b>Доступ к занятиям пока открыт.</b> Школа может ограничить доступ при задержке оплаты — уточните условия в договоре.</div>' : '');
+
+  /* операции */
+  var fK = document.getElementById('fKind').value;
+  var list = OPS.filter(function(o){ return !fK || o.k === fK; });
+  var paid = OPS.filter(function(o){ return o.k === 'pay'; }).reduce(function(a, o){ return a + o.sum; }, 0);
+  var charged = OPS.filter(function(o){ return o.k === 'charge'; }).reduce(function(a, o){ return a - o.sum; }, 0);
+
+  document.getElementById('opsSum').textContent = list.length + ' из ' + OPS.length;
+  document.getElementById('ops').innerHTML = list.length ? list.map(function(o){
+    return '<tr><td class="dt">' + o.d + '</td>' +
+      '<td><span class="kind k-' + o.k + '">' + NAMES[o.k] + '</span></td>' +
+      '<td>' + o.n + '</td>' +
+      '<td>' + (o.doc ? '<span class="doc" onclick="toast(\'Открыт документ: ' + o.doc + '\')">' + o.doc + '</span>'
+                      : '<span class="muted">—</span>') + '</td>' +
+      '<td class="amt ' + (o.sum > 0 ? 'in' : 'out') + '">' + money(o.sum) + '</td></tr>';
+  }).join('') : '<tr><td colspan="5" class="empty">Операций этого типа не было</td></tr>';
+
+  /* итоги */
+  document.getElementById('totals').innerHTML =
+    '<div class="row"><span>Начислено<div class="k">за всё время</div></span><b>' + charged.toLocaleString('ru-RU') + ' ₽</b></div>' +
+    '<div class="row"><span>Оплачено<div class="k">2 платежа</div></span><b>' + paid.toLocaleString('ru-RU') + ' ₽</b></div>' +
+    '<div class="row"><span>Скидки и возвраты<div class="k">2 операции</div></span><b>2 700 ₽</b></div>' +
+    '<div class="row"><span>' + (debt ? 'Долг' : 'Остаток') + '</span><b class="' + (debt ? 'amt out' : 'amt in') + '" style="color:' +
+      (debt ? '#c92a2a' : '#2b8a3e') + '">' + money(bal) + '</b></div>';
+
+  /* схема оплаты — объясняем, откуда берутся суммы */
+  document.getElementById('plan').innerHTML =
+    '<b>Поурочная оплата</b>' +
+    'Начисление появляется за каждое проведённое занятие — 1 500 ₽. Перенос занятия начисление сохраняет, отмена — аннулирует.' +
+    '<b style="margin-top:var(--sp-12)">Скидки</b>' +
+    'Действующая скидка 10% («второй ребёнок») применяется к начислениям автоматически.' +
+    (parent ? '<b style="margin-top:var(--sp-12)">Кто платит</b>Счёт привязан к ученику, оплачивать может представитель — оплата видна обоим.' : '');
+}
+
+function openPay(){
+  document.getElementById('scrim').classList.add('on');
+  document.getElementById('mPay').classList.add('on');
+}
+function closePay(){
+  document.getElementById('scrim').classList.remove('on');
+  document.getElementById('mPay').classList.remove('on');
+}
+var tt;
+function toast(m){ var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3200); }
+render();
+</script>
+</body>
+</html>

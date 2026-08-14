@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Проверка работ — FS-LMS 2.0</title>
 <link rel="stylesheet" href="_shared.css">
+<script src="_nav.js"></script>
 <style>
   .tabs{background:#fff;border-bottom:1px solid var(--gray2);padding:0 var(--sp-20);display:flex;gap:var(--sp-4);flex:none}
   .tabs button{border:0;background:none;padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);color:var(--gray6);border-bottom:2px solid transparent}
@@ -102,7 +103,7 @@
       <div style="flex:1"><b>Шаг в будущее</b><small>Управление</small></div>
       <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')">⟨</button>
     </div>
-    <div class="switch"><button>Обучение</button><button class="on">Управление</button></div>
+    <div class="switch"><a href="11-student-home.html" title="Пространство «Обучение»: свои курсы и учёба">Обучение</a><button class="on">Управление</button></div>
     <nav class="nav">
       <h4>Моя работа</h4>
       <a href="#"><i class="ic">◱</i><span>Главная</span></a>
@@ -510,7 +511,26 @@ function startFlow(){
 var tt;
 function toast(m){ var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
   clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3800); }
-render();
+
+/* адрес карточки: 05-review.html#sub=7 или #stu=Абрамов%20Кирилл — со страницы работы
+   и из журнала открывается сразу нужная сдача, а не общая очередь */
+function applyHash(){
+  var m = location.hash.match(/(?:^|[#&])sub=(\d+)/);
+  var s = m ? SUBS.filter(function(x){ return x.id === +m[1]; })[0] : null;
+  if(!s){
+    var n = location.hash.match(/(?:^|[#&])stu=([^&]+)/);
+    if(n){
+      var name = decodeURIComponent(n[1]);
+      s = SUBS.filter(function(x){ return x.name === name && ['new','late'].indexOf(x.state) >= 0; })[0]
+        || SUBS.filter(function(x){ return x.name === name; })[0];
+      if(!s) toast('Сдача ученика «'+name+'» не найдена — открыта общая очередь');
+    }
+  }
+  if(s){ tab = ['new','late'].indexOf(s.state) >= 0 ? 0 : (s.state === 'confirm' ? 1 : 2); openSub(s.id); return true; }
+  return false;
+}
+addEventListener('hashchange', applyHash);
+if(!applyHash()) render();
 </script>
 </body>
 </html>

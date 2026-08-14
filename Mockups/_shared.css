@@ -44,13 +44,16 @@ button{font:inherit;cursor:pointer}
 
 /* сайдбар «Управления» */
 .side{width:236px;flex:none;background:#fff;border-right:1px solid var(--gray2);display:flex;flex-direction:column;transition:width .16s}
-.side-top{padding:var(--sp-16) var(--sp-16);border-bottom:1px solid var(--gray2);display:flex;gap:var(--sp-12);align-items:center;min-height:var(--head-h)}
+.side-top{padding:0 var(--sp-16);border-bottom:1px solid var(--gray2);display:flex;gap:var(--sp-12);
+  align-items:center;height:var(--head-h);flex:none}
 .logo{width:34px;height:34px;border-radius:var(--r-8);background:linear-gradient(135deg,#4dabf7,#228be6);color:#fff;display:grid;place-items:center;font-weight:700;font-size:var(--fs-12);flex:none}
 .side-top b{display:block;font-size:var(--fs-14);line-height:1.2}
 .side-top small{font-size:var(--fs-12);color:var(--gray6)}
 .switch{margin:var(--sp-12) var(--sp-12) var(--sp-4);display:flex;background:var(--gray1);border-radius:var(--r-6);padding:var(--sp-4)}
-.switch button{flex:1;border:0;background:none;padding:var(--sp-6);border-radius:var(--r-4);font-size:var(--fs-14);color:var(--gray7)}
-.switch button.on{background:#fff;box-shadow:var(--sh);font-weight:600;color:var(--gray9)}
+.switch button,.switch a{flex:1;border:0;background:none;padding:var(--sp-6);border-radius:var(--r-4);
+  font-size:var(--fs-14);color:var(--gray7);text-align:center;text-decoration:none;cursor:pointer}
+.switch a:hover,.switch button:not(.on):hover{background:var(--gray2);color:var(--gray9)}
+.switch .on{background:#fff;box-shadow:var(--sh);font-weight:600;color:var(--gray9);cursor:default}
 .nav{flex:1;overflow:auto;padding:var(--sp-8) var(--sp-12) var(--sp-16)}
 .nav h4{font-size:var(--fs-12);letter-spacing:.06em;text-transform:uppercase;color:var(--gray5);margin:var(--sp-16) var(--sp-8) var(--sp-6);font-weight:600}
 .nav a{display:flex;gap:var(--sp-12);align-items:center;padding:var(--sp-8) var(--sp-12);border-radius:var(--r-6);color:var(--gray7);text-decoration:none;font-size:var(--fs-14)}
@@ -71,8 +74,10 @@ button{font:inherit;cursor:pointer}
 .side.collapsed .collapse-btn{transform:rotate(180deg)}
 
 /* шапка экрана */
-.head{background:#fff;border-bottom:1px solid var(--gray2);padding:var(--sp-12) var(--sp-20);display:flex;align-items:center;gap:var(--sp-24);
-  flex:none;flex-wrap:wrap;min-height:var(--head-h)}
+.head{background:#fff;border-bottom:1px solid var(--gray2);padding:0 var(--sp-20);display:flex;align-items:center;gap:var(--sp-24);
+  flex:none;flex-wrap:nowrap;height:var(--head-h);overflow-x:auto}
+.head > *{flex:none}
+.head > :first-child{min-width:0}
 .head h1{margin:0;font-size:var(--fs-16)}
 .crumbs{font-size:var(--fs-12);color:var(--gray6)}
 .sp{flex:1}
@@ -146,3 +151,14 @@ select,input[type=text],input[type=date],input[type=number]{border:1px solid var
 .tipbox .a.bad span:last-child{color:#ffa8a8}
 .tipbox .a.good span:last-child{color:#b2f2bb}
 .tipbox .note{margin-top:8px;padding-top:8px;border-top:1px solid #495057;color:#adb5bd;font-size:var(--fs-12)}
+
+/* Ссылки-элементы интерфейса. Переходы сделаны через <a href>, а не onclick,
+   чтобы работали средняя кнопка, Ctrl/Cmd+клик и «Открыть в новой вкладке» (см. sameTab в _nav.js).
+   Эти правила возвращают ссылке вид того элемента, которым она притворяется. */
+a.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-6);
+  text-decoration:none;cursor:pointer;white-space:nowrap}
+a.as-row{color:inherit;text-decoration:none;display:flex;cursor:pointer}
+a.as-text{color:inherit;text-decoration:none}
+/* выключенное действие у ссылки-кнопки: <a> не понимает disabled,
+   поэтому представителю действия ученика гасим классом (см. applyRole) */
+a.btn.is-off{pointer-events:none;background:var(--gray1);border-color:var(--gray2);color:var(--gray5);opacity:.75}

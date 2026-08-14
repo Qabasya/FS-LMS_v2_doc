@@ -6,6 +6,7 @@
 <title>Работа по группе — FS-LMS 2.0</title>
 <link rel="stylesheet" href="_shared.css">
 <script src="_tip.js"></script>
+<script src="_nav.js"></script>
 <style>
   :root{ --w-name:var(--col-300); --w-cell:36px; --w-sc:var(--col-110); --w-st:var(--col-220);
          /* фактические ширины: свободное место делится поровну между всеми колонками —
@@ -45,7 +46,7 @@
   .stu-in .n{color:var(--gray5);font-size:var(--fs-12);min-width:16px}
   .stu-in .av{width:26px;height:26px;border-radius:50%;background:var(--blue-l);color:var(--blue);display:grid;
     place-items:center;font-size:var(--fs-12);font-weight:700;flex:none}
-  .stu-in .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+  .stu-in .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;color:inherit;text-decoration:none}
   .stu-in .nm:hover{color:var(--blue);text-decoration:underline}
 
   th.col{width:var(--w-cell-run);min-width:var(--w-cell-run);max-width:var(--w-cell-run)}
@@ -100,7 +101,7 @@
   .pk .lead{color:var(--gray6);font-size:var(--fs-14);margin:0 0 var(--sp-20)}
   .pk-f{display:flex;gap:var(--sp-8);margin-bottom:var(--sp-16);flex-wrap:wrap}
   .pk-list{border:1px solid var(--gray2);border-radius:var(--r-8);overflow:hidden}
-  .pk-row{display:flex;gap:var(--sp-12);align-items:center;padding:var(--sp-12) var(--sp-16);
+  .pk-row{display:flex;gap:var(--sp-12);align-items:center;padding:var(--sp-12) var(--sp-16);color:inherit;text-decoration:none;box-sizing:border-box;
     border-top:1px solid var(--gray1);cursor:pointer;font-size:var(--fs-14);width:100%;background:#fff;
     border-left:0;border-right:0;border-bottom:0;text-align:left}
   .pk-row:first-child{border-top:0}
@@ -109,6 +110,7 @@
   .pk-row .sub{font-size:var(--fs-12);color:var(--gray6)}
   .wrapnote{padding:var(--sp-12) var(--sp-20);font-size:var(--fs-12);color:var(--gray6);border-top:1px solid var(--gray1);display:flex;gap:var(--sp-12);align-items:center;flex:none}
   .demo{display:flex;align-items:center;gap:var(--sp-8);font-size:var(--fs-12);color:var(--gray6)}
+  .crumbs .link{color:var(--blue);text-decoration:none} .crumbs .link:hover{text-decoration:underline}
 </style>
 </head>
 <body>
@@ -119,7 +121,7 @@
       <div style="flex:1"><b>Шаг в будущее</b><small>Управление</small></div>
       <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')">⟨</button>
     </div>
-    <div class="switch"><button>Обучение</button><button class="on">Управление</button></div>
+    <div class="switch"><a href="11-student-home.html" title="Пространство «Обучение»: свои курсы и учёба">Обучение</a><button class="on">Управление</button></div>
     <nav class="nav">
       <h4>Моя работа</h4>
       <a href="#"><i class="ic">◱</i><span>Главная</span></a>
@@ -142,7 +144,7 @@
   <div class="app">
     <header class="head">
       <div>
-        <div class="crumbs ctx">Журнал · МЕГЭ-1 · Математика · Урок 4 «Системы уравнений»</div>
+        <div class="crumbs ctx">Журнал · <a class="link" href="20-group.html#g=0">МЕГЭ-1</a> · Математика · Урок 4 «Системы уравнений»</div>
         <h1 id="hTitle">СР «Системы уравнений»</h1>
       </div>
       <div class="sp"></div>
@@ -152,7 +154,7 @@
           <option>6</option><option>12</option><option>20</option><option selected>27</option><option>40</option>
         </select></label>
       <span class="muted ctx" id="hSum">—</span>
-      <button class="btn ctx" id="btnFlow" onclick="location.href='05-review.html'">Проверять подряд</button>
+      <a class="btn ctx" id="btnFlow" href="05-review.html">Проверять подряд</a>
       <button class="btn ctx" onclick="openPicker()">Другая работа</button>
       <a class="btn ctx" href="08-lesson.html" style="text-decoration:none">К уроку</a>
     </header>
@@ -241,29 +243,34 @@ function build(n){
 }
 
 /* ── экран выбора работы ── */
+/* названия работ те же, что в сводке по ученику (07-student) — по ним экраны и ссылаются друг на друга */
 var WORKS_LIST = [
-  {l:'ДЗ', name:'Проценты и пропорции',  lesson:'Урок 2', d:'07.09', n:4,  max:5},
-  {l:'СР', name:'Системы уравнений',     lesson:'Урок 4', d:'11.09', n:6,  max:10},
-  {l:'ДЗ', name:'Системы уравнений',     lesson:'Урок 4', d:'14.09', n:4,  max:5},
-  {l:'КР', name:'Неравенства',           lesson:'Урок 6', d:'18.09', n:8,  max:20, fin:true},
-  {l:'СР', name:'Функции и графики',     lesson:'Урок 7', d:'22.09', n:6,  max:10},
-  {l:'ДЗ', name:'Степени и корни',       lesson:'Урок 8', d:'28.09', n:4,  max:5}
+  {l:'ДЗ', name:'Проценты: базовые задачи',       lesson:'Урок 2', d:'07.09', n:4,  max:5},
+  {l:'СР', name:'Системы: два способа решения',   lesson:'Урок 4', d:'11.09', n:6,  max:10},
+  {l:'ДЗ', name:'Системы: тренировка',            lesson:'Урок 4', d:'14.09', n:4,  max:5},
+  {l:'КР', name:'Уравнения и неравенства',        lesson:'Урок 6', d:'18.09', n:8,  max:20, fin:true},
+  {l:'СР', name:'Графики: чтение и построение',   lesson:'Урок 7', d:'22.09', n:6,  max:10},
+  {l:'ДЗ', name:'Функции: домашняя',              lesson:'Урок 7', d:'25.09', n:4,  max:5},
+  {l:'ДЗ', name:'Степени и корни: тренировка',    lesson:'Урок 8', d:'28.09', n:4,  max:5},
+  {l:'СР', name:'Прогрессии: самостоятельная',    lesson:'Урок 9', d:'02.10', n:6,  max:10},
+  {l:'КР', name:'Итоговая по разделу «Алгебра»',  lesson:'Урок 10',d:'09.10', n:8,  max:20, fin:true}
 ];
 function needPick(){ return (location.search + location.hash).indexOf('pick') >= 0; }
 function renderPicker(){
   document.getElementById('pkList').innerHTML = WORKS_LIST.map(function(w, i){
     var cls = w.fin ? 'kr' : (w.l === 'ДЗ' ? 'dz' : 'sr');
-    return '<button class="pk-row" onclick="pickWork('+i+')">' +
+    return '<a class="pk-row" href="09-work.html#w='+i+'" onclick="if(sameTab(event)) pickWork('+i+')">' +
       '<span class="lb '+cls+'">'+w.l+'</span>' +
       '<span class="nm">'+w.name+'<div class="sub">'+w.lesson+' · сдать до '+w.d+' · '+w.n+' заданий · макс '+w.max+'</div></span>' +
-      '<span class="muted">открыть ›</span></button>';
+      '<span class="muted">открыть ›</span></a>';
   }).join('');
 }
 function pickWork(i){
   var w = WORKS_LIST[i];
   closePicker();
   document.getElementById('hTitle').textContent = w.l + ' «' + w.name + '»';
-  document.querySelector('.crumbs').textContent = 'Журнал · МЕГЭ-1 · Математика · ' + w.lesson + ' «' + w.name + '»';
+  document.querySelector('.crumbs').innerHTML = 'Журнал · <a class="link" href="20-group.html#g=0">МЕГЭ-1</a> · Математика · ' +
+    w.lesson + ' «' + w.name + '»';
   document.getElementById('cnt').value = String(w.n);
   render();
   toast('Работа: ' + w.l + ' «' + w.name + '» (демо — данные те же)');
@@ -326,7 +333,7 @@ function render(){
     var d = DATA[si];
     h += '<tr><td class="stu"><div class="stu-in"><span class="n">'+(si+1)+'</span>' +
       '<span class="av">'+ini(name)+'</span>' +
-      '<span class="nm" onclick="location.href=\'07-student.html\'" title="Сводка по ученику">'+name+'</span></div></td>';
+      '<a class="nm" href="07-student.html" title="Сводка по ученику">'+name+'</a></div></td>';
 
     d.ans.forEach(function(v, ti){
       var cls = v === null ? 'na' : d.review ? 'wait' : v ? 'ok' : 'no';
@@ -345,7 +352,7 @@ function render(){
       : d.late ? '<span class="st st-late">с опозданием</span>'
       : '<span class="st st-ok">зачтено</span>';
     h += '<td class="tot t2"><div class="tot-in">' + st +
-      (mod && !d.skip ? '<button class="btn btn-s" style="margin-left:auto" onclick="location.href=\'05-review.html\'">Открыть</button>' : '') +
+      (mod && !d.skip ? '<a class="btn btn-s" style="margin-left:auto" href="05-review.html#stu='+encodeURIComponent(name)+'">Открыть</a>' : '') +
       '</div></td></tr>';
   });
 
@@ -389,8 +396,8 @@ function render(){
     ' из ' + STUDENTS.length;
 
   document.getElementById('note').innerHTML = mod
-    ? '<span>Наведите на клетку — видно ответ ученика и верный ответ. Кнопка «Открыть» ведёт в карточку проверки: там вся работа с ходом решения, критериями и комментарием.</span>'
-    : '<span>Наведите на клетку — видно ответ ученика и верный ответ. <b>Разбор всей работы с комментарием доступен с модулем ручной проверки</b> — без него задания проверяются автоматически по эталону.</span>';
+    ? ''
+    : '<span>Разбор всей работы доступен с модулем ручной проверки.</span>';
 }
 
 /* ── подсказка с ответом ── */
@@ -419,7 +426,20 @@ var tt;
 function toast(m){ var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
   clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3200); }
 render();
-if(needPick()) openPicker();
+/* адрес работы живёт в хеше — ссылку можно открыть в новой вкладке:
+   09-work.html#w=2 (по номеру) или #n=Прогрессии... (по названию, так ссылаются другие экраны) */
+var wHash = location.hash.match(/(?:^|[#&])w=(\d+)/);
+var nHash = location.hash.match(/(?:^|[#&])n=([^&]+)/);
+var wi = wHash && WORKS_LIST[+wHash[1]] ? +wHash[1] : -1;
+if(wi < 0 && nHash){
+  var nm = decodeURIComponent(nHash[1]);
+  WORKS_LIST.forEach(function(w, i){ if(wi < 0 && w.name === nm) wi = i; });
+}
+if(wi >= 0) pickWork(wi);
+else if(needPick() || nHash){
+  openPicker();
+  if(nHash) toast('Работа «'+decodeURIComponent(nHash[1])+'» в демо-данных не заведена — выберите из списка');
+}
 </script>
 </body>
 </html>

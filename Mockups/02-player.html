@@ -6,6 +6,7 @@
 <title>Плеер курса — FS-LMS 2.0</title>
 <link rel="stylesheet" href="_shared.css">
 <script src="_icons.js"></script>
+<script src="_nav.js"></script>
 <style>
   /* плеер живёт в своей рамке — сайдбара приложения нет (§2.2) */
   .app{height:100vh}
@@ -26,32 +27,29 @@
   .body{flex:1;display:flex;min-height:0;position:relative}
 
   /* дерево курса: свёрнуто, раскрывается при наведении (§4.2) */
-  .tree{width:52px;flex:none;position:relative}
-  .tree-inner{position:absolute;left:0;top:0;bottom:0;width:52px;background:#fff;border-right:1px solid var(--gray2);
-    overflow:hidden;transition:width .16s ease;z-index:22;padding:var(--sp-12) var(--sp-8)}
-  .tree:hover .tree-inner{width:274px;overflow-y:auto;box-shadow:8px 0 28px rgba(0,0,0,.10);padding:var(--sp-12) var(--sp-12)}
-  .tree.pinned{width:274px}
-  .tree.pinned .tree-inner{width:274px;overflow-y:auto;box-shadow:none;padding:var(--sp-12) var(--sp-12)}
-  .tree .full{display:none;white-space:nowrap}
-  .tree:hover .full,.tree.pinned .full{display:block}
-  .tree .mini{display:flex;flex-direction:column;gap:var(--sp-6);align-items:center}
-  .tree:hover .mini,.tree.pinned .mini{display:none}
-  .mini .m{width:34px;height:30px;border-radius:var(--r-6);background:var(--gray1);color:var(--gray6);font-size:var(--fs-12);
-    display:grid;place-items:center;font-weight:600;cursor:pointer}
-  .mini .m.on{background:var(--blue-l);color:var(--blue)}
-  .mini .m.done{background:var(--green-l);color:#2b8a3e}
-  .mini .m.lock{color:var(--gray5);font-size:var(--fs-12)}
-  .mini .sep{width:20px;height:1px;background:var(--gray2);margin:var(--sp-4) 0}
-  .pin{position:absolute;right:8px;top:10px;border:1px solid var(--gray3);background:#fff;border-radius:var(--r-6);
-    width:24px;height:24px;font-size:var(--fs-12);color:var(--gray6);display:none;place-items:center;padding:0}
-  .tree:hover .pin,.tree.pinned .pin{display:grid}
-  .tree.pinned .pin{color:var(--blue);border-color:var(--blue)}
-  .tree h4{font-size:var(--fs-14);margin:var(--sp-4) var(--sp-8) var(--sp-12)}
-  .tree .sec{font-size:var(--fs-12);letter-spacing:.05em;text-transform:uppercase;color:var(--gray5);font-weight:600;margin:var(--sp-16) var(--sp-8) var(--sp-6)}
-  .tree .les{padding:var(--sp-8) var(--sp-12);border-radius:var(--r-6);font-size:var(--fs-14);color:var(--gray7);cursor:pointer;display:flex;gap:var(--sp-8);align-items:center}
+  /* Дерево курса — панель поверх контента, открывается язычком.
+     Контент не сдвигается: он центрирован по всему экрану и от панели не зависит. */
+  .tree{position:absolute;left:0;top:0;bottom:0;width:360px;background:#fff;border-right:1px solid var(--gray2);
+    transform:translateX(-100%);transition:transform .18s ease;z-index:30;display:flex;flex-direction:column}
+  .tree.open{transform:none;box-shadow:12px 0 32px rgba(0,0,0,.10)}
+  /* приоткрытие: наведение на язычок выдвигает панель на 40px — видно, что за ней есть содержимое */
+  .tree:not(.open):has(.tab:hover){transform:translateX(calc(-100% + 40px))}
+  .tree-inner{flex:1;overflow-y:auto;padding:var(--sp-16)}
+  .tree h4{font-size:var(--fs-14);margin:0 var(--sp-8) var(--sp-12);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tree .sec{font-size:var(--fs-12);letter-spacing:.05em;text-transform:uppercase;color:var(--gray5);
+    font-weight:600;margin:var(--sp-16) var(--sp-8) var(--sp-6)}
+  .tree .les{padding:var(--sp-8) var(--sp-12);border-radius:var(--r-6);font-size:var(--fs-14);color:var(--gray7);
+    cursor:pointer;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .tree .les:hover{background:var(--gray1)}
   .tree .les.on{background:var(--blue-l);color:var(--blue);font-weight:600}
   .tree .les.lock{color:var(--gray5)}
+
+  /* язычок прикреплён к правому краю панели и уезжает вместе с ней */
+  .tab{position:absolute;right:-30px;top:50%;transform:translateY(-50%);width:30px;height:72px;
+    background:#fff;border:1px solid var(--gray2);border-left:0;border-radius:0 var(--r-8) var(--r-8) 0;
+    display:grid;place-items:center;color:var(--gray6);font-size:var(--fs-14);box-shadow:2px 0 8px rgba(0,0,0,.06)}
+  .tab:hover{background:var(--gray0);color:var(--gray9)}
 
   .canvas{flex:1;overflow:auto;position:relative}
   .readbar{position:sticky;top:0;height:3px;z-index:15}
@@ -59,7 +57,8 @@
   .wrap{max-width:1180px;margin:0 auto;padding:var(--sp-20) var(--sp-24) var(--user-h);display:flex;gap:var(--sp-24)}
   .col{flex:1;min-width:0}
 
-  .steps{display:flex;flex-wrap:nowrap;gap:var(--sp-6);overflow-x:auto;padding-bottom:8px}
+  /* горизонтальный скролл обрезал галочку и обводку активного шага — даём им место */
+  .steps{display:flex;flex-wrap:nowrap;gap:var(--sp-6);overflow-x:auto;padding:var(--sp-8) var(--sp-6)}
   .step{width:62px;flex:none;border:0;background:none;padding:0;text-align:center;position:relative}
   .step .box{width:52px;height:52px;margin:0 auto;border-radius:var(--r-12);display:grid;place-items:center;position:relative;color:#fff}
   .step .n{position:absolute;top:3px;left:6px;font-size:var(--fs-12);opacity:.8;font-weight:700}
@@ -103,13 +102,15 @@
   .reveal{background:var(--violet-l);border:1px solid #e0d7ff;color:#5f3dc4;border-radius:var(--r);padding:var(--sp-12) var(--sp-16);margin-top:12px;font-size:var(--fs-14);display:none}
   .reveal.show{display:block}
 
-  .tasknav{position:sticky;top:8px;background:#fff;border:1px solid var(--gray2);border-radius:var(--r-8);padding:var(--sp-12) var(--sp-12);
-    display:flex;gap:var(--sp-6);flex-wrap:wrap;align-items:center;z-index:10;margin-bottom:14px}
-  .tn{width:30px;height:30px;border-radius:var(--r-6);border:1px solid var(--gray3);background:#fff;font-size:var(--fs-14);color:var(--gray7)}
-  .tn.filled{background:var(--green-l);border-color:#8ce99a;color:#2b8a3e;font-weight:600}
-  .tn.cur{outline:2px solid var(--blue);outline-offset:1px}
-  .qbox{border-top:1px solid var(--gray2);padding-top:16px;margin-top:16px}
-  .qnum{font-size:var(--fs-12);color:var(--gray6);font-weight:600;margin-bottom:6px}
+  /* задание работы — отдельная карточка; отметка сохранения живёт в ней самой */
+  .qcard{margin-top:var(--sp-16)}
+  .qnum{font-size:var(--fs-12);color:var(--gray6);font-weight:600;margin-bottom:var(--sp-6)}
+  .qfoot{display:flex;justify-content:flex-end;margin-top:var(--sp-8);min-height:18px}
+  .saved{font-size:var(--fs-12);color:#2b8a3e;opacity:0;transition:opacity .15s}
+  .saved.on{opacity:1}
+  .finrow{display:flex;align-items:center;gap:var(--sp-12);margin-top:var(--sp-20);
+    padding-top:var(--sp-16);border-top:1px solid var(--gray2)}
+  .finrow .muted{flex:1;font-size:var(--fs-14)}
   .deadline{display:inline-flex;gap:var(--sp-8);align-items:center;background:var(--yellow-l);color:#a37200;border-radius:var(--r-pill);
     padding:var(--sp-4) var(--sp-12);font-size:var(--fs-14);margin-bottom:12px}
 
@@ -120,7 +121,6 @@
 <body>
 <div class="app">
   <header class="phead">
-    <button class="back" onclick="togglePin()">☰</button>
     <button class="back">↩ Вернуться</button>
     <div>
       <div class="crumbs">Мои курсы · Информатика ЕГЭ · Введение</div>
@@ -135,31 +135,21 @@
     </div>
   </header>
 
-  <div class="banner b-preview" id="bnPreview">👁 <b>Предпросмотр курса</b> — ответы не сохраняются, прогресс не создаётся.</div>
-  <div class="banner b-teacher" id="bnTeacher">🎓 <b>Режим педагога</b> — снимок курса вашей группы. Эталонные ответы скрыты, доступна кнопка «Показать ответ».</div>
+  <div class="banner b-preview" id="bnPreview">👁 <b>Предпросмотр курса</b> — все шаги открыты, обязательные ничего не закрывают. Ответы не сохраняются, прогресс не создаётся.</div>
+  <div class="banner b-teacher" id="bnTeacher">🎓 <b>Режим педагога</b> — снимок курса вашей группы, все шаги открыты. Эталонные ответы скрыты, доступна кнопка «Показать ответ».</div>
 
   <div class="body">
     <aside class="tree" id="tree">
+      <button class="tab" onclick="toggleTree()" id="treeTab" title="Дерево курса">☰</button>
       <div class="tree-inner">
-        <button class="pin" onclick="togglePin()" title="Закрепить панель">📌</button>
-        <div class="mini">
-          <span class="m on" title="Урок 1.1 · Системы счисления">1.1</span>
-          <span class="m" title="Урок 1.2 · Кодирование информации">1.2</span>
-          <span class="m lock" title="Урок 1.3 · Логика — откроется 12 сентября">🔒</span>
-          <span class="sep"></span>
-          <span class="m lock" title="Урок 2.1 · Основы алгоритмов — откроется 19 сентября">🔒</span>
-          <span class="m lock" title="Урок 2.2 · Циклы — откроется 26 сентября">🔒</span>
-        </div>
-        <div class="full">
-          <h4>Информатика ЕГЭ — базовый</h4>
-          <div class="sec">1. Введение</div>
-          <div class="les on">Урок 1.1 · Системы счисления</div>
-          <div class="les">Урок 1.2 · Кодирование информации</div>
-          <div class="les lock">Урок 1.3 · Логика 🔒</div>
-          <div class="sec">2. Алгоритмизация</div>
-          <div class="les lock">Урок 2.1 · Основы алгоритмов 🔒</div>
-          <div class="les lock">Урок 2.2 · Циклы 🔒</div>
-        </div>
+        <h4>Информатика ЕГЭ — базовый</h4>
+        <div class="sec">1. Введение</div>
+        <div class="les on">Урок 1.1 · Системы счисления</div>
+        <div class="les">Урок 1.2 · Кодирование информации и представление данных</div>
+        <div class="les lock">Урок 1.3 · Логика 🔒</div>
+        <div class="sec">2. Алгоритмизация</div>
+        <div class="les lock">Урок 2.1 · Основы алгоритмов 🔒</div>
+        <div class="les lock">Урок 2.2 · Циклы 🔒</div>
       </div>
     </aside>
 
@@ -198,7 +188,12 @@ var steps = [
 ];
 var cur = 0;
 
+/* обязательный шаг закрывает следующие только тому, кто реально проходит курс.
+   Предпросмотр и режим педагога — просмотр, а не прохождение: методист смотрит, что собрал,
+   преподаватель — что видит группа. Решать по дороге все задачи ради доступа к концу урока
+   ни тому, ни другому не нужно, поэтому блокировок в этих режимах нет. */
 function firstBlocker(){
+  if(mode === 'preview' || mode === 'teacher') return steps.length;
   for(var i=0;i<steps.length;i++) if(steps[i].required && !steps[i].done) return i;
   return steps.length;
 }
@@ -231,6 +226,7 @@ function render(){
   document.getElementById('content').innerHTML = render_fn();
   renderSteps();
   if(s.type==='text') buildToc();
+  if(s.type==='work') markFilled(1);
   document.getElementById('canvas').scrollTo({top:0});
 }
 
@@ -273,20 +269,21 @@ function task(){
 }
 function work(){
   var qs = '';
-  for(var i=1;i<=6;i++)
-    qs += '<div class="qbox" id="q'+i+'"><div class="qnum">Задание '+i+'</div>' +
+  for(var i = 1; i <= 6; i++){
+    qs += '<div class="card qcard" id="q'+i+'">' +
+      '<div class="qnum">Задание '+i+' из 6</div>' +
       '<p>Условие задания '+i+': вычислите значение выражения и запишите ответ числом.</p>' +
-      '<div class="answer"><input class="wans" data-i="'+i+'" oninput="markFilled('+i+')" placeholder="Ответ…"></div></div>';
-  var nav = '';
-  for(var k=1;k<=6;k++) nav += '<button class="tn '+(k===1?'cur':'')+'" id="tn'+k+'" onclick="jump('+k+')">'+k+'</button>';
+      '<div class="answer"><input class="wans" data-i="'+i+'" oninput="markFilled('+i+')" placeholder="Ответ…"></div>' +
+      '<div class="qfoot"><span class="saved" id="sv'+i+'">Сохранено ✓</span></div>' +
+    '</div>';
+  }
   return '<div class="card"><span class="kind" style="background:var(--orange-l);color:#d9480f">Работа</span>' +
-    '<h2>Практическая работа</h2>' +
-    '<span class="deadline">⏱ Сдать до 14 сентября, 23:59</span>' +
-    '<div class="tasknav"><b class="muted">Задания:</b>' + nav +
-    '<span class="sp"></span><button class="btn btn-s" onclick="nextEmpty()">К следующему без ответа</button>' +
-    '<button class="btn btn-s btn-p" onclick="toast(\'Работа отправлена на проверку\')">Завершить работу</button></div>' +
+      '<h2>Практическая работа</h2>' +
+      '<span class="deadline">⏱ Сдать до 14 сентября, 23:59</span>' +
+      '<p class="lead" style="margin:0">Все задания открыты сразу, отвечать можно в любом порядке. Ответы сохраняются сами; работа не блокирует навигацию по курсу — в отличие от экзамена.</p></div>' +
     qs +
-    '<p class="lead" style="margin-top:18px">Панель заданий липкая: видно, что уже заполнено, и можно прыгать между заданиями. Работа не блокирует навигацию по курсу — в отличие от экзамена.</p></div>';
+    '<div class="finrow"><span class="muted" id="workSum">—</span>' +
+      '<button class="btn btn-p" onclick="toast(\'Работа отправлена на проверку\')">Завершить работу</button></div>';
 }
 function exam(){
   return '<div class="card" style="text-align:center;padding:var(--sp-40) var(--sp-32)">' +
@@ -308,20 +305,15 @@ function check(){
 }
 function markFilled(i){
   var inp = document.querySelector('.wans[data-i="'+i+'"]');
-  document.getElementById('tn'+i).classList.toggle('filled', inp.value.trim().length > 0);
-}
-function jump(i){
-  var all = document.querySelectorAll('.tn');
-  for(var k=0;k<all.length;k++) all[k].classList.remove('cur');
-  document.getElementById('tn'+i).classList.add('cur');
-  document.getElementById('q'+i).scrollIntoView({behavior:'smooth', block:'center'});
-}
-function nextEmpty(){
-  for(var i=1;i<=6;i++){
-    var inp = document.querySelector('.wans[data-i="'+i+'"]');
-    if(!inp.value.trim()){ jump(i); inp.focus(); return; }
+  var sv = document.getElementById('sv'+i);
+  sv.classList.toggle('on', inp.value.trim().length > 0);   /* автосохранение по мере ввода */
+  var filled = 0;
+  for(var k = 1; k <= 6; k++){
+    var el = document.querySelector('.wans[data-i="'+k+'"]');
+    if(el && el.value.trim()) filled++;
   }
-  toast('Все задания заполнены');
+  document.getElementById('workSum').textContent = 'Заполнено ' + filled + ' из 6 заданий' +
+    (filled < 6 ? ' · незаполненные можно оставить пустыми' : '');
 }
 function buildToc(){
   var hs = document.querySelectorAll('.card h3'), html = '';
@@ -347,7 +339,11 @@ function setMode(m, btn){
   document.getElementById('bnTeacher').classList.toggle('show', m==='teacher');
   render();
 }
-function togglePin(){ document.getElementById('tree').classList.toggle('pinned'); }
+function toggleTree(){
+  var t = document.getElementById('tree');
+  t.classList.toggle('open');
+  document.getElementById('treeTab').textContent = t.classList.contains('open') ? '‹' : '☰';
+}
 var tt;
 function toast(m){ var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
   clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3400); }

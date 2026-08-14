@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Настройки обучения — FS-LMS 2.0</title>
+<link rel="stylesheet" href="_shared.css">
+<script src="_tip.js"></script>
+<script src="_nav.js"></script>
+<style>
+  .body{flex:1;overflow:auto;padding:var(--sp-16) var(--sp-20) var(--user-h)}
+  .card{background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);box-shadow:var(--sh)}
+  .sec{padding:var(--sp-16) var(--sp-20);margin-bottom:14px}
+  .sec-h{display:flex;align-items:center;gap:var(--sp-12);margin-bottom:12px;flex-wrap:wrap}
+  .sec-h h3{margin:0;font-size:var(--fs-14)}
+
+  .tabs{display:flex;gap:var(--sp-4);margin-bottom:var(--sp-16);border-bottom:1px solid var(--gray2);flex-wrap:wrap}
+  .tabs button{border:0;background:none;padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);color:var(--gray6);
+    border-bottom:2px solid transparent;margin-bottom:-1px}
+  .tabs button:hover{color:var(--gray9)}
+  .tabs button.on{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
+  .tabs .cnt{font-size:var(--fs-12);font-weight:700;background:var(--gray1);color:var(--gray6);border-radius:var(--r-8);
+    padding:var(--sp-4) var(--sp-8);margin-left:6px}
+  .tabs button.on .cnt{background:var(--blue-l);color:var(--blue)}
+
+  table.t{width:100%;border-collapse:collapse;font-size:var(--fs-14)}
+  table.t th{text-align:left;font-size:var(--fs-12);letter-spacing:.04em;text-transform:uppercase;color:var(--gray5);
+    font-weight:700;padding:var(--sp-8) var(--sp-12);border-bottom:1px solid var(--gray2);white-space:nowrap}
+  table.t td{padding:var(--sp-8) var(--sp-12);border-bottom:1px solid var(--gray1);vertical-align:middle}
+  table.t tr:last-child td{border-bottom:0}
+  table.t tbody tr:hover{background:var(--gray0)}
+  table.t tbody tr.clickable{cursor:pointer}
+  .nm-a{font-weight:600;color:inherit;text-decoration:none}
+  .nm-a:hover{color:var(--blue);text-decoration:underline}
+  .num{color:var(--gray5);font-size:var(--fs-12)}
+  .dt{font-variant-numeric:tabular-nums;color:var(--gray7);white-space:nowrap}
+  .link{color:var(--blue);text-decoration:none} .link:hover{text-decoration:underline}
+  .empty{color:var(--gray5);font-size:var(--fs-14);padding:var(--sp-20) 0;text-align:center}
+  .muted-i{color:var(--gray5);font-style:italic}
+
+  .badge{display:inline-block;font-size:var(--fs-12);font-weight:600;padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4)}
+  .b-now{background:var(--green-l);color:#2b8a3e}
+  .b-next{background:var(--blue-l);color:#1864ab}
+  .b-old{background:var(--gray1);color:var(--gray6)}
+  .b-warn{background:var(--orange-l);color:#d9480f}
+  .lb{display:inline-block;font-size:var(--fs-12);font-weight:700;padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4);
+    background:var(--gray1);color:var(--gray6)}
+  .lb.kr{background:#ffe3e3;color:#c92a2a} .lb.sr{background:var(--blue-l);color:#1864ab}
+  .lb.dz{background:var(--green-l);color:#2b8a3e} .lb.pr{background:var(--violet-l);color:#5f3dc4}
+  .rowact{border:0;background:none;color:var(--gray5);font-size:var(--fs-16);line-height:1;
+    padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4)}
+  .rowact:hover{background:var(--gray2);color:var(--gray9)}
+  .used{font-size:var(--fs-12);color:var(--gray6)}
+
+  .vac{display:flex;gap:var(--sp-6);flex-wrap:wrap}
+  .vac span{border:1px solid var(--gray2);background:var(--gray0);border-radius:var(--r-pill);
+    padding:var(--sp-4) var(--sp-12);font-size:var(--fs-12);color:var(--gray7)}
+  .vac span.hol{background:var(--red-l);border-color:#ffc9c9;color:#c92a2a}
+
+  .fld{margin-bottom:12px}
+  .fld label{display:block;font-size:var(--fs-12);color:var(--gray6);margin-bottom:5px;font-weight:600}
+  .fld input,.fld select,.fld textarea{width:100%;border:1px solid var(--gray3);border-radius:var(--r);
+    padding:var(--sp-8) var(--sp-12);font-size:var(--fs-14);font-family:inherit}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-12)}
+  .hint2{font-size:var(--fs-12);color:var(--gray6);margin-top:6px;line-height:1.45}
+  .warnbox{background:var(--orange-l);border:1px solid #ffd8a8;color:#d9480f;border-radius:var(--r-8);
+    padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);margin-bottom:14px}
+  .lockbox{background:var(--gray0);border:1px solid var(--gray2);color:var(--gray6);border-radius:var(--r-8);
+    padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);margin-bottom:14px}
+  .demo{display:flex;align-items:center;gap:var(--sp-8);font-size:var(--fs-12);color:var(--gray6)}
+  .scale{display:flex;gap:var(--sp-6);flex-wrap:wrap}
+  .scale i{border:1px solid var(--gray2);border-radius:var(--r-6);padding:var(--sp-4) var(--sp-8);
+    font-size:var(--fs-12);font-style:normal;font-variant-numeric:tabular-nums;color:var(--gray7);background:var(--gray0)}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-top">
+      <div class="logo">ШБ</div>
+      <div style="flex:1"><b>Шаг в будущее</b><small>Управление</small></div>
+      <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')">⟨</button>
+    </div>
+    <div class="switch" id="spaceSwitch" style="display:none"><a href="11-student-home.html" title="Пространство «Обучение»: свои курсы и учёба">Обучение</a><button class="on">Управление</button></div>
+    <nav class="nav">
+      <h4>Учебный процесс</h4>
+      <a href="07-student.html#pick"><i class="ic">◉</i><span>Группы</span></a>
+      <a href="03-ktp.html"><i class="ic">◷</i><span>КТП и расписание</span></a>
+      <h4>Настройки</h4>
+      <a href="26-settings-learning.html" class="on"><i class="ic">⚙</i><span>Настройки обучения</span></a>
+      <a href="27-settings-system.html"><i class="ic">⚒</i><span>Настройки системы</span></a>
+    </nav>
+    <div class="side-user">
+      <div class="ava" id="userIni">ПА</div>
+      <div style="flex:1"><b style="font-size:var(--fs-14);display:block" id="userName">Приёмщикова А.</b>
+        <small style="font-size:var(--fs-12);color:var(--gray6)" id="userRole">Адм. учебной части</small></div>
+      <span style="color:var(--gray5)">⚙</span>
+    </div>
+  </aside>
+
+  <div class="app">
+    <header class="head">
+      <div>
+        <div class="crumbs">Управление · Настройки</div>
+        <h1>Настройки обучения</h1>
+      </div>
+      <div class="sp"></div>
+      <label class="demo">роль <i>(демо)</i>
+        <select id="role" onchange="setRole(this.value)" style="padding:var(--sp-4) var(--sp-8);font-size:var(--fs-12)">
+          <option value="adm">Адм. учебной части</option>
+          <option value="method">Методист</option>
+          <option value="owner">Владелец</option>
+        </select></label>
+      <label class="demo"><input type="checkbox" id="campus" checked onchange="setCampus(this.checked)"> модуль «Кампус» <i>(демо)</i></label>
+      <button class="btn btn-p" id="addBtn" onclick="add()">Добавить</button>
+    </header>
+
+    <div class="body">
+      <div class="tabs" id="tabs"></div>
+      <div id="pane"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* Справочники, из которых собирается учебный процесс. Их правят редко — раз в год и реже,
+   поэтому они собраны на одном экране, а не разбросаны отдельными пунктами меню.
+   Область видимости: предметы, периоды, кабинеты и группы — адм. учебной части;
+   типы работ и шкалы — методист (это библиотеки контента, 01-product §3.4). */
+var TABS = [
+  {k:'subj',   t:'Предметы',      own:'adm'},
+  {k:'period', t:'Учебные периоды', own:'adm'},
+  {k:'room',   t:'Кабинеты',      own:'adm', mod:'campus'},
+  {k:'group',  t:'Группы',        own:'adm'},
+  {k:'wtype',  t:'Типы работ',    own:'method'},
+  {k:'scale',  t:'Шкалы оценивания', own:'method'}
+];
+
+var ROLES = {
+  adm:   {n:'Приёмщикова А.', t:'Адм. учебной части', ini:'ПА', can:['adm']},
+  method:{n:'Кэбс М.',        t:'Методист',           ini:'КМ', can:['method']},
+  owner: {n:'Владельцев В.',  t:'Владелец',           ini:'ВВ', can:['adm','method']}
+};
+var role = 'adm', CAMPUS = true, tab = 0;
+
+var SUBJ = [
+  {n:'Математика',   code:'МАТ', dir:'Подготовка к ЕГЭ', courses:4, groups:5},
+  {n:'Информатика',  code:'ИНФ', dir:'Подготовка к ЕГЭ', courses:2, groups:3},
+  {n:'Гитара',       code:'ГИТ', dir:'Творчество',       courses:1, groups:1},
+  {n:'Робототехника',code:'РОБ', dir:'Техническое',      courses:1, groups:0}
+];
+var PERIODS = [
+  {n:'2026/27 — первое полугодие', from:'02.09.2026', to:'27.12.2026', st:'now',
+   vac:['28.09–30.09 каникулы','04.11 праздник','30.12–08.01 каникулы'], groups:12},
+  {n:'2026/27 — второе полугодие', from:'12.01.2027', to:'25.05.2027', st:'next',
+   vac:['23.02 праздник','08.03 праздник','22.03–28.03 каникулы','01.05 · 09.05 праздники'], groups:0},
+  {n:'2025/26 — второе полугодие', from:'13.01.2026', to:'26.05.2026', st:'old',
+   vac:['23.02 праздник','23.03–29.03 каникулы'], groups:9}
+];
+var ROOMS = [
+  {n:'315', cap:16, eq:'проектор, доска', busy:'вт, пт 17:00–18:30 · ещё 3 слота'},
+  {n:'212', cap:12, eq:'компьютеры ×12',  busy:'пн, ср 15:00–16:30'},
+  {n:'410', cap:8,  eq:'инструменты',     busy:'свободен'},
+  {n:'Онлайн', cap:0, eq:'трансляция',    busy:'без ограничений'}
+];
+var GROUPS = [
+  {n:'МЕГЭ-1', subj:'Математика',  per:'первое полугодие', stu:10, cap:15, teach:'Училков И. П.'},
+  {n:'МЕГЭ-2', subj:'Математика',  per:'первое полугодие', stu:14, cap:15, teach:'Училков И. П.'},
+  {n:'ИНФ-2',  subj:'Информатика', per:'первое полугодие', stu:9,  cap:12, teach:'Замещалов П. С.'},
+  {n:'Подарочный гит', subj:'Гитара', per:'вне периода',   stu:2,  cap:6,  teach:'Кэбс М.'}
+];
+var WTYPES = [
+  {n:'Домашняя работа',       lb:'ДЗ', cls:'dz', fin:false, used:24},
+  {n:'Самостоятельная работа',lb:'СР', cls:'sr', fin:false, used:12},
+  {n:'Контрольная работа',    lb:'КР', cls:'kr', fin:true,  used:6},
+  {n:'Практическая работа',   lb:'ПР', cls:'pr', fin:false, used:8}
+];
+var SCALES = [
+  {n:'ЕГЭ: математика профиль', kind:'первичные баллы', pts:[1,1,1,1,1,2,2,3,3,4], used:3},
+  {n:'Пятибалльная',            kind:'оценка',          pts:[2,3,4,5],             used:9},
+  {n:'Зачёт / незачёт',         kind:'бинарная',        pts:[0,1],                 used:4}
+];
+
+function R(){ return ROLES[role]; }
+function tabsFor(){
+  return TABS.filter(function(t){
+    if(t.mod === 'campus' && !CAMPUS) return false;
+    return R().can.indexOf(t.own) >= 0;
+  });
+}
+function cur(){ return tabsFor()[tab]; }
+
+function setRole(v){
+  role = v; tab = 0;
+  /* «Обучение» непусто только у методиста: в демо он же ведёт группу (03-design §2.1) */
+  document.getElementById('spaceSwitch').style.display = v === 'method' ? '' : 'none';
+  document.getElementById('userIni').textContent = R().ini;
+  document.getElementById('userName').textContent = R().n;
+  document.getElementById('userRole').textContent = R().t;
+  render();
+  toast(R().t + ': ' + tabsFor().map(function(t){ return t.t.toLowerCase(); }).join(', '));
+}
+function setCampus(v){
+  CAMPUS = v; tab = 0; render();
+  toast(v ? 'Модуль «Кампус» включён: появились кабинеты' : 'Без «Кампуса» кабинетов нет — занятию негде находиться');
+}
+function setTab(i){ tab = i; render(); }
+
+function render(){
+  var list = tabsFor();
+  document.getElementById('tabs').innerHTML = list.map(function(t, i){
+    return '<button class="' + (i === tab ? 'on' : '') + '" onclick="setTab(' + i + ')">' + t.t + '</button>';
+  }).join('');
+  var k = cur() ? cur().k : '';
+  document.getElementById('addBtn').textContent = {
+    subj:'Добавить предмет', period:'Добавить период', room:'Добавить кабинет',
+    group:'Создать группу', wtype:'Добавить тип работы', scale:'Добавить шкалу'
+  }[k] || 'Добавить';
+  document.getElementById('pane').innerHTML =
+    k === 'subj' ? paneSubj() :
+    k === 'period' ? panePeriod() :
+    k === 'room' ? paneRoom() :
+    k === 'group' ? paneGroup() :
+    k === 'wtype' ? paneWtype() :
+    k === 'scale' ? paneScale() : '';
+}
+
+function head(cols){ return '<thead><tr>' + cols.map(function(c){
+  return '<th' + (c[1] ? ' style="width:var(--col-' + c[1] + ')"' : '') + '>' + c[0] + '</th>';
+}).join('') + '</tr></thead>'; }
+
+function paneSubj(){
+  return '<div class="card sec"><div class="sec-h"><h3>Предметы</h3>' +
+    '<span class="muted">' + SUBJ.length + ' предметов</span></div>' +
+    '<table class="t">' + head([['Название',''],['Код','92'],['Направление','260'],
+      ['Курсов','110'],['Групп','110'],['','92']]) + '<tbody>' +
+    SUBJ.map(function(x){
+      return '<tr><td><b>' + x.n + '</b></td><td>' + x.code + '</td><td>' + x.dir + '</td>' +
+        '<td><a class="link" href="01-course-builder.html">' + x.courses + '</a></td>' +
+        '<td><a class="link" href="07-student.html#pick">' + x.groups + '</a></td>' +
+        '<td style="text-align:right"><button class="rowact" onclick="edit(\'' + x.n + '\')">⋯</button></td></tr>';
+    }).join('') + '</tbody></table></div>';
+}
+
+function panePeriod(){
+  return '<div class="card sec"><div class="sec-h"><h3>Учебные периоды</h3>' +
+      '<span class="muted">каникулы и праздники не попадают в сетку занятий</span></div>' +
+    '<table class="t">' + head([['Период',''],['Начало','110'],['Конец','110'],
+      ['Каникулы и праздники','300'],['Групп','110'],['Состояние','160'],['','92']]) + '<tbody>' +
+    PERIODS.map(function(p){
+      var st = p.st === 'now' ? '<span class="badge b-now">текущий</span>'
+        : p.st === 'next' ? '<span class="badge b-next">следующий</span>'
+        : '<span class="badge b-old">закрыт</span>';
+      return '<tr><td><b>' + p.n + '</b></td>' +
+        '<td class="dt">' + p.from + '</td><td class="dt">' + p.to + '</td>' +
+        '<td><div class="vac">' + p.vac.map(function(v){
+          return '<span' + (v.indexOf('праздник') >= 0 ? ' class="hol"' : '') + '>' + v + '</span>';
+        }).join('') + '</div></td>' +
+        '<td>' + (p.groups ? '<a class="link" href="07-student.html#pick">' + p.groups + '</a>' : '—') + '</td>' +
+        '<td>' + st + '</td>' +
+        '<td style="text-align:right"><button class="rowact" onclick="edit(\'' + p.n + '\')">⋯</button></td></tr>';
+    }).join('') + '</tbody></table>' +
+    '<div class="warnbox" style="margin:14px 0 0"><b>Закрытие периода — одна операция над всеми его группами.</b> ' +
+      'Прошедшие курс остаются со статусом «курс пройден», остальные активные записи получают «доступ прекращён» ' +
+      'с основанием «окончание учебного периода», группы уходят в архив вместе с журналами и счетами. ' +
+      'Группы вне периода не затрагиваются.</div>' +
+    '</div>';
+}
+
+function paneRoom(){
+  return '<div class="card sec"><div class="sec-h"><h3>Кабинеты</h3>' +
+      '<span class="badge b-next">модуль «Кампус»</span></div>' +
+    '<table class="t">' + head([['Кабинет','160'],['Вместимость','160'],['Оборудование','300'],
+      ['Занятость',''],['','92']]) + '<tbody>' +
+    ROOMS.map(function(r){
+      return '<tr><td><b>' + r.n + '</b></td>' +
+        '<td>' + (r.cap ? r.cap + ' мест' : '<span class="muted-i">не ограничено</span>') + '</td>' +
+        '<td>' + r.eq + '</td>' +
+        '<td class="used">' + r.busy + '</td>' +
+        '<td style="text-align:right"><button class="rowact" onclick="edit(\'' + r.n + '\')">⋯</button></td></tr>';
+    }).join('') + '</tbody></table></div>';
+}
+
+function paneGroup(){
+  return '<div class="card sec"><div class="sec-h"><h3>Группы</h3>' +
+      '<span class="muted">полный список и работа с группой — на своём экране</span>' +
+      '<div style="flex:1"></div>' +
+      '<a class="btn btn-s" href="07-student.html#pick">Открыть список групп</a></div>' +
+    '<table class="t">' + head([['Группа',''],['Предмет','220'],['Период','260'],
+      ['Состав','160'],['Преподаватель','260'],['','92']]) + '<tbody>' +
+    GROUPS.map(function(g, i){
+      return '<tr class="clickable" onclick="location.href=\'20-group.html#g=' + Math.min(i,3) + '\'">' +
+        '<td><a class="nm-a" href="20-group.html#g=' + Math.min(i,3) + '" onclick="event.stopPropagation()">' + g.n + '</a></td>' +
+        '<td>' + g.subj + '</td><td>' + g.per + '</td>' +
+        '<td>' + g.stu + ' из ' + g.cap + '</td><td>' + g.teach + '</td>' +
+        '<td style="text-align:right"><span class="num">открыть ›</span></td></tr>';
+    }).join('') + '</tbody></table></div>';
+}
+
+function paneWtype(){
+  return '<div class="card sec"><div class="sec-h"><h3>Типы работ</h3>' +
+      '<span class="muted">метка идёт в журнал и в сводку ученика</span></div>' +
+    '<table class="t">' + head([['Название',''],['Метка','110'],['Итоговая','160'],
+      ['Используется','220'],['','92']]) + '<tbody>' +
+    WTYPES.map(function(w){
+      return '<tr><td><b>' + w.n + '</b></td>' +
+        '<td><span class="lb ' + w.cls + '">' + w.lb + '</span></td>' +
+        '<td>' + (w.fin ? '<span class="badge b-now">да</span>' : '<span class="muted">нет</span>') + '</td>' +
+        '<td class="used">' + w.used + ' работ</td>' +
+        '<td style="text-align:right"><button class="rowact" onclick="edit(\'' + w.n + '\')">⋯</button></td></tr>';
+    }).join('') + '</tbody></table>' +
+    '<div class="hint2" style="margin-top:10px">Признак «итоговая» отделяет баллы, которые идут в итог курса, ' +
+      'от текущих: складывать их нельзя — максимумы разные.</div></div>';
+}
+
+function paneScale(){
+  return '<div class="card sec"><div class="sec-h"><h3>Шкалы оценивания</h3>' +
+      '<span class="muted">карта «задание → баллы» для экзаменов и работ</span></div>' +
+    '<table class="t">' + head([['Название',''],['Вид','220'],['Значения','300'],
+      ['Используется','220'],['','92']]) + '<tbody>' +
+    SCALES.map(function(s){
+      return '<tr><td><b>' + s.n + '</b></td><td>' + s.kind + '</td>' +
+        '<td><div class="scale">' + s.pts.map(function(p){ return '<i>' + p + '</i>'; }).join('') + '</div></td>' +
+        '<td class="used">' + s.used + ' работ и экзаменов</td>' +
+        '<td style="text-align:right"><button class="rowact" onclick="edit(\'' + s.n + '\')">⋯</button></td></tr>';
+    }).join('') + '</tbody></table></div>';
+}
+
+function add(){
+  var k = cur() ? cur().k : '';
+  if(k === 'group'){ location.href = '07-student.html#pick'; return; }
+  toast('Форма добавления: ' + document.getElementById('addBtn').textContent.toLowerCase());
+}
+function edit(n){ toast('Правка: ' + n + '. Изменение справочника не трогает уже созданное — только новое'); }
+
+var tt;
+function toast(m){
+  var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3600);
+}
+
+render();
+</script>
+</body>
+</html>
