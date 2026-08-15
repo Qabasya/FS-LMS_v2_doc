@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Письма — FS-LMS 2.0</title>
+<link rel="stylesheet" href="_shared.css">
+<script src="_nav.js"></script>
+<style>
+  body{background:var(--gray0)}
+  .wrap{max-width:1180px;margin:0 auto;padding:var(--sp-24) var(--sp-20) var(--sp-60)}
+  .demo-bar{display:flex;gap:var(--sp-12);align-items:center;flex-wrap:wrap;background:#fff;border:1px solid var(--gray2);
+    border-radius:var(--r-8);box-shadow:var(--sh);padding:var(--sp-12) var(--sp-16);margin-bottom:var(--sp-20);
+    font-size:var(--fs-12);color:var(--gray6)}
+  .demo-bar select{padding:var(--sp-4) var(--sp-8);font-size:var(--fs-12);border:1px solid var(--gray3);border-radius:var(--r-4)}
+  .demo-bar label{display:flex;gap:var(--sp-6);align-items:center;white-space:nowrap;cursor:pointer}
+
+  .two{display:grid;grid-template-columns:1fr 380px;gap:var(--sp-20);align-items:start}
+
+  /* конверт почтового клиента */
+  .mail{background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);box-shadow:var(--sh);overflow:hidden}
+  .mail-h{padding:var(--sp-16) var(--sp-20);border-bottom:1px solid var(--gray2);font-size:var(--fs-14)}
+  .mail-h .subj{font-size:var(--fs-16);font-weight:600;margin-bottom:6px}
+  .mail-h .from{color:var(--gray6);font-size:var(--fs-12);display:flex;gap:var(--sp-8);flex-wrap:wrap}
+  .mail-b{padding:var(--sp-24) var(--sp-20);background:#f6f7f9}
+  .letter{max-width:560px;margin:0 auto;background:#fff;border-radius:var(--r-8);overflow:hidden;
+    box-shadow:0 1px 4px rgba(0,0,0,.08)}
+  .l-top{background:var(--blue);color:#fff;padding:var(--sp-16) var(--sp-20);display:flex;gap:var(--sp-12);align-items:center}
+  .l-top .logo{width:34px;height:34px;border-radius:var(--r-8);background:rgba(255,255,255,.22);display:grid;
+    place-items:center;font-weight:700;font-size:var(--fs-12)}
+  .l-top b{font-size:var(--fs-14)}
+  .l-body{padding:var(--sp-24) var(--sp-20)}
+  .l-body h2{margin:0 0 var(--sp-12);font-size:var(--fs-22);line-height:1.3}
+  .l-body p{margin:0 0 var(--sp-16);font-size:var(--fs-14);line-height:1.65;color:var(--gray8)}
+  .l-body p.small{font-size:var(--fs-12);color:var(--gray6)}
+  .code-big{font-family:ui-monospace,Menlo,monospace;font-size:var(--fs-32);font-weight:700;letter-spacing:.32em;
+    text-align:center;background:var(--gray0);border:1px solid var(--gray2);border-radius:var(--r-8);
+    padding:var(--sp-16);margin:0 0 var(--sp-16)}
+  .cta{display:inline-block;background:var(--blue);color:#fff;text-decoration:none;font-weight:600;font-size:var(--fs-14);
+    padding:var(--sp-12) var(--sp-24);border-radius:var(--r);margin-bottom:var(--sp-16)}
+  .creds{border:1px solid var(--gray2);border-radius:var(--r-8);overflow:hidden;margin-bottom:var(--sp-16)}
+  .creds .ct{background:var(--gray0);padding:var(--sp-8) var(--sp-16);font-size:var(--fs-12);font-weight:600;
+    color:var(--gray6);border-bottom:1px solid var(--gray2)}
+  .creds .cr{display:flex;gap:var(--sp-12);padding:var(--sp-8) var(--sp-16);font-size:var(--fs-14);
+    border-bottom:1px solid var(--gray1)}
+  .creds .cr:last-child{border-bottom:0}
+  .creds .cr span:first-child{color:var(--gray6);width:78px;flex:none}
+  .creds code{font-family:ui-monospace,Menlo,monospace;background:var(--gray0);border-radius:var(--r-4);padding:1px 6px}
+  .facts{border-left:3px solid var(--blue);padding:var(--sp-4) 0 var(--sp-4) var(--sp-16);margin-bottom:var(--sp-16)}
+  .facts div{font-size:var(--fs-14);padding:var(--sp-4) 0;color:var(--gray8)}
+  .facts b{color:var(--gray9)}
+  .l-foot{border-top:1px solid var(--gray2);padding:var(--sp-16) var(--sp-20);font-size:var(--fs-12);
+    color:var(--gray6);line-height:1.6}
+  .l-foot a{color:var(--gray6)}
+
+  /* правая колонка */
+  .card{background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);box-shadow:var(--sh);
+    padding:var(--sp-16) var(--sp-20);margin-bottom:14px}
+  .card h3{margin:0 0 var(--sp-12);font-size:var(--fs-14)}
+  .kv{font-size:var(--fs-14)}
+  .kv .r{display:flex;gap:var(--sp-12);padding:var(--sp-6) 0;border-top:1px solid var(--gray1)}
+  .kv .r:first-child{border-top:0}
+  .kv .r span:first-child{color:var(--gray6);width:var(--col-160);flex:none}
+  .kv .r span:last-child{flex:1;min-width:0}
+  .vars{display:flex;gap:var(--sp-6);flex-wrap:wrap}
+  .vars code{font-family:ui-monospace,Menlo,monospace;font-size:var(--fs-12);background:var(--gray0);
+    border:1px solid var(--gray2);border-radius:var(--r-4);padding:2px 6px;color:var(--gray7)}
+  .badge{display:inline-block;font-size:var(--fs-12);font-weight:600;padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4)}
+  .b-tr{background:var(--red-l);color:#c92a2a}
+  .b-ev{background:var(--blue-l);color:#1864ab}
+  .b-ok{background:var(--green-l);color:#2b8a3e}
+  .hint2{font-size:var(--fs-12);color:var(--gray6);line-height:1.5;margin-top:8px}
+  .plain{font-family:ui-monospace,Menlo,monospace;font-size:var(--fs-12);white-space:pre-wrap;line-height:1.6;
+    background:var(--gray0);border:1px solid var(--gray2);border-radius:var(--r-8);padding:var(--sp-12);
+    color:var(--gray7);max-height:260px;overflow:auto}
+  .btn-row{display:flex;gap:var(--sp-8);flex-wrap:wrap;margin-top:10px}
+
+  @media (max-width:1100px){ .two{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="demo-bar">
+    <span><i>(демо)</i> письмо</span>
+    <select id="tpl" onchange="render()">
+      <option value="otp">Код подтверждения</option>
+      <option value="join">Приглашение представителя</option>
+      <option value="creds">Данные для входа</option>
+      <option value="enroll">Зачисление в группу</option>
+    </select>
+    <label><input type="checkbox" id="brand" checked onchange="render()">палитра школы</label>
+    <label><input type="checkbox" id="plain" onchange="render()">текстовая версия</label>
+    <div style="flex:1"></div>
+    <a class="btn btn-s" href="27-settings-system.html">Шаблоны в настройках</a>
+  </div>
+
+  <div class="two">
+    <div id="mail"></div>
+    <div id="side"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* Транзакционные письма фазы 0. Тексты живут в редактируемых шаблонах инстанса (02-tech §14),
+   поток transactional приоритетнее рассылок, доставка — через релей вендора (§17). */
+function v(id){ return document.getElementById(id); }
+
+var TPL = {
+  otp: {
+    subj: 'Код подтверждения: 402 815',
+    kind: 'transactional',
+    why: 'регистрация · сброс пароля · смена почты · второй фактор',
+    vars: ['{{ code }}', '{{ ttl_minutes }}', '{{ purpose }}', '{{ school.name }}'],
+    off: false,
+    body: function(){
+      return '<h2>Код подтверждения</h2>' +
+        '<p>Введите его на странице подтверждения почты. Код действует 10 минут.</p>' +
+        '<div class="code-big">402 815</div>' +
+        '<p class="small">Если вы не запрашивали код — просто удалите это письмо: без кода ничего не произойдёт. ' +
+        'Никому не пересылайте его, даже если попросят от имени школы.</p>';
+    },
+    text: 'Код подтверждения: 402 815\n\nВведите его на странице подтверждения почты.\nКод действует 10 минут.\n\n' +
+      'Если вы не запрашивали код — удалите это письмо.\n\nШкола «Шаг в будущее»'
+  },
+
+  join: {
+    subj: 'Подтвердите, что вы представитель Кирилла Абрамова',
+    kind: 'transactional',
+    why: 'выпуск JOIN-ссылки в заявке (§4.17)',
+    vars: ['{{ student.full_name }}', '{{ join_url }}', '{{ expires_hours }}', '{{ school.name }}'],
+    off: false,
+    body: function(){
+      return '<h2>Вас указали представителем ученика</h2>' +
+        '<p>Школа «Шаг в будущее» оформляет зачисление <b>Абрамова Кирилла</b>. Чтобы завершить оформление, ' +
+        'подтвердите, что вы его представитель, и заполните документы.</p>' +
+        '<a class="cta" href="#" onclick="event.preventDefault();toast(\'Переход на 28-auth.html — приглашение представителя\')">' +
+        'Подтвердить и заполнить</a>' +
+        '<p class="small">Ссылка действует <b>24 часа</b> — так она не работает у того, кому её переслали случайно. ' +
+        'Если срок вышел, попросите школу выпустить новую: анкета ребёнка сохранена, заполнять заново ничего не нужно.</p>' +
+        '<p class="small">После подтверждения вы увидите расписание, оценки и счёт ребёнка в своём кабинете.</p>';
+    },
+    text: 'Вас указали представителем ученика Абрамова Кирилла.\n\nПодтвердите и заполните документы:\n' +
+      'https://shag.ru/join/2NQ9-SVT4-VAAQ\n\nСсылка действует 24 часа.\n\nШкола «Шаг в будущее»'
+  },
+
+  creds: {
+    subj: 'Данные для входа в «Шаг в будущее»',
+    kind: 'transactional',
+    why: 'зачисление · выдача пароля из карточки ученика',
+    vars: ['{{ parent.login }}', '{{ parent.password }}', '{{ student.login }}', '{{ student.password }}', '{{ login_url }}'],
+    off: false,
+    body: function(){
+      return '<h2>Вход в личный кабинет</h2>' +
+        '<p>Кирилл зачислен в группу МЕГЭ-1. Ниже — доступы: ваш и его.</p>' +
+        '<div class="creds"><div class="ct">Ваш вход — родитель</div>' +
+          '<div class="cr"><span>Логин</span><code>e.abramova</code></div>' +
+          '<div class="cr"><span>Пароль</span><code>Berёza-4172</code></div></div>' +
+        '<div class="creds"><div class="ct">Вход ученика — Кирилл</div>' +
+          '<div class="cr"><span>Логин</span><code>k.abramov</code></div>' +
+          '<div class="cr"><span>Пароль</span><code>Kirill-2026</code></div></div>' +
+        '<a class="cta" href="#" onclick="event.preventDefault();toast(\'Переход на страницу входа\')">Войти</a>' +
+        '<p class="small">Пароли рабочие — менять их при первом входе не нужно. Сменить на свой можно в профиле; ' +
+        'после этого школа перестанет их видеть. Если пароль потеряется, преподаватель выдаст новый на занятии.</p>';
+    },
+    text: 'Вход в личный кабинет «Шаг в будущее»\n\nРодитель: логин e.abramova, пароль Berёza-4172\n' +
+      'Ученик: логин k.abramov, пароль Kirill-2026\n\nВойти: https://shag.ru/login\n\n' +
+      'Пароли рабочие, менять не обязательно.'
+  },
+
+  enroll: {
+    subj: 'Кирилл зачислен в группу МЕГЭ-1',
+    kind: 'event',
+    why: 'создание записи «ученик × группа» (§4.17)',
+    vars: ['{{ student.name }}', '{{ group.name }}', '{{ course.name }}', '{{ group.schedule }}',
+           '{{ teacher.name }}', '{{ start_date }}'],
+    off: true,
+    body: function(){
+      return '<h2>Зачисление оформлено</h2>' +
+        '<p>Кирилл зачислен на курс «Математика ЕГЭ — базовый».</p>' +
+        '<div class="facts">' +
+          '<div>Группа: <b>МЕГЭ-1</b></div>' +
+          '<div>Начало занятий: <b>2 сентября</b></div>' +
+          '<div>Расписание: <b>вт, пт · 17:00–18:30 · каб. 315</b></div>' +
+          '<div>Преподаватель: <b>Училков И. П.</b></div>' +
+        '</div>' +
+        '<a class="cta" href="#" onclick="event.preventDefault();toast(\'Переход в кабинет ученика\')">Открыть кабинет</a>' +
+        '<p class="small">Материалы уроков открываются по расписанию — курс целиком заранее не появится. ' +
+        'Расписание, оценки и счёт всегда в кабинете.</p>';
+    },
+    text: 'Кирилл зачислен в группу МЕГЭ-1 (курс «Математика ЕГЭ — базовый»).\n\n' +
+      'Начало: 2 сентября\nРасписание: вт, пт 17:00–18:30, каб. 315\nПреподаватель: Училков И. П.\n\n' +
+      'Кабинет: https://shag.ru/learn'
+  }
+};
+
+function render(){
+  var t = TPL[v('tpl').value];
+  var brand = v('brand').checked;
+
+  v('mail').innerHTML =
+    '<div class="mail"><div class="mail-h">' +
+      '<div class="subj">' + t.subj + '</div>' +
+      '<div class="from"><span>от: Шаг в будущее &lt;no-reply@shag.ru&gt;</span>' +
+      '<span>кому: e.abramova@mail.ru</span></div></div>' +
+    '<div class="mail-b">' +
+      (v('plain').checked
+        ? '<div class="letter" style="padding:var(--sp-20)"><div class="plain">' + t.text + '</div></div>'
+        : '<div class="letter">' +
+          '<div class="l-top"' + (brand ? '' : ' style="background:var(--gray8)"') + '>' +
+            '<span class="logo">ШБ</span><b>Шаг в будущее</b></div>' +
+          '<div class="l-body">' + t.body() + '</div>' +
+          '<div class="l-foot">' + foot(t) + '</div></div>') +
+    '</div></div>';
+
+  v('side').innerHTML =
+    '<div class="card"><h3>Шаблон</h3><div class="kv">' +
+      row('Тема', t.subj) +
+      row('Поток', t.kind === 'transactional'
+        ? '<span class="badge b-tr">transactional</span> <span class="hint2" style="margin:0">приоритетный</span>'
+        : '<span class="badge b-ev">default</span>') +
+      row('Повод', t.why) +
+      row('Отключаемо', t.off
+        ? '<span class="badge b-ok">да, в профиле</span>'
+        : '<span class="badge b-tr">нет — сервисное</span>') +
+    '</div>' +
+    '<div class="hint2">Сервисные письма — доступы, коды, зачисление — не отключаются: без них человек не сможет войти ' +
+    'или не узнает о собственном обучении (01-product §4.10).</div></div>' +
+
+    '<div class="card"><h3>Переменные</h3><div class="vars">' +
+      t.vars.map(function(x){ return '<code>' + x + '</code>'; }).join('') +
+    '</div><div class="hint2">Подставляются из события. Школа правит текст, но не набор переменных: ' +
+    'шаблон без обязательной переменной не сохраняется.</div></div>' +
+
+    '<div class="card"><h3>Оформление и доставка</h3>' +
+    '<div class="hint2">Логотип и палитра — из настроек школы (white-label применяется к письмам и публичным страницам, ' +
+    'но не к кабинетам). Рядом с HTML всегда уходит текстовая версия — часть почтовиков показывает её, ' +
+    'и без неё письмо чаще попадает в спам.</div>' +
+    '<div class="btn-row">' +
+      '<button class="btn btn-s" onclick="toast(\'Тестовое письмо отправлено на почту техадмина\')">Отправить себе</button>' +
+      '<button class="btn btn-s" onclick="v(\'plain\').checked = !v(\'plain\').checked; render()">Текстовая версия</button>' +
+    '</div></div>';
+}
+
+function row(k, val){ return '<div class="r"><span>' + k + '</span><span>' + val + '</span></div>'; }
+
+function foot(t){
+  return 'Письмо от школы «Шаг в будущее» · <a href="#" onclick="event.preventDefault();toast(\'Сайт школы\')">shag.ru</a>' +
+    '<br>Вы получили его, потому что ' + (t.kind === 'transactional'
+      ? 'запросили действие в системе или школа оформляет ваше обучение.'
+      : 'учитесь в этой школе или являетесь представителем ученика.') +
+    (t.off ? '<br><a href="#" onclick="event.preventDefault();toast(\'Настройки уведомлений в профиле\')">Настроить уведомления</a>' : '');
+}
+
+var tt;
+function toast(m){
+  var t = v('toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3600);
+}
+
+render();
+</script>
+</body>
+</html>

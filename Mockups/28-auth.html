@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Вход и регистрация — FS-LMS 2.0</title>
+<link rel="stylesheet" href="_shared.css">
+<script src="_nav.js"></script>
+<style>
+  body{background:var(--gray0)}
+  .stage{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:var(--sp-24) var(--sp-16)}
+  .auth{width:min(440px,100%);background:#fff;border:1px solid var(--gray2);border-radius:var(--r-14);
+    box-shadow:var(--sh);padding:var(--sp-32) var(--sp-32) var(--sp-24)}
+  .auth.wide{width:min(680px,100%)}
+  /* анкета блоками: у заявки и у приглашения полей много, и без группировки они читаются как список */
+  .sect{border-top:1px solid var(--gray2);margin:var(--sp-20) 0 0;padding-top:var(--sp-16)}
+  .sect:first-of-type{border-top:0;margin-top:0;padding-top:0}
+  .sect h3{margin:0 0 var(--sp-4);font-size:var(--fs-16)}
+  .sect .sh{color:var(--gray6);font-size:var(--fs-12);margin:0 0 var(--sp-16);line-height:1.5}
+  .locked{background:var(--gray0);border:1px solid var(--gray2);border-radius:var(--r-8);
+    padding:var(--sp-8) var(--sp-12);font-size:var(--fs-12);color:var(--gray6);margin-bottom:var(--sp-12);
+    display:flex;gap:var(--sp-8);align-items:center}
+  .req{color:var(--red)}
+  .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+  .brand{display:flex;gap:var(--sp-12);align-items:center;margin-bottom:var(--sp-20)}
+  .brand .logo{width:40px;height:40px;border-radius:var(--r-8);background:var(--blue);color:#fff;display:grid;
+    place-items:center;font-weight:700;font-size:var(--fs-14)}
+  .brand b{font-size:var(--fs-16);display:block;line-height:1.3}
+  .brand small{color:var(--gray6);font-size:var(--fs-12)}
+  .auth h1{margin:0 0 var(--sp-4);font-size:var(--fs-22)}
+  .lead{color:var(--gray6);font-size:var(--fs-14);margin:0 0 var(--sp-20);line-height:1.5}
+
+  .fld{margin-bottom:14px}
+  .fld label{display:block;font-size:var(--fs-12);color:var(--gray6);margin-bottom:5px;font-weight:600}
+  .fld input,.fld select{width:100%;border:1px solid var(--gray3);border-radius:var(--r);
+    padding:var(--sp-12) var(--sp-12);font-size:var(--fs-14);font-family:inherit}
+  .fld input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-l)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-12)}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--sp-12)}
+  @media (max-width:640px){ .row2,.row3{grid-template-columns:1fr} }
+  .hint2{font-size:var(--fs-12);color:var(--gray6);margin-top:6px;line-height:1.45}
+  .pwd{position:relative}
+  .pwd .eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:none;
+    color:var(--gray5);font-size:var(--fs-14);padding:var(--sp-4)}
+  .pwd .eye:hover{color:var(--gray9)}
+
+  .chk{display:flex;gap:var(--sp-8);align-items:flex-start;font-size:var(--fs-14);margin-bottom:14px;cursor:pointer;
+    line-height:1.45}
+  .chk input{margin-top:3px;flex:none}
+  .chk small{display:block;color:var(--gray6);font-size:var(--fs-12);margin-top:2px}
+  .link{color:var(--blue);text-decoration:none;cursor:pointer} .link:hover{text-decoration:underline}
+
+  .btn-main{width:100%;border:0;background:var(--blue);color:#fff;font-weight:600;font-size:var(--fs-14);
+    padding:var(--sp-12);border-radius:var(--r);margin-top:4px}
+  .btn-main:hover{background:#1c7ed6}
+  .btn-main:disabled{background:var(--gray3);cursor:not-allowed}
+  .foot{display:flex;justify-content:space-between;gap:var(--sp-12);margin-top:16px;font-size:var(--fs-14);flex-wrap:wrap}
+
+  .err{background:var(--red-l);border:1px solid #ffc9c9;color:#c92a2a;border-radius:var(--r-8);
+    padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);margin-bottom:14px;display:none;line-height:1.5}
+  .err.on{display:block}
+  .okbox{background:var(--green-l);border:1px solid #b2f2bb;color:#2b8a3e;border-radius:var(--r-8);
+    padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);margin-bottom:14px;line-height:1.5}
+  .warnbox{background:var(--orange-l);border:1px solid #ffd8a8;color:#d9480f;border-radius:var(--r-8);
+    padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);margin-bottom:14px;line-height:1.5}
+  .infobox{background:var(--blue-l);border:1px solid #a5d8ff;color:#1864ab;border-radius:var(--r-8);
+    padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);margin-bottom:14px;line-height:1.5}
+  .joinbadge{display:inline-flex;align-items:center;gap:var(--sp-6);background:var(--violet-l);color:#5f3dc4;
+    font-size:var(--fs-12);font-weight:600;border-radius:var(--r-pill);padding:var(--sp-4) var(--sp-12);margin-bottom:12px}
+
+  .otp-in{font-family:ui-monospace,Menlo,monospace;font-size:var(--fs-26)!important;letter-spacing:.45em;
+    text-align:center;padding:var(--sp-12)!important}
+  .captcha{border:1px solid var(--gray3);border-radius:var(--r-8);background:var(--gray0);padding:var(--sp-12) var(--sp-16);
+    display:flex;gap:var(--sp-12);align-items:center;font-size:var(--fs-14);margin-bottom:14px}
+  .captcha input{width:18px;height:18px}
+  .captcha small{color:var(--gray5);font-size:var(--fs-12);margin-left:auto}
+
+  .below{margin-top:16px;font-size:var(--fs-12);color:var(--gray5);display:flex;gap:var(--sp-16);flex-wrap:wrap;
+    justify-content:center}
+  .below a{color:var(--gray6);text-decoration:none}
+  .below a:hover{color:var(--gray9);text-decoration:underline}
+
+  /* демо-панель */
+  .demo-bar{position:fixed;top:12px;right:12px;background:#fff;border:1px solid var(--gray2);border-radius:var(--r-8);
+    box-shadow:var(--sh);padding:var(--sp-8) var(--sp-12);display:flex;gap:var(--sp-12);align-items:center;
+    font-size:var(--fs-12);color:var(--gray6);flex-wrap:wrap;z-index:30;max-width:min(560px,90vw)}
+  .demo-bar select{padding:var(--sp-4) var(--sp-8);font-size:var(--fs-12);border:1px solid var(--gray3);border-radius:var(--r-4)}
+  .demo-bar label{display:flex;gap:var(--sp-4);align-items:center;white-space:nowrap;cursor:pointer}
+</style>
+</head>
+<body>
+
+<div class="demo-bar">
+  <span><i>(демо)</i> состояние</span>
+  <select id="st" onchange="render()">
+    <option value="login">Вход</option>
+    <option value="reg">Регистрация</option>
+    <option value="join">Приглашение представителя</option>
+    <option value="joindead">Приглашение истекло</option>
+    <option value="otp">Подтверждение почты</option>
+    <option value="2fa">Второй фактор при входе</option>
+    <option value="temp">Временный пароль</option>
+    <option value="reset">Сброс пароля</option>
+  </select>
+  <label><input type="checkbox" id="school" checked onchange="render()">модуль «Школа»</label>
+  <label><input type="checkbox" id="edo" checked onchange="render()">модуль ЭДО</label>
+  <label><input type="checkbox" id="locked" onchange="render()">представитель уже заполнен</label>
+  <label><input type="checkbox" id="adult" onchange="render()">ученик совершеннолетний</label>
+  <label>возраст ребёнка
+    <select id="age" onchange="render()">
+      <option value="under14">до 14</option>
+      <option value="teen">14–17</option>
+    </select></label>
+  <label><input type="checkbox" id="suspect" onchange="render()">подозрение на бота</label>
+</div>
+
+<div class="stage">
+  <div class="auth" id="card"></div>
+  <div class="below">
+    <a href="#" onclick="event.preventDefault();toast('Публичная страница: политика обработки ПД')">Политика обработки ПД</a>
+    <a href="#" onclick="event.preventDefault();toast('Публичная страница: оферта, редакция 2')">Оферта</a>
+    <a href="#" onclick="event.preventDefault();toast('Публичный сайт школы')">На сайт школы</a>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* Один вход на всех: ученик, представитель, сотрудник. Приземление после входа —
+   по основной деятельности (03-design §2.1): сотрудник в «Управление», остальные в «Обучение». */
+var attempts = 0, resent = 47;
+
+function v(id){ return document.getElementById(id); }
+function brand(){
+  return '<div class="brand"><span class="logo">ШБ</span>' +
+    '<span><b>Шаг в будущее</b><small>вход в платформу</small></span></div>';
+}
+function captcha(){
+  /* SmartCaptcha показывается только по CAPTCHA_REQUIRED — живой пользователь её обычно не видит (02-tech §8) */
+  return v('suspect').checked
+    ? '<div class="captcha"><input type="checkbox" onchange="toast(\'SmartCaptcha пройдена — токен уйдёт с формой\')">' +
+      'Я не робот<small>SmartCaptcha</small></div>'
+    : '';
+}
+
+function render(){
+  var s = v('st').value;
+  v('card').className = 'auth' + (s === 'reg' || s === 'join' ? ' wide' : '');
+  v('card').innerHTML =
+    s === 'login' ? loginCard() :
+    s === 'reg' ? regCard() :
+    s === 'join' ? joinCard() :
+    s === 'joindead' ? joinDeadCard() :
+    s === 'otp' ? otpCard() :
+    s === '2fa' ? faCard() :
+    s === 'temp' ? tempCard() : resetCard();
+}
+
+/* ── вход ── */
+function loginCard(){
+  return brand() + '<h1>Вход</h1>' +
+    '<p class="lead">Один вход для учеников, родителей и сотрудников.</p>' +
+    '<div class="err" id="loginErr"></div>' +
+    '<div class="fld"><label>Логин или почта</label><input type="text" id="li" placeholder="abramov или abramov@mail.ru"></div>' +
+    '<div class="fld"><label>Пароль</label><div class="pwd">' +
+      '<input type="password" id="lp"><button class="eye" onclick="peek(\'lp\',this)">👁</button></div></div>' +
+    captcha() +
+    '<button class="btn-main" id="loginBtn" onclick="doLogin()">Войти</button>' +
+    '<div class="foot"><a class="link" onclick="go(\'reset\')">Забыли пароль?</a>' +
+    '<a class="link" onclick="go(\'reg\')">Регистрация</a></div>';
+}
+function doLogin(){
+  attempts++;
+  var e = v('loginErr');
+  if(attempts >= 4){
+    /* лимит неудачных попыток — пауза, а не вечная блокировка (01-product §4.7) */
+    e.innerHTML = '<b>Слишком много попыток.</b> Вход приостановлен на 5 минут — попробуйте в 14:32 ' +
+      'или восстановите пароль.';
+    e.classList.add('on');
+    v('loginBtn').disabled = true;
+    return;
+  }
+  /* одна формулировка на оба случая: не подсказываем, существует ли логин */
+  e.textContent = 'Неверный логин или пароль.';
+  e.classList.add('on');
+  toast('Демо: осталось попыток до паузы — ' + (4 - attempts));
+}
+
+/* ── регистрация ── */
+function regCard(){
+  var school = v('school').checked;
+  var edo = v('edo').checked;
+  /* Взрослый ученик проходит одной формой: представителя у него нет, второго шага не будет,
+     поэтому согласие и документы для договора собираются сразу (01-product §4.7).
+     Без модуля «Школа» представителей нет вовсе — форма всегда одна. */
+  var adult = v('adult').checked || !school;
+
+  return brand() + '<h1>Заявка на обучение</h1>' +
+    '<p class="lead">' + (adult
+      ? 'Одна анкета: данные, доступ' + (edo ? ' и документы для договора' : '') + '.'
+      : 'Анкету заполняет сам ученик. Документы и согласие оформит представитель по ссылке.') + '</p>' +
+
+    '<div class="hp" aria-hidden="true"><label>Компания</label><input type="text" tabindex="-1"></div>' +
+
+    '<div class="sect"><h3>Направление и данные</h3>' +
+      '<div class="fld"><label>Направление <span class="req">*</span></label>' +
+        '<select><option value="">— выберите направление —</option><option>Математика</option>' +
+        '<option>Информатика</option><option>Русский язык</option></select></div>' +
+      '<div class="row3">' +
+        '<div class="fld"><label>Фамилия <span class="req">*</span></label><input type="text" placeholder="Иванов"></div>' +
+        '<div class="fld"><label>Имя <span class="req">*</span></label><input type="text" placeholder="Иван"></div>' +
+        '<div class="fld"><label>Отчество</label><input type="text" placeholder="Иванович"></div>' +
+      '</div>' +
+      '<div class="row2">' +
+        '<div class="fld"><label>Дата рождения <span class="req">*</span></label>' +
+          '<input type="date" onchange="toast(\'По дате рождения форма решает, нужен ли представитель\')"></div>' +
+        '<div class="fld"><label>Телефон <span class="req">*</span></label><input type="text" placeholder="+7 (999) 000-00-00"></div>' +
+      '</div>' +
+      '<div class="fld"><label>Почта <span class="req">*</span></label><input type="text" placeholder="ivanov@mail.ru">' +
+        '<div class="hint2">На неё придёт код подтверждения и данные для входа.</div></div>' +
+      (adult ? '' :
+        '<label class="chk"><input type="checkbox"><span>Это почта родителя' +
+        '<small>для восстановления доступа и писем; логином не станет и не помешает родителю зарегистрироваться</small></span></label>') +
+    '</div>' +
+
+    (school && !adult
+      ? '<div class="sect"><h3>Школа</h3>' +
+        '<div class="row2">' +
+          '<div class="fld"><label>Школа <span class="req">*</span></label><input type="text" placeholder="МАОУ СОШ № 57"></div>' +
+          '<div class="fld"><label>Класс <span class="req">*</span></label><select>' +
+            '<option value="">— выберите класс —</option>' +
+            [1,2,3,4,5,6,7,8,9,10,11].map(function(i){ return '<option>' + i + ' класс</option>'; }).join('') +
+          '</select></div>' +
+        '</div></div>'
+      : '') +
+
+    /* документы взрослый заполняет здесь же — второго шага у него не будет */
+    (adult && edo
+      ? '<div class="sect"><h3>Документы для договора</h3>' +
+        '<p class="sh">Договор оформляется на вас: вы сами себе представитель.</p>' +
+        '<div class="row2">' +
+          '<div class="fld"><label>Тип документа <span class="req">*</span></label>' +
+            '<select><option>Паспорт РФ</option><option>Иностранный паспорт</option></select></div>' +
+          '<div class="fld"><label>Серия и номер <span class="req">*</span></label><input type="text" placeholder="1234 567890"></div>' +
+        '</div>' +
+        '<div class="row2">' +
+          '<div class="fld"><label>Кем выдан <span class="req">*</span></label><input type="text" placeholder="ГУ МВД России по г. Москве"></div>' +
+          '<div class="fld"><label>Дата выдачи</label><input type="date"></div>' +
+        '</div>' +
+        '<div class="row2">' +
+          '<div class="fld"><label>ИНН <span class="req">*</span></label><input type="text" placeholder="12 цифр"></div>' +
+          '<div class="fld"><label>Адрес регистрации <span class="req">*</span></label><input type="text" placeholder="как в паспорте"></div>' +
+        '</div></div>'
+      : '') +
+
+    '<div class="sect"><h3>Доступ в кабинет</h3>' +
+      '<div class="row2">' +
+        '<div class="fld"><label>Логин <span class="req">*</span></label><input type="text" placeholder="ivanov">' +
+          '<div class="hint2">Латиница, 3–20 символов.</div></div>' +
+        '<div class="fld"><label>Пароль <span class="req">*</span></label><div class="pwd">' +
+          '<input type="password" id="rp"><button class="eye" onclick="peek(\'rp\',this)">👁</button></div>' +
+          '<div class="hint2">Латиница, цифры и знаки, не короче 6 символов.</div></div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="sect">' +
+      (adult
+        ? '<label class="chk"><input type="checkbox" id="agree" onchange="v(\'regBtn\').disabled = !this.checked">' +
+          '<span>Согласен на обработку персональных данных — ' +
+          '<a class="link" onclick="toast(\'Текст согласия, редакция 3 от 01.09.2026\')">редакция 3</a>' +
+          '<small>согласие сохранится с номером этой редакции</small></span></label>'
+        : '<div class="infobox">Данные уйдут в школу для оформления зачисления. Согласие на их обработку ' +
+          'подпишет ваш родитель или представитель — ему придёт ссылка после проверки заявки.</div>') +
+      captcha() +
+      '<button class="btn-main" id="regBtn"' + (adult ? ' disabled' : '') +
+        ' onclick="go(\'otp\');toast(\'Код отправлен на почту\')">Подать заявку</button>' +
+      '<div class="foot"><span></span><a class="link" onclick="go(\'login\')">У меня есть аккаунт</a></div>' +
+    '</div>';
+}
+
+/* ── приглашение представителя (JOIN-ссылка) ── */
+function joinCard(){
+  var edo = v('edo') ? v('edo').checked : true;
+  var locked = v('locked') ? v('locked').checked : false;
+  return brand() +
+    '<span class="joinbadge">Приглашение представителя</span>' +
+    '<h1>Завершение регистрации</h1>' +
+    '<p class="lead">Школа «Шаг в будущее» оформляет зачисление <b>Абрамова Кирилла</b>. ' +
+    'Проверьте данные ученика' + (edo ? ' и заполните анкету представителя — по ней сформируется договор.' : '.') + '</p>' +
+
+    '<div class="sect"><h3>1. Данные ученика</h3>' +
+      '<p class="sh">Их ввёл ученик при подаче заявки. Поправьте, если есть ошибки.</p>' +
+      '<div class="row3">' +
+        '<div class="fld"><label>Фамилия <span class="req">*</span></label><input type="text" value="Абрамов"></div>' +
+        '<div class="fld"><label>Имя <span class="req">*</span></label><input type="text" value="Кирилл"></div>' +
+        '<div class="fld"><label>Отчество</label><input type="text" value="Сергеевич"></div>' +
+      '</div>' +
+      '<div class="row2">' +
+        '<div class="fld"><label>Дата рождения <span class="req">*</span></label><input type="date" value="2009-04-12"></div>' +
+        '<div class="fld"><label>Телефон <span class="req">*</span></label><input type="text" value="+7 (926) 100-11-22"></div>' +
+      '</div>' +
+      '<div class="row2">' +
+        '<div class="fld"><label>Школа <span class="req">*</span></label><input type="text" value="МАОУ СОШ № 57"></div>' +
+        '<div class="fld"><label>Класс <span class="req">*</span></label><select><option>10 класс</option></select></div>' +
+      '</div>' +
+      (edo ? studentDoc() : '') +
+    '</div>' +
+
+    '<div class="sect"><h3>2. Данные представителя</h3>' +
+      (locked
+        ? '<div class="locked"><span>🔒</span>Данные уже заполнены при оформлении другого ребёнка и зафиксированы. ' +
+          'Изменить их можно через школу.</div>'
+        : '<p class="sh">По ним оформляется договор, поэтому нужны как в паспорте.</p>') +
+      '<div class="row3">' +
+        '<div class="fld"><label>Фамилия <span class="req">*</span></label><input type="text"' + (locked ? ' value="Абрамова" disabled' : '') + '></div>' +
+        '<div class="fld"><label>Имя <span class="req">*</span></label><input type="text"' + (locked ? ' value="Елена" disabled' : '') + '></div>' +
+        '<div class="fld"><label>Отчество</label><input type="text"' + (locked ? ' value="Петровна" disabled' : '') + '></div>' +
+      '</div>' +
+      '<div class="row2">' +
+        '<div class="fld"><label>Дата рождения <span class="req">*</span></label><input type="date"' + (locked ? ' disabled' : '') + '></div>' +
+        '<div class="fld"><label>Тип документа <span class="req">*</span></label><select' + (locked ? ' disabled' : '') + '>' +
+          '<option>Паспорт РФ</option><option>Иностранный паспорт</option></select></div>' +
+      '</div>' +
+      (edo
+        ? '<div class="row2">' +
+            '<div class="fld"><label>Серия и номер <span class="req">*</span></label><input type="text" placeholder="1234 567890"' + (locked ? ' disabled' : '') + '></div>' +
+            '<div class="fld"><label>Дата выдачи</label><input type="date"' + (locked ? ' disabled' : '') + '></div>' +
+          '</div>' +
+          '<div class="fld"><label>Кем выдан <span class="req">*</span></label><input type="text" placeholder="ГУ МВД России по г. Москве"' + (locked ? ' disabled' : '') + '></div>' +
+          '<div class="row2">' +
+            '<div class="fld"><label>ИНН <span class="req">*</span></label><input type="text" placeholder="12 цифр"' + (locked ? ' disabled' : '') + '></div>' +
+            '<div class="fld"><label>Адрес регистрации <span class="req">*</span></label><input type="text" placeholder="как в паспорте"' + (locked ? ' disabled' : '') + '></div>' +
+          '</div>'
+        : '') +
+      '<div class="row2">' +
+        '<div class="fld"><label>Телефон <span class="req">*</span></label><input type="text" placeholder="+7 (999) 000-00-00"' + (locked ? ' disabled' : '') + '></div>' +
+        '<div class="fld"><label>Почта <span class="req">*</span></label><input type="text" placeholder="на неё придут доступы"' + (locked ? ' disabled' : '') + '></div>' +
+      '</div>' +
+      (locked ? '' :
+        '<div class="fld"><label>Пароль <span class="req">*</span></label><div class="pwd">' +
+        '<input type="password" id="jp"><button class="eye" onclick="peek(\'jp\',this)">👁</button></div>' +
+        '<div class="hint2">Латиница, цифры и знаки, не короче 6 символов.</div></div>') +
+    '</div>' +
+
+    '<div class="sect">' +
+      '<label class="chk"><input type="checkbox" onchange="v(\'joinBtn\').disabled = !this.checked">' +
+        '<span>Согласен на обработку персональных данных — своих и ребёнка — ' +
+        '<a class="link" onclick="toast(\'Текст согласия, редакция 3\')">редакция 3</a></span></label>' +
+      '<button class="btn-main" id="joinBtn" disabled ' +
+        'onclick="toast(\'' + (edo ? 'Договор сформирован; данные для входа отправлены на почту' : 'Регистрация завершена; данные для входа отправлены на почту') + '\')">' +
+        (edo ? 'Заключить договор' : 'Завершить регистрацию') + '</button>' +
+      '<div class="foot"><span></span>' +
+      '<a class="link" onclick="toast(\'Вход: существующая учётная запись привяжется к ученику этой же ссылкой\')">У меня уже есть аккаунт</a></div>' +
+    '</div>';
+}
+
+/* Документ ученика определяется возрастом (01-product §4.7): до 14 — свидетельство о рождении,
+   с 14 — паспорт. Тип подставляется сам, но остаётся переключаемым: паспорт получают не в день
+   рождения, и месяц-другой подросток живёт со свидетельством. */
+function studentDoc(){
+  var teen = v('age').value === 'teen';
+  return '<div class="row2">' +
+      '<div class="fld"><label>Документ ученика <span class="req">*</span></label>' +
+        '<select onchange="toast(\'Тип подставлен по возрасту, но его можно сменить\')">' +
+          (teen
+            ? '<option selected>Паспорт</option><option>Свидетельство о рождении</option>'
+            : '<option selected>Свидетельство о рождении</option><option>Паспорт</option>') +
+        '</select>' +
+        '<div class="hint2">' + (teen
+          ? 'С 14 лет — паспорт: свидетельство уже заменено.'
+          : 'До 14 лет — свидетельство о рождении.') + '</div></div>' +
+      '<div class="fld"><label>' + (teen ? 'Серия и номер паспорта' : 'Серия и номер свидетельства') +
+        ' <span class="req">*</span></label>' +
+        '<input type="text" placeholder="' + (teen ? '1234 567890' : 'XX-АА № 123456') + '"></div>' +
+    '</div>' +
+    '<div class="fld"><label>ИНН ученика <span class="req">*</span></label><input type="text" placeholder="12 цифр">' +
+      '<div class="hint2">Нужен для договора. Если ИНН неизвестен — его выдаёт налоговая по заявлению.</div></div>';
+}
+
+function joinDeadCard(){
+  return brand() +
+    '<span class="joinbadge">Приглашение представителя</span>' +
+    '<h1>Ссылка истекла</h1>' +
+    '<p class="lead">Приглашения действуют 24 часа — это защита от пересылки по чужим рукам.</p>' +
+    '<div class="warnbox">Анкета ученика сохранена, заново ничего заполнять не придётся. ' +
+    'Попросите школу выпустить новую ссылку — это одна кнопка в заявке.</div>' +
+    '<button class="btn-main" onclick="toast(\'Публичная страница школы с контактами\')">Контакты школы</button>';
+}
+
+/* ── подтверждение почты: единый OTP-механизм (02-tech §8) ── */
+function otpCard(){
+  return brand() + '<h1>Подтвердите почту</h1>' +
+    '<p class="lead">Мы отправили 6-значный код на <b>a•••••v@mail.ru</b>. Он действует 10 минут.</p>' +
+    '<div class="fld"><input type="text" class="otp-in" maxlength="6" placeholder="––––––" ' +
+      'oninput="if(this.value.length===6){toast(\'Почта подтверждена — добро пожаловать\')}"></div>' +
+    '<div class="foot" style="margin-top:4px">' +
+      '<span class="hint2" id="resend">Отправить ещё раз — через 0:' + resent + ' сек</span>' +
+      '<a class="link" onclick="bypass()">Письмо не приходит?</a></div>' +
+    '<div id="bypassBox"></div>';
+}
+function bypass(){
+  /* код обхода: один на школу, администратор диктует его лично; в заявке останется отметка,
+     каким кодом подтверждена почта (03-design §4.20) */
+  v('bypassBox').innerHTML =
+    '<div class="infobox" style="margin-top:14px">Позвоните в школу или подойдите к администратору — ' +
+    'он продиктует код подтверждения. Ввод кода отметится в вашей заявке.</div>' +
+    '<div class="fld"><label>Код от администратора</label>' +
+    '<input type="text" class="otp-in" style="letter-spacing:.2em" placeholder="0000-XXXX" ' +
+    'oninput="if(this.value.length>=9){toast(\'Почта подтверждена кодом администратора — отметка в заявке\')}"></div>';
+}
+
+/* ── второй фактор: тот же OTP, только повод другой (01-product §4.7) ── */
+function faCard(){
+  return brand() + '<h1>Подтвердите вход</h1>' +
+    '<p class="lead">Вы входите как <b>Кэбс М.</b> — методист. Для ролей с доступом к персональным данным, ' +
+    'деньгам и настройкам мы просим второй код.</p>' +
+    '<div class="fld"><label>Код из письма</label>' +
+      '<input type="text" class="otp-in" maxlength="6" placeholder="––––––" ' +
+      'oninput="if(this.value.length===6){toast(\'Вход подтверждён — вы в «Управлении»\')}"></div>' +
+    '<label class="chk"><input type="checkbox" checked><span>Не спрашивать на этом устройстве' +
+      '<small>пока вы заходите регулярно, код больше не понадобится</small></span></label>' +
+    '<div class="foot"><span class="hint2">Отправить ещё раз — через 0:42</span>' +
+      '<a class="link" onclick="toast(\'Запасной путь: код обхода у администратора школы\')">Нет доступа к почте?</a></div>';
+}
+
+/* ── смена временного пароля ── */
+function tempCard(){
+  return brand() + '<h1>Придумайте новый пароль</h1>' +
+    '<p class="lead">Вы вошли по временному паролю. Он одноразовый: после смены перестанет действовать.</p>' +
+    '<div class="fld"><label>Новый пароль</label><div class="pwd">' +
+      '<input type="password" id="np"><button class="eye" onclick="peek(\'np\',this)">👁</button></div>' +
+      '<div class="hint2">Латиница, цифры и знаки, не короче 6 символов. Старый пароль не спрашиваем — временный вход уже подтвердил, что это вы.</div></div>' +
+    '<div class="fld"><label>Ещё раз</label><input type="password"></div>' +
+    '<button class="btn-main" onclick="toast(\'Пароль сохранён — вы в системе\')">Сохранить и продолжить</button>';
+}
+
+/* ── сброс пароля: тот же OTP, что и при регистрации ── */
+var resetSent = false;
+function resetCard(){
+  if(!resetSent)
+    return brand() + '<h1>Восстановление пароля</h1>' +
+      '<p class="lead">Укажите почту — пришлём код для смены пароля.</p>' +
+      '<div class="fld"><label>Почта</label><input type="text"></div>' +
+      captcha() +
+      '<button class="btn-main" onclick="resetSent=true;render()">Отправить код</button>' +
+      '<div class="foot"><a class="link" onclick="go(\'login\')">‹ Ко входу</a>' +
+      '<a class="link" onclick="toast(\'Запасной путь: временный пароль выдаёт преподаватель или администратор — 01-product §4.7\')">Нет доступа к почте?</a></div>';
+  return brand() + '<h1>Проверьте почту</h1>' +
+    '<div class="okbox">Если эта почта зарегистрирована, на неё отправлен код. ' +
+    'Формулировка нарочно одинаковая для любой почты — так нельзя проверить, есть ли у человека аккаунт.</div>' +
+    '<div class="fld"><label>Код из письма</label>' +
+      '<input type="text" class="otp-in" maxlength="6" placeholder="––––––"></div>' +
+    '<div class="fld"><label>Новый пароль</label><div class="pwd">' +
+      '<input type="password" id="sp"><button class="eye" onclick="peek(\'sp\',this)">👁</button></div></div>' +
+    '<button class="btn-main" onclick="toast(\'Пароль изменён — войдите с новым\')">Сменить пароль</button>' +
+    '<div class="foot"><a class="link" onclick="resetSent=false;render()">‹ Другая почта</a></div>';
+}
+
+function go(s){ v('st').value = s; attempts = 0; resetSent = false; render(); }
+function peek(id, btn){
+  var i = v(id);
+  i.type = i.type === 'password' ? 'text' : 'password';
+  btn.textContent = i.type === 'password' ? '👁' : '●';
+}
+
+var tt;
+function toast(m){
+  var t = v('toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3600);
+}
+
+render();
+</script>
+</body>
+</html>

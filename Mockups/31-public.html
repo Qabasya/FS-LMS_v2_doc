@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Публичная часть — FS-LMS 2.0</title>
+<link rel="stylesheet" href="_shared.css">
+<script src="_nav.js"></script>
+<style>
+  /* Публичная часть — единственное место с палитрой клиента (white-label).
+     Токены размеров те же (§1.13), меняются только цвета бренда. */
+  :root{ --br:#228be6; --br-d:#1c7ed6; --br-l:#e7f5ff; }
+  body.p-green{ --br:#2f9e44; --br-d:#2b8a3e; --br-l:#ebfbee; }
+  body.p-violet{ --br:#7048e8; --br-d:#6741d9; --br-l:#f3f0ff; }
+
+  body{background:#fff}
+  .demo-bar{position:fixed;top:12px;right:12px;background:#fff;border:1px solid var(--gray2);border-radius:var(--r-8);
+    box-shadow:0 4px 16px rgba(0,0,0,.12);padding:var(--sp-8) var(--sp-12);display:flex;gap:var(--sp-12);align-items:center;
+    font-size:var(--fs-12);color:var(--gray6);flex-wrap:wrap;z-index:80;max-width:min(680px,92vw)}
+  .demo-bar select{padding:var(--sp-4) var(--sp-8);font-size:var(--fs-12);border:1px solid var(--gray3);border-radius:var(--r-4)}
+  .demo-bar label{display:flex;gap:var(--sp-4);align-items:center;white-space:nowrap;cursor:pointer}
+
+  /* шапка сайта */
+  .site-h{border-bottom:1px solid var(--gray2);position:sticky;top:0;background:rgba(255,255,255,.94);
+    backdrop-filter:blur(6px);z-index:40}
+  .site-h .in{max-width:1140px;margin:0 auto;padding:var(--sp-16) var(--sp-20);display:flex;gap:var(--sp-24);align-items:center}
+  .site-h .logo{width:38px;height:38px;border-radius:var(--r-8);background:var(--br);color:#fff;display:grid;
+    place-items:center;font-weight:700;font-size:var(--fs-14);flex:none}
+  .site-h b{font-size:var(--fs-16)}
+  .site-h nav{display:flex;gap:var(--sp-20);margin-left:auto;font-size:var(--fs-14)}
+  .site-h nav a{color:var(--gray7);text-decoration:none}
+  .site-h nav a:hover{color:var(--br)}
+  .b-main{background:var(--br);color:#fff;border:0;border-radius:var(--r);padding:var(--sp-8) var(--sp-20);
+    font-size:var(--fs-14);font-weight:600;text-decoration:none;display:inline-block;cursor:pointer}
+  .b-main:hover{background:var(--br-d)}
+  .b-ghost{border:1px solid var(--gray3);background:#fff;border-radius:var(--r);padding:var(--sp-8) var(--sp-20);
+    font-size:var(--fs-14);color:var(--gray8);text-decoration:none;display:inline-block;cursor:pointer}
+  .b-ghost:hover{border-color:var(--br);color:var(--br)}
+  .b-lg{padding:var(--sp-12) var(--sp-32);font-size:var(--fs-16)}
+
+  .page{max-width:1140px;margin:0 auto;padding:0 var(--sp-20)}
+  .block{padding:var(--sp-60) 0;border-bottom:1px solid var(--gray1)}
+  .block:last-child{border-bottom:0}
+  .block h2{margin:0 0 var(--sp-8);font-size:var(--fs-32);line-height:1.2}
+  .block .sub{color:var(--gray6);font-size:var(--fs-16);margin:0 0 var(--sp-32);line-height:1.6;max-width:640px}
+  .bl-tag{display:inline-block;font-size:var(--fs-12);font-weight:600;color:var(--br);background:var(--br-l);
+    border-radius:var(--r-pill);padding:var(--sp-4) var(--sp-12);margin-bottom:var(--sp-12)}
+
+  /* hero */
+  .hero{display:grid;grid-template-columns:1fr 420px;gap:var(--sp-48);align-items:center;padding:var(--sp-60) 0}
+  .hero h1{margin:0 0 var(--sp-16);font-size:var(--fs-32);line-height:1.15}
+  .hero p{font-size:var(--fs-16);color:var(--gray7);line-height:1.65;margin:0 0 var(--sp-24)}
+  .hero .acts{display:flex;gap:var(--sp-12);flex-wrap:wrap}
+  .hero-art{background:linear-gradient(140deg,var(--br-l),#fff);border:1px solid var(--gray2);border-radius:var(--r-14);
+    height:280px;display:grid;place-items:center;color:var(--br);font-size:var(--fs-14)}
+  .facts{display:flex;gap:var(--sp-32);margin-top:var(--sp-32);flex-wrap:wrap}
+  .facts div b{display:block;font-size:var(--fs-26);font-weight:700}
+  .facts div span{font-size:var(--fs-12);color:var(--gray6)}
+
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-20)}
+  .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--sp-20)}
+  .tile{border:1px solid var(--gray2);border-radius:var(--r-12);padding:var(--sp-20);background:#fff}
+  .tile h3{margin:0 0 var(--sp-8);font-size:var(--fs-16)}
+  .tile p{margin:0;color:var(--gray6);font-size:var(--fs-14);line-height:1.6}
+  .who-t{display:flex;gap:var(--sp-12);align-items:center;margin-bottom:var(--sp-12)}
+  .who-t .ava{width:48px;height:48px;border-radius:50%;background:var(--br-l);color:var(--br);display:grid;
+    place-items:center;font-weight:700;flex:none}
+  .quote{border-left:3px solid var(--br);padding-left:var(--sp-16);font-size:var(--fs-14);line-height:1.7;color:var(--gray8)}
+  .quote .by{color:var(--gray6);font-size:var(--fs-12);margin-top:var(--sp-8)}
+
+  /* карточка курса в каталоге */
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-20)}
+  .cc{border:1px solid var(--gray2);border-radius:var(--r-12);overflow:hidden;background:#fff;display:flex;
+    flex-direction:column;text-decoration:none;color:inherit}
+  .cc:hover{border-color:var(--br);box-shadow:0 6px 20px rgba(0,0,0,.07)}
+  .cc .ph{height:132px;background:linear-gradient(140deg,var(--br-l),#fff);display:grid;place-items:center;
+    color:var(--br);font-size:var(--fs-12)}
+  .cc .cb{padding:var(--sp-16);flex:1;display:flex;flex-direction:column}
+  .cc h3{margin:0 0 var(--sp-8);font-size:var(--fs-16);line-height:1.3}
+  .cc .d{color:var(--gray6);font-size:var(--fs-14);line-height:1.55;margin-bottom:var(--sp-12)}
+  .cc .m{display:flex;gap:var(--sp-12);flex-wrap:wrap;font-size:var(--fs-12);color:var(--gray6);margin-bottom:var(--sp-12)}
+  .cc .bot{margin-top:auto;display:flex;align-items:center;gap:var(--sp-12)}
+  .cc .price{font-size:var(--fs-22);font-weight:700}
+  .cc .cta{margin-left:auto}
+  .st{display:inline-block;font-size:var(--fs-12);font-weight:600;padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4)}
+  .st-open{background:var(--green-l);color:#2b8a3e}
+  .st-soon{background:var(--blue-l);color:#1864ab}
+  .st-closed{background:var(--gray1);color:var(--gray6)}
+
+  /* страница курса */
+  .course{display:grid;grid-template-columns:1fr 360px;gap:var(--sp-32);align-items:start;padding:var(--sp-32) 0}
+  .course h1{margin:0 0 var(--sp-12);font-size:var(--fs-32);line-height:1.2}
+  .course .lead{font-size:var(--fs-16);color:var(--gray7);line-height:1.7;margin-bottom:var(--sp-24)}
+  .prog{border:1px solid var(--gray2);border-radius:var(--r-12);overflow:hidden;margin-bottom:var(--sp-24)}
+  .prog .ph{background:var(--gray0);padding:var(--sp-12) var(--sp-16);font-weight:600;font-size:var(--fs-14);
+    border-bottom:1px solid var(--gray2)}
+  .prog .pr{padding:var(--sp-12) var(--sp-16);border-bottom:1px solid var(--gray1);font-size:var(--fs-14);
+    display:flex;gap:var(--sp-12)}
+  .prog .pr:last-child{border-bottom:0}
+  .prog .pr span:first-child{color:var(--gray5);width:26px;flex:none}
+  .buy{border:1px solid var(--gray2);border-radius:var(--r-12);padding:var(--sp-20);position:sticky;top:90px;
+    box-shadow:0 4px 20px rgba(0,0,0,.06)}
+  .buy .price{font-size:var(--fs-32);font-weight:700;margin-bottom:var(--sp-4)}
+  .buy .price s{font-size:var(--fs-16);color:var(--gray5);font-weight:400;margin-left:var(--sp-8)}
+  .buy .note{font-size:var(--fs-12);color:var(--gray6);margin-bottom:var(--sp-16);line-height:1.55}
+  .buy .b-main,.buy .b-ghost{width:100%;text-align:center;margin-bottom:var(--sp-8)}
+  .kv{font-size:var(--fs-14);margin-top:var(--sp-16)}
+  .kv .r{display:flex;gap:var(--sp-12);padding:var(--sp-8) 0;border-top:1px solid var(--gray1)}
+  .kv .r:first-child{border-top:0}
+  .kv .r span:first-child{color:var(--gray6);width:112px;flex:none}
+
+  /* форма заявки */
+  .lead-form{background:var(--br-l);border-radius:var(--r-14);padding:var(--sp-32);display:grid;
+    grid-template-columns:1fr 420px;gap:var(--sp-32);align-items:center}
+  .lead-form h2{margin:0 0 var(--sp-8);font-size:var(--fs-26)}
+  .lead-form p{margin:0;color:var(--gray7);font-size:var(--fs-14);line-height:1.6}
+  .form-card{background:#fff;border-radius:var(--r-12);padding:var(--sp-20);box-shadow:0 4px 20px rgba(0,0,0,.08)}
+  .fld{margin-bottom:12px}
+  .fld label{display:block;font-size:var(--fs-12);color:var(--gray6);margin-bottom:5px;font-weight:600}
+  .fld input,.fld select,.fld textarea{width:100%;border:1px solid var(--gray3);border-radius:var(--r);
+    padding:var(--sp-12);font-size:var(--fs-14);font-family:inherit}
+  .fld input:focus,.fld select:focus{outline:none;border-color:var(--br);box-shadow:0 0 0 3px var(--br-l)}
+  .agree{display:flex;gap:var(--sp-8);align-items:flex-start;font-size:var(--fs-12);color:var(--gray6);
+    line-height:1.5;margin-bottom:12px}
+  .agree input{margin-top:2px;flex:none}
+  .agree a{color:var(--br)}
+  .captcha{border:1px solid var(--gray3);border-radius:var(--r-8);background:var(--gray0);padding:var(--sp-12);
+    display:flex;gap:var(--sp-12);align-items:center;font-size:var(--fs-14);margin-bottom:12px}
+  .captcha small{color:var(--gray5);font-size:var(--fs-12);margin-left:auto}
+
+  .site-f{background:var(--gray9);color:#adb5bd;padding:var(--sp-40) 0;font-size:var(--fs-14);margin-top:var(--sp-32)}
+  .site-f .in{max-width:1140px;margin:0 auto;padding:0 var(--sp-20);display:grid;grid-template-columns:2fr 1fr 1fr;
+    gap:var(--sp-32)}
+  .site-f b{color:#fff;display:block;margin-bottom:var(--sp-12);font-size:var(--fs-14)}
+  .site-f a{color:#adb5bd;text-decoration:none;display:block;padding:var(--sp-4) 0}
+  .site-f a:hover{color:#fff}
+  .site-f .legal{grid-column:1/-1;border-top:1px solid #343a40;padding-top:var(--sp-16);font-size:var(--fs-12);color:var(--gray6)}
+
+  @media (max-width:980px){ .hero,.course,.lead-form{grid-template-columns:1fr} .cards,.grid3{grid-template-columns:1fr 1fr}
+    .site-f .in{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+
+<div class="demo-bar">
+  <span><i>(демо)</i></span>
+  <select id="pg" onchange="render()">
+    <option value="landing">Лендинг</option>
+    <option value="catalog">Каталог курсов</option>
+    <option value="course">Страница курса</option>
+  </select>
+  <select id="mode" onchange="render()">
+    <option value="shop">Витрина (У2/У4): запись и оплата</option>
+    <option value="info">Каталог (У1/У3): только заявка</option>
+  </select>
+  <select id="run" onchange="render()">
+    <option value="open">набор открыт</option>
+    <option value="soon">набор откроется</option>
+    <option value="closed">набор закрыт</option>
+  </select>
+  <select id="pal" onchange="setPal(this.value)">
+    <option value="">палитра: синяя</option>
+    <option value="p-green">зелёная</option>
+    <option value="p-violet">фиолетовая</option>
+  </select>
+</div>
+
+<div id="root"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* Публичная часть (01-product §8): блочный лендинг, каталог, карточка курса.
+   Два режима — транзакционная витрина (У2/У4) и информационный каталог (У1/У3),
+   где вместо записи и оплаты стоит заявка-лид. */
+function v(id){ return document.getElementById(id); }
+function shop(){ return v('mode').value === 'shop'; }
+function runState(){ return v('run').value; }
+function setPal(c){ document.body.className = c; }
+
+function render(){
+  var p = v('pg').value;
+  v('root').innerHTML = header() +
+    (p === 'landing' ? landing() : p === 'catalog' ? catalog() : course()) +
+    footer();
+}
+
+function header(){
+  return '<header class="site-h"><div class="in">' +
+    '<span class="logo">ШБ</span><b>Шаг в будущее</b>' +
+    '<nav><a href="#" onclick="event.preventDefault();go(\'landing\')">О школе</a>' +
+    '<a href="#" onclick="event.preventDefault();go(\'catalog\')">Курсы</a>' +
+    '<a href="#" onclick="event.preventDefault();toast(\'Страница «Преподаватели»\')">Преподаватели</a>' +
+    '<a href="#" onclick="event.preventDefault();toast(\'Блог школы — модуль SMM\')">Статьи</a>' +
+    '<a href="#" onclick="event.preventDefault();toast(\'Контакты с картой\')">Контакты</a></nav>' +
+    '<a class="b-ghost" href="28-auth.html" style="margin-left:var(--sp-20)">Войти</a>' +
+    '</div></header>';
+}
+
+/* ── лендинг: типовые блоки из поставки (01-product §8.4) ── */
+function landing(){
+  return '<div class="page">' +
+    '<section class="hero">' +
+      '<div><span class="bl-tag">Подготовка к ЕГЭ · 8–11 класс</span>' +
+      '<h1>Готовим к экзаменам так, чтобы результат был предсказуем</h1>' +
+      '<p>Группы до 15 человек, разбор каждой работы преподавателем, честная статистика по каждому ученику. ' +
+      'Родитель видит успеваемость и оплату в личном кабинете.</p>' +
+      '<div class="acts">' +
+        (shop()
+          ? '<a class="b-main b-lg" href="#" onclick="event.preventDefault();go(\'catalog\')">Выбрать курс</a>' +
+            '<a class="b-ghost b-lg" href="#" onclick="event.preventDefault();scrollForm()">Задать вопрос</a>'
+          : '<a class="b-main b-lg" href="#" onclick="event.preventDefault();scrollForm()">Оставить заявку</a>' +
+            '<a class="b-ghost b-lg" href="#" onclick="event.preventDefault();go(\'catalog\')">Наши курсы</a>') +
+      '</div>' +
+      '<div class="facts"><div><b>9 лет</b><span>работаем</span></div>' +
+        '<div><b>1 240</b><span>выпускников</span></div>' +
+        '<div><b>78</b><span>средний балл ЕГЭ</span></div></div></div>' +
+      '<div class="hero-art">фотография занятия</div>' +
+    '</section>' +
+
+    '<section class="block"><h2>Направления</h2>' +
+      '<p class="sub">Курсы ведут преподаватели, которые сами сдают экзамен каждый год.</p>' +
+      '<div class="grid3">' +
+        tile('Математика', 'Профильная и базовая, с нуля до 90+. Разбор второй части с проверкой каждой работы.') +
+        tile('Информатика', 'Задачи 25–27 на Python, тренажёр с автопроверкой и живой разбор кода.') +
+        tile('Русский язык', 'Сочинение с построчными комментариями преподавателя, а не «зачёт/незачёт».') +
+      '</div></section>' +
+
+    '<section class="block"><h2>Преподаватели</h2>' +
+      '<div class="grid3">' +
+        person('УИ', 'Училков Иван Петрович', 'Математика · 12 лет · эксперт ЕГЭ') +
+        person('ЗП', 'Замещалов Пётр Сергеевич', 'Информатика · 8 лет · олимпиадный тренер') +
+        person('КМ', 'Кэбс Мария', 'Методист · собирает программы курсов') +
+      '</div></section>' +
+
+    '<section class="block"><h2>Что говорят выпускники</h2>' +
+      '<div class="grid2">' +
+        '<div class="tile"><div class="quote">Первый раз пошла на курсы, где видно, что именно я не понимаю — ' +
+        'по каждой работе разбор, а не просто балл.<div class="by">Аня, 11 класс · 84 балла</div></div></div>' +
+        '<div class="tile"><div class="quote">Удобно, что маме видно расписание и оплату — она перестала звонить ' +
+        'администратору каждую неделю.<div class="by">Кирилл, 10 класс</div></div></div>' +
+      '</div></section>' +
+
+    '<section class="block" id="form">' + leadForm() + '</section>' +
+  '</div>';
+}
+function tile(h, p){ return '<div class="tile"><h3>' + h + '</h3><p>' + p + '</p></div>'; }
+function person(ini, n, d){
+  return '<div class="tile"><div class="who-t"><span class="ava">' + ini + '</span>' +
+    '<div><h3 style="margin:0">' + n + '</h3><p style="font-size:var(--fs-12)">' + d + '</p></div></div></div>';
+}
+
+/* ── форма заявки: создаёт лид, учётной записи не создаёт (01-product §4.7) ── */
+function leadForm(){
+  return '<div class="lead-form"><div>' +
+    '<h2>Оставьте заявку</h2>' +
+    '<p>Перезвоним в течение рабочего дня, подберём курс и группу по расписанию. ' +
+    'Записи в группу заявка не создаёт — сначала поговорим.</p></div>' +
+    '<div class="form-card">' +
+      '<div class="fld"><label>Как вас зовут</label><input type="text" placeholder="Имя"></div>' +
+      '<div class="fld"><label>Телефон или почта</label><input type="text" placeholder="+7 или почта"></div>' +
+      '<div class="fld"><label>Интересует направление</label>' +
+        '<select><option>— не выбрано —</option><option>Математика</option><option>Информатика</option>' +
+        '<option>Русский язык</option></select></div>' +
+      '<div class="fld"><label>Комментарий</label><textarea rows="2" placeholder="класс, цель, удобное время"></textarea></div>' +
+      '<div class="captcha"><input type="checkbox">Я не робот<small>появляется при подозрении</small></div>' +
+      '<label class="agree"><input type="checkbox" id="ag" onchange="v(\'sendBtn\').disabled = !this.checked">' +
+        '<span>Согласен на обработку персональных данных — ' +
+        '<a href="#" onclick="event.preventDefault();toast(\'Политика обработки ПД\')">политика</a></span></label>' +
+      '<button class="b-main" id="sendBtn" disabled style="width:100%" ' +
+        'onclick="toast(\'Заявка отправлена — появилась в разделе «Лиды» у маркетолога\')">Отправить заявку</button>' +
+    '</div></div>';
+}
+
+/* ── каталог ── */
+var COURSES = [
+  {n:'Математика ЕГЭ — базовый', d:'Годовой курс: разбор заданий, еженедельные работы, пробники в формате экзамена.',
+   m:['64 занятия','10–11 класс'], price:'24 900 ₽', old:''},
+  {n:'Математика — два раза в неделю', d:'Тот же курс в интенсивном расписании: быстрее проходим программу.',
+   m:['64 занятия','вт, пт'], price:'32 900 ₽', old:''},
+  {n:'Информатика ЕГЭ', d:'Python, задачи 25–27, автопроверка кода и живой разбор решений.',
+   m:['48 занятий','10–11 класс'], price:'22 900 ₽', old:'26 900 ₽'},
+  {n:'Русский язык ЕГЭ', d:'Сочинение с построчным разбором, тесты по частям речи, словарь ошибок.',
+   m:['48 занятий','11 класс'], price:'19 900 ₽', old:''},
+  {n:'Математика 8 класс', d:'Школьная программа и олимпиадные задачи, подготовка к ОГЭ заранее.',
+   m:['32 занятия','8 класс'], price:'15 900 ₽', old:''},
+  {n:'Робототехника с нуля', d:'Сборка и программирование, проектная работа в конце курса.',
+   m:['24 занятия','5–7 класс'], price:'18 900 ₽', old:''}
+];
+
+function catalog(){
+  return '<div class="page"><section class="block" style="border-bottom:0">' +
+    '<h2>Курсы</h2><p class="sub">' +
+    (shop() ? 'Записаться можно прямо на странице курса — место закрепляется после оплаты.'
+            : 'Выберите курс и оставьте заявку — подберём группу и расписание.') + '</p>' +
+    '<div class="cards">' + COURSES.map(function(c, i){
+      return '<a class="cc" href="#" onclick="event.preventDefault();go(\'course\')">' +
+        '<span class="ph">обложка курса</span>' +
+        '<span class="cb"><h3>' + c.n + '</h3>' +
+        '<span class="d">' + c.d + '</span>' +
+        '<span class="m">' + c.m.map(function(x){ return '<span>' + x + '</span>'; }).join('') +
+          badge(i === 0 ? runState() : i % 3 === 1 ? 'soon' : 'open') + '</span>' +
+        '<span class="bot"><span class="price">' + c.price +
+          (c.old ? ' <s style="font-size:var(--fs-14);color:var(--gray5)">' + c.old + '</s>' : '') + '</span>' +
+        '<span class="cta"><span class="b-main">' + (shop() ? 'Подробнее' : 'Узнать') + '</span></span></span>' +
+        '</span></a>';
+    }).join('') + '</div></section></div>';
+}
+function badge(st){
+  return st === 'open' ? '<span class="st st-open">набор открыт</span>'
+    : st === 'soon' ? '<span class="st st-soon">набор откроется 15.10</span>'
+    : '<span class="st st-closed">набор закрыт</span>';
+}
+
+/* ── страница курса: три состояния набора (01-product §8.3) ── */
+function course(){
+  var st = runState();
+  return '<div class="page"><section class="course">' +
+    '<div><span class="bl-tag">Подготовка к ЕГЭ</span>' +
+      '<h1>Математика ЕГЭ — базовый</h1>' +
+      '<p class="lead">Годовой курс подготовки: разбираем задания первой и второй части, каждую неделю — ' +
+      'работа с проверкой преподавателем, раз в месяц — пробник в формате экзамена с разбором ошибок.</p>' +
+      '<div class="prog"><div class="ph">Программа — 8 разделов, 64 занятия</div>' +
+        ['Повторение: дроби, проценты, пропорции','Уравнения и неравенства','Функции и графики',
+         'Планиметрия','Стереометрия','Теория вероятностей и статистика','Задачи с параметром','Пробники и разбор']
+        .map(function(x, i){ return '<div class="pr"><span>' + (i+1) + '</span><span>' + x + '</span></div>'; }).join('') +
+      '</div>' +
+      '<h2 style="font-size:var(--fs-22);margin:0 0 var(--sp-12)">Кому подойдёт</h2>' +
+      '<p style="color:var(--gray7);line-height:1.7">Ученикам 10–11 класса, которые уже решают базовую часть ' +
+      'и хотят разобраться со второй. Начальные требования: школьная программа за 9 класс.</p>' +
+    '</div>' +
+
+    '<aside class="buy">' + buyBox(st) + '</aside>' +
+  '</section></div>';
+}
+
+function buyBox(st){
+  var price = '<div class="price">24 900 ₽</div>';
+
+  if(st === 'closed')
+    return price + '<div class="note">Набор на этот курс сейчас закрыт. Оставьте заявку — сообщим, ' +
+      'когда откроется следующий.</div>' +
+      '<a class="b-main" href="#" onclick="event.preventDefault();scrollForm()">Сообщить об открытии</a>' +
+      meta('—', 'набора нет');
+
+  if(st === 'soon')
+    return price + '<div class="note">Набор откроется <b>15 октября</b>. Можно записаться заранее: ' +
+      'место закрепится за вами, оплата — при старте.</div>' +
+      (shop()
+        ? '<a class="b-main" href="#" onclick="event.preventDefault();toast(\'Предзапись: обычная запись в будущую группу\')">Записаться заранее</a>'
+        : '<a class="b-main" href="#" onclick="event.preventDefault();scrollForm()">Оставить заявку</a>') +
+      meta('15 октября', 'предзапись открыта');
+
+  return price + '<div class="note">Идёт набор в группу, старт <b>1 октября</b>. Осталось 6 мест из 15.</div>' +
+    (shop()
+      ? '<a class="b-main" href="#" onclick="event.preventDefault();toast(\'Оформление покупки: оплата через провайдера\')">Записаться и оплатить</a>' +
+        '<a class="b-ghost" href="#" onclick="event.preventDefault();scrollForm()">Сначала задать вопрос</a>'
+      : '<a class="b-main" href="#" onclick="event.preventDefault();scrollForm()">Оставить заявку</a>' +
+        '<div class="note" style="margin-top:var(--sp-8)">Оплата и зачисление — после разговора с администратором.</div>') +
+    meta('1 октября', '6 из 15 мест');
+}
+function meta(start, seats){
+  return '<div class="kv">' +
+    '<div class="r"><span>Начало</span><span>' + start + '</span></div>' +
+    '<div class="r"><span>Расписание</span><span>вт, пт · 17:00–18:30</span></div>' +
+    '<div class="r"><span>Преподаватель</span><span>Училков И. П.</span></div>' +
+    '<div class="r"><span>Объём</span><span>64 занятия · 128 часов</span></div>' +
+    '<div class="r"><span>Места</span><span>' + seats + '</span></div>' +
+    '<div class="r"><span>Документ</span><span>сертификат по окончании</span></div>' +
+  '</div>';
+}
+
+function footer(){
+  return '<footer class="site-f"><div class="in">' +
+    '<div><b>Шаг в будущее</b>Частное образовательное учреждение дополнительного образования.<br>' +
+    'Лицензия № Л035-01298 от 12.04.2024</div>' +
+    '<div><b>Курсы</b><a href="#" onclick="event.preventDefault();go(\'catalog\')">Все курсы</a>' +
+      '<a href="#" onclick="event.preventDefault();toast(\'Преподаватели\')">Преподаватели</a>' +
+      '<a href="#" onclick="event.preventDefault();toast(\'Статьи\')">Статьи</a></div>' +
+    '<div><b>Документы</b><a href="#" onclick="event.preventDefault();toast(\'Оферта, редакция 2\')">Оферта</a>' +
+      '<a href="#" onclick="event.preventDefault();toast(\'Политика обработки ПД\')">Обработка данных</a>' +
+      '<a href="28-auth.html">Личный кабинет</a></div>' +
+    '<div class="legal">ЧОУ ДО «Шаг в будущее» · ИНН 7712345678 · г. Москва, ул. Примерная, 1 · ' +
+    '+7 495 000-00-00 · Сайт собран на FS-LMS</div>' +
+  '</div></footer>';
+}
+
+function go(p){ v('pg').value = p; render(); window.scrollTo({top:0}); }
+function scrollForm(){
+  if(v('pg').value !== 'landing'){ go('landing'); }
+  setTimeout(function(){
+    var f = document.getElementById('form');
+    if(f) f.scrollIntoView({behavior:'smooth'});
+    toast('Форма заявки — она же блок лендинга');
+  }, 60);
+}
+
+var tt;
+function toast(m){
+  var t = v('toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3600);
+}
+
+render();
+</script>
+</body>
+</html>

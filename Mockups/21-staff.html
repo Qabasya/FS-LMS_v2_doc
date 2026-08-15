@@ -324,6 +324,11 @@ function isMethod(s){ return s.roles.indexOf('method') >= 0; }
 /* Методисту, который сам ведёт группу, закрепление за собой не нужно: свои группы он видит всегда,
    независимо от закреплений (01-product §3.4). Поэтому совмещённый в «без методиста» не попадает. */
 function noMethod(s){ return isTeacher(s) && !isMethod(s) && !s.method; }
+/* Второй фактор — по правам, а не по названию роли (01-product §4.7): чувствительный набор —
+   финансы, приём и ПД, настройки, назначение ролей, надзор. Преподаватель и проверяющий без него. */
+function needs2fa(s){
+  return s.roles.some(function(r){ return ['method','adm','fin','tech','owner','custom'].indexOf(r) >= 0; });
+}
 
 function roleTags(s){
   return s.roles.map(function(r){
@@ -459,7 +464,8 @@ function cardTop(s){
         '<h5>Доступ</h5>' +
         '<div class="r"><span>Состояние</span><span>' + (s.state === 'active'
           ? '<span class="badge b-ok">активен</span>' : '<span class="badge b-gray">отключён</span>') + '</span></div>' +
-        '<div class="r"><span>Двухфакторка</span><span>не включена</span></div>' +
+        '<div class="r"><span>Второй фактор</span><span>' + (needs2fa(s)
+          ? '<span class="badge b-ok">обязателен</span>' : '<span class="muted">не требуется</span>') + '</span></div>' +
         '<button class="btn" onclick="toast(\'Временный пароль показан один раз; смена при первом входе\')">Выдать временный пароль</button>' +
         '<button class="btn" onclick="toast(\'' + (s.state === 'active'
           ? 'Доступ отключён: вход закрыт, данные и история сохранены'

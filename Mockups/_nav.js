@@ -3,6 +3,10 @@
    Здесь это единственный способ попасть на любой экран, не возвращаясь в индекс. */
 var SCREENS = [
   ['Оглавление',            'index.html'],
+  ['— Вход —',              ''],
+  ['Вход и регистрация',    '28-auth.html'],
+  ['Служебные страницы',    '29-service.html'],
+  ['Письма',                '30-emails.html'],
   ['— Управление —',        ''],
   ['Главная сотрудника',    '10-home.html'],
   ['Журнал',                '04-journal.html'],
@@ -20,6 +24,9 @@ var SCREENS = [
   ['Витрина: карточки',     '25-storefront.html'],
   ['Настройки обучения',    '26-settings-learning.html'],
   ['Настройки системы',     '27-settings-system.html'],
+  ['— Публичная часть —',   ''],
+  ['Сайт и каталог',        '31-public.html'],
+  ['Лиды',                  '32-leads.html'],
   ['— Контент —',           ''],
   ['Конструктор курса',     '01-course-builder.html'],
   ['Конструктор работы',    '13-work-builder.html'],
@@ -50,7 +57,8 @@ function sameTab(ev){
 /* Шапка на части экранов перерисовывается скриптом, поэтому вставку повторяем
    при любых изменениях DOM: иначе селектор исчезает после первого же render(). */
 function navMount(){
-  var head = document.querySelector('.head') || document.querySelector('.phead') || document.querySelector('.top');
+  var head = document.querySelector('.head') || document.querySelector('.phead') ||
+             document.querySelector('.top') || document.querySelector('.demo-bar');
   if(!head || head.querySelector('.navpick')) return;
   var here = location.pathname.split('/').pop();
   var wrap = document.createElement('label');

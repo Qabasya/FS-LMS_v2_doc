@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лиды — FS-LMS 2.0</title>
+<link rel="stylesheet" href="_shared.css">
+<script src="_tip.js"></script>
+<script src="_nav.js"></script>
+<style>
+  .body{flex:1;overflow:auto;padding:var(--sp-16) var(--sp-20) var(--user-h)}
+  .card{background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);box-shadow:var(--sh)}
+  .sec{padding:var(--sp-16) var(--sp-20);margin-bottom:14px}
+  .sec-h{display:flex;align-items:center;gap:var(--sp-12);margin-bottom:12px;flex-wrap:wrap}
+  .sec-h h3{margin:0;font-size:var(--fs-14)}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-16);margin-bottom:14px}
+  .kpi{padding:var(--sp-16);display:flex;flex-direction:column;text-align:left;border:1px solid var(--gray2);
+    background:#fff;border-radius:var(--r-12);box-shadow:var(--sh);color:inherit;cursor:pointer}
+  .kpi:hover{border-color:var(--blue)}
+  .kpi.on{border-color:var(--blue);background:var(--blue-l)}
+  .kpi .lab{font-size:var(--fs-12);color:var(--gray6);font-weight:600}
+  .kpi .big{font-size:var(--fs-26);font-weight:700;line-height:1.25;margin:var(--sp-6) 0 var(--sp-4)}
+  .kpi .big.warn{color:#d9480f}
+  .kpi .sub{font-size:var(--fs-12);color:var(--gray6);line-height:1.45}
+
+  .filters{display:flex;gap:var(--sp-8);align-items:center;flex-wrap:wrap;margin-bottom:14px}
+  .filters select,.filters input{border:1px solid var(--gray3);border-radius:var(--r);padding:var(--sp-8) var(--sp-12);
+    font-size:var(--fs-14);font-family:inherit}
+  .filters input{min-width:var(--col-260)}
+
+  table.t{width:100%;border-collapse:collapse;font-size:var(--fs-14)}
+  table.t th{text-align:left;font-size:var(--fs-12);letter-spacing:.04em;text-transform:uppercase;color:var(--gray5);
+    font-weight:700;padding:var(--sp-8) var(--sp-12);border-bottom:1px solid var(--gray2);white-space:nowrap}
+  table.t td{padding:var(--sp-8) var(--sp-12);border-bottom:1px solid var(--gray1);vertical-align:middle}
+  table.t tr:last-child td{border-bottom:0}
+  table.t tbody tr:hover{background:var(--gray0)}
+  table.t tbody tr.clickable{cursor:pointer}
+  .nm-a{font-weight:600;color:inherit;text-decoration:none}
+  .nm-a:hover{color:var(--blue);text-decoration:underline}
+  .num{color:var(--gray5);font-size:var(--fs-12)}
+  .dt{font-variant-numeric:tabular-nums;color:var(--gray7);white-space:nowrap}
+  .empty{color:var(--gray5);font-size:var(--fs-14);padding:var(--sp-20) 0;text-align:center;line-height:1.6}
+  .warn{color:#d9480f}
+
+  .badge{display:inline-block;font-size:var(--fs-12);font-weight:600;padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4)}
+  .b-new{background:var(--blue-l);color:#1864ab}
+  .b-work{background:var(--violet-l);color:#5f3dc4}
+  .b-wait{background:var(--orange-l);color:#d9480f}
+  .b-won{background:var(--green-l);color:#2b8a3e}
+  .b-lost{background:var(--gray1);color:var(--gray6)}
+  .src{font-size:var(--fs-12);color:var(--gray6)}
+  .utm{font-family:ui-monospace,Menlo,monospace;font-size:var(--fs-12);color:var(--gray6)}
+  .rowact{border:0;background:none;color:var(--gray5);font-size:var(--fs-16);line-height:1;
+    padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4)}
+  .rowact:hover{background:var(--gray2);color:var(--gray9)}
+
+  /* канбан — только с модулем «Маркетинг» */
+  .kanban{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--sp-12);align-items:start}
+  .col{background:var(--gray0);border:1px solid var(--gray2);border-radius:var(--r-8);padding:var(--sp-8);min-height:200px}
+  .col-h{display:flex;align-items:center;gap:var(--sp-8);padding:var(--sp-4) var(--sp-8) var(--sp-8)}
+  .col-h b{font-size:var(--fs-12);text-transform:uppercase;letter-spacing:.04em;color:var(--gray6)}
+  .col-h .c{margin-left:auto;font-size:var(--fs-12);font-weight:700;color:var(--gray6);background:#fff;
+    border-radius:var(--r-pill);padding:1px 7px;border:1px solid var(--gray2)}
+  .lead{background:#fff;border:1px solid var(--gray2);border-radius:var(--r-8);padding:var(--sp-12);margin-bottom:var(--sp-8);
+    cursor:grab;box-shadow:var(--sh)}
+  .lead:hover{border-color:var(--blue)}
+  .lead b{font-size:var(--fs-14);display:block;line-height:1.35}
+  .lead .m{font-size:var(--fs-12);color:var(--gray6);margin-top:4px;line-height:1.5}
+  .lead .f{display:flex;gap:var(--sp-8);align-items:center;margin-top:8px;font-size:var(--fs-12);color:var(--gray5)}
+  .lead .ava{width:22px;height:22px;border-radius:50%;background:var(--blue-l);color:var(--blue);display:grid;
+    place-items:center;font-size:var(--fs-12);font-weight:700}
+  .lead.old{border-left:3px solid var(--orange)}
+
+  .demo{display:flex;align-items:center;gap:var(--sp-8);font-size:var(--fs-12);color:var(--gray6)}
+  .fld{margin-bottom:12px}
+  .fld label{display:block;font-size:var(--fs-12);color:var(--gray6);margin-bottom:5px;font-weight:600}
+  .fld input,.fld select,.fld textarea{width:100%;border:1px solid var(--gray3);border-radius:var(--r);
+    padding:var(--sp-8) var(--sp-12);font-size:var(--fs-14);font-family:inherit}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-12)}
+  .hint2{font-size:var(--fs-12);color:var(--gray6);margin-top:6px;line-height:1.45}
+  .infobox{background:var(--blue-l);border:1px solid #a5d8ff;color:#1864ab;border-radius:var(--r-8);
+    padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);margin-bottom:14px;line-height:1.55}
+  .hist{position:relative;padding-left:var(--sp-20);margin-top:var(--sp-12)}
+  .hist:before{content:'';position:absolute;left:5px;top:6px;bottom:6px;width:1px;background:var(--gray2)}
+  .hev{position:relative;padding:var(--sp-8) 0 var(--sp-8) var(--sp-8);font-size:var(--fs-14)}
+  .hev:before{content:'';position:absolute;left:-19px;top:14px;width:9px;height:9px;border-radius:50%;
+    background:var(--gray3);border:2px solid #fff}
+  .hev .meta{font-size:var(--fs-12);color:var(--gray6);margin-top:2px}
+
+  @media (max-width:1360px){ .kpis{grid-template-columns:repeat(2,1fr)} .kanban{grid-template-columns:repeat(3,1fr)} }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-top">
+      <div class="logo">ШБ</div>
+      <div style="flex:1"><b>Шаг в будущее</b><small>Управление</small></div>
+      <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')">⟨</button>
+    </div>
+    <nav class="nav">
+      <h4>Витрина и сайт</h4>
+      <a href="25-storefront.html"><i class="ic">▧</i><span>Карточки курсов</span></a>
+      <a href="32-leads.html" class="on"><i class="ic">◌</i><span>Лиды</span><span class="cnt" id="navCnt">5</span></a>
+      <a href="#" onclick="toast('Публичные страницы: состав и порядок блоков')"><i class="ic">▤</i><span>Страницы сайта</span></a>
+      <h4>Люди</h4>
+      <a href="23-admission.html"><i class="ic">◔</i><span>Приём</span></a>
+    </nav>
+    <div class="side-user">
+      <div class="ava">МЛ</div>
+      <div style="flex:1"><b style="font-size:var(--fs-14);display:block">Маркетова Л.</b>
+        <small style="font-size:var(--fs-12);color:var(--gray6)">Маркетолог</small></div>
+      <span style="color:var(--gray5)">⚙</span>
+    </div>
+  </aside>
+
+  <div class="app">
+    <header class="head">
+      <div>
+        <div class="crumbs">Управление · Витрина и сайт</div>
+        <h1>Лиды</h1>
+      </div>
+      <div class="sp"></div>
+      <label class="demo"><input type="checkbox" id="mkt" onchange="setMkt(this.checked)"> модуль «Маркетинг» <i>(демо)</i></label>
+      <a class="btn" href="31-public.html">Форма на сайте</a>
+      <button class="btn btn-p" onclick="toast('Ручной лид: звонок или сообщение в мессенджере')">Добавить лид</button>
+    </header>
+
+    <div class="body">
+      <div class="kpis" id="kpis"></div>
+      <div class="filters">
+        <input type="text" placeholder="Поиск по имени, телефону или почте" oninput="setSearch(this.value)">
+        <select id="fDir" onchange="render()">
+          <option value="">Все направления</option>
+          <option>Математика</option><option>Информатика</option><option>Русский язык</option>
+        </select>
+        <select id="fSrc" onchange="render()">
+          <option value="">Все источники</option>
+          <option>лендинг</option><option>карточка курса</option><option>звонок</option>
+        </select>
+        <div style="flex:1"></div>
+        <span class="muted" id="listSum"></span>
+      </div>
+      <div id="pane"></div>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" onclick="closeAll()"></div>
+
+<div class="modal" id="mLead" style="width:min(620px,94vw)">
+  <div class="mo-h" id="leadTitle">Лид</div>
+  <div class="mo-b" id="leadBody"></div>
+  <div class="mo-f"><button class="btn" onclick="closeAll()">Закрыть</button>
+    <button class="btn btn-p" onclick="toast('Заявка на приём создана: анкету заполнит сам ученик по ссылке')">Пригласить на регистрацию</button></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* Лид — обратная связь с лендинга или карточки курса: имя, контакт, комментарий.
+   Учётная запись не создаётся (01-product §4.7): путь в ученики — через регистрацию и приём (§4.17).
+   Без модуля «Маркетинг» это список со статусами; с модулем — канбан воронки, UTM и история касаний. */
+var ST = {
+  'new':  {t:'Новый',        c:'b-new'},
+  'work': {t:'В работе',     c:'b-work'},
+  'wait': {t:'Ждём ответа',  c:'b-wait'},
+  'won':  {t:'Записался',    c:'b-won'},
+  'lost': {t:'Отказ',        c:'b-lost'}
+};
+var ORDER = ['new','work','wait','won','lost'];
+
+var LEADS = [
+  {n:'Марина (мама Егора)', c:'+7 926 100-22-33', dir:'Математика', src:'лендинг', st:'new', d:'сегодня, 11:20',
+   who:'', txt:'Сын в 10 классе, нужна профильная математика. Когда можно прийти?',
+   utm:'yandex / cpc / ege-math', days:0},
+  {n:'Игорь Соколов', c:'sokolov@mail.ru', dir:'Информатика', src:'карточка курса', st:'new', d:'сегодня, 09:45',
+   who:'', txt:'Интересует Python с нуля, есть ли группа вечером?', utm:'vk / social / post-12', days:0},
+  {n:'Ольга', c:'+7 903 555-11-99', dir:'Русский язык', src:'лендинг', st:'work', d:'вчера, 16:30',
+   who:'МЛ', txt:'Дочь 11 класс, сочинение западает.', utm:'direct / — / —', days:1},
+  {n:'Пётр Дёмин', c:'+7 916 777-44-22', dir:'Математика', src:'звонок', st:'wait', d:'12.08, 10:15',
+   who:'МЛ', txt:'Просил перезвонить после отпуска, в конце августа.', utm:'—', days:3},
+  {n:'Анна Кузнецова', c:'kuznetsova@mail.ru', dir:'Математика', src:'лендинг', st:'wait', d:'08.08, 14:02',
+   who:'ПА', txt:'Ждёт расписание на осень.', utm:'yandex / cpc / ege-math', days:7},
+  {n:'Семья Волковых', c:'+7 985 222-33-44', dir:'Информатика', src:'карточка курса', st:'won', d:'05.08, 12:00',
+   who:'МЛ', txt:'Записались в ИНФ-2, зачислены 09.08.', utm:'google / organic / —', days:10},
+  {n:'Роман', c:'+7 900 111-22-33', dir:'Русский язык', src:'лендинг', st:'lost', d:'01.08, 18:20',
+   who:'МЛ', txt:'Не подошло расписание, ушёл к конкурентам.', utm:'vk / social / —', days:14}
+];
+
+var MKT = false, search = '', filter = '', cur = -1;
+
+function v(id){ return document.getElementById(id); }
+function plural(n, one, few, many){
+  var a = n % 10, b = n % 100;
+  return n + ' ' + (a === 1 && b !== 11 ? one : a >= 2 && a <= 4 && (b < 12 || b > 14) ? few : many);
+}
+function setMkt(x){
+  MKT = x; render();
+  toast(x ? 'С модулем «Маркетинг»: канбан воронки, UTM-источники и история касаний'
+          : 'Без модуля: простой список лидов со статусами — этого хватает, пока лидов десятки');
+}
+function setSearch(x){ search = x; render(); }
+function setFilter(f){ filter = (filter === f) ? '' : f; render(); }
+
+function visible(){
+  var dir = v('fDir').value, src = v('fSrc').value;
+  return LEADS.filter(function(l){
+    if(filter && l.st !== filter) return false;
+    if(dir && l.dir !== dir) return false;
+    if(src && l.src !== src) return false;
+    if(search && (l.n + ' ' + l.c).toLowerCase().indexOf(search.toLowerCase()) < 0) return false;
+    return true;
+  });
+}
+function count(st){ return LEADS.filter(function(l){ return l.st === st; }).length; }
+/* «завис» — лид в работе, к которому не возвращались неделю: это и есть главная утечка воронки */
+function stale(l){ return (l.st === 'work' || l.st === 'wait') && l.days >= 7; }
+
+function render(){
+  var open = LEADS.filter(function(l){ return l.st !== 'won' && l.st !== 'lost'; }).length;
+  v('navCnt').textContent = open;
+
+  v('kpis').innerHTML =
+    kpi('', 'Лидов в работе', open, 'новые, в работе и ожидающие') +
+    kpi('new', 'Новых', count('new'), 'ещё никто не взял', count('new') > 0) +
+    kpi('', 'Зависли', LEADS.filter(stale).length, 'без касания больше недели', LEADS.filter(stale).length > 0) +
+    (MKT
+      ? kpi('won', 'Записались', count('won'), 'конверсия ' + Math.round(count('won') / LEADS.length * 100) + '%')
+      : kpi('won', 'Записались', count('won'), 'дошли до зачисления'));
+
+  v('pane').innerHTML = MKT ? kanban() : list();
+  v('listSum').textContent = visible().length + ' из ' + LEADS.length;
+}
+function kpi(f, lab, big, sub, warn){
+  return '<button class="kpi' + (filter === f && f ? ' on' : '') + '" onclick="setFilter(\'' + f + '\')">' +
+    '<span class="lab">' + lab + '</span><span class="big' + (warn ? ' warn' : '') + '">' + big + '</span>' +
+    '<span class="sub">' + sub + '</span></button>';
+}
+
+/* ── без модуля: список ── */
+function list(){
+  var vis = visible();
+  return '<div class="card sec"><div class="sec-h"><h3>Заявки с сайта</h3>' +
+      '<span class="muted">обрабатываются вручную</span></div>' +
+    '<table class="t"><thead><tr>' +
+      '<th style="width:var(--col-300)">Кто</th>' +
+      '<th style="width:var(--col-220)">Контакт</th>' +
+      '<th style="width:var(--col-220)">Направление</th>' +
+      '<th>Комментарий</th>' +
+      '<th style="width:var(--col-160)">Статус</th>' +
+      '<th style="width:var(--col-160)">Когда</th>' +
+      '<th style="width:var(--col-92)"></th>' +
+    '</tr></thead><tbody>' +
+    (vis.length ? vis.map(function(l){
+      var i = LEADS.indexOf(l);
+      return '<tr class="clickable" onclick="openLead(' + i + ')">' +
+        '<td><a class="nm-a" href="#" onclick="event.preventDefault();event.stopPropagation();openLead(' + i + ')">' +
+          l.n + '</a><div class="src">' + l.src + '</div></td>' +
+        '<td class="dt">' + l.c + '</td>' +
+        '<td>' + l.dir + '</td>' +
+        '<td>' + l.txt + '</td>' +
+        '<td><span class="badge ' + ST[l.st].c + '">' + ST[l.st].t + '</span>' +
+          (stale(l) ? '<div class="num warn">' + plural(l.days, 'день', 'дня', 'дней') + ' без касания</div>' : '') + '</td>' +
+        '<td class="dt">' + l.d + '</td>' +
+        '<td style="text-align:right"><button class="rowact" onclick="event.stopPropagation();openLead(' + i + ')">⋯</button></td></tr>';
+    }).join('') : '<tr><td colspan="7" class="empty">Заявок нет.<br>Они появляются из формы на лендинге и с карточек курсов.</td></tr>') +
+    '</tbody></table></div>';
+}
+
+/* ── с модулем: канбан воронки ── */
+function kanban(){
+  var vis = visible();
+  return '<div class="kanban">' + ORDER.map(function(st){
+    var items = vis.filter(function(l){ return l.st === st; });
+    return '<div class="col" ondragover="event.preventDefault()" ondrop="drop(event,\'' + st + '\')">' +
+      '<div class="col-h"><b>' + ST[st].t + '</b><span class="c">' + items.length + '</span></div>' +
+      items.map(function(l){
+        var i = LEADS.indexOf(l);
+        return '<div class="lead' + (stale(l) ? ' old' : '') + '" draggable="true" ' +
+          'ondragstart="drag(event,' + i + ')" onclick="openLead(' + i + ')">' +
+          '<b>' + l.n + '</b>' +
+          '<div class="m">' + l.dir + ' · ' + l.c + '</div>' +
+          '<div class="m utm">' + l.utm + '</div>' +
+          '<div class="f">' + (l.who ? '<span class="ava">' + l.who + '</span>' : '<span class="num">без ответственного</span>') +
+            '<span style="margin-left:auto">' + l.d + '</span></div>' +
+        '</div>';
+      }).join('') +
+      (items.length ? '' : '<div class="empty" style="padding:var(--sp-16) 0;font-size:var(--fs-12)">пусто</div>') +
+    '</div>';
+  }).join('') + '</div>' +
+  '<div class="infobox" style="margin-top:14px">Оранжевая полоса слева — лид без касания больше недели. ' +
+  'Воронка нужна не для красоты колонок, а чтобы такие не терялись: именно они и есть утечка.</div>';
+}
+
+var dragIdx = -1;
+function drag(e, i){ dragIdx = i; }
+function drop(e, st){
+  e.preventDefault();
+  if(dragIdx < 0) return;
+  var l = LEADS[dragIdx];
+  l.st = st; l.days = 0; l.d = 'сегодня';
+  if(st !== 'new' && !l.who) l.who = 'МЛ';
+  dragIdx = -1; render();
+  toast(l.n + ' → ' + ST[st].t.toLowerCase() + (st === 'won' ? '. Дальше — приглашение на регистрацию' : ''));
+}
+
+/* ── карточка лида ── */
+function openLead(i){
+  cur = i;
+  var l = LEADS[i];
+  v('leadTitle').textContent = l.n;
+  v('leadBody').innerHTML =
+    '<div class="infobox">Лид — это обращение, а не учётная запись. Чтобы человек стал учеником, он проходит ' +
+    'регистрацию и приём (§4.17): анкету заполняет сам, школа проверяет и зачисляет.</div>' +
+    '<div class="row2">' +
+      '<div class="fld"><label>Контакт</label><input type="text" value="' + l.c + '"></div>' +
+      '<div class="fld"><label>Направление</label><input type="text" value="' + l.dir + '"></div>' +
+    '</div>' +
+    '<div class="row2">' +
+      '<div class="fld"><label>Статус</label><select onchange="setSt(' + i + ', this.value)">' +
+        ORDER.map(function(s){ return '<option value="' + s + '"' + (s === l.st ? ' selected' : '') + '>' + ST[s].t + '</option>'; }).join('') +
+      '</select></div>' +
+      '<div class="fld"><label>Ответственный</label><select><option>Маркетова Л.</option>' +
+        '<option>Приёмщикова А.</option><option>— не назначен —</option></select></div>' +
+    '</div>' +
+    '<div class="fld"><label>Комментарий</label><textarea rows="2">' + l.txt + '</textarea></div>' +
+    (MKT
+      ? '<div class="fld"><label>Источник</label><input type="text" class="utm" value="' + l.utm + '" disabled>' +
+        '<div class="hint2">UTM-метки приходят с формы: по ним видно, какой канал приводит тех, кто доходит до оплаты.</div></div>' +
+        '<div class="fld"><label>История касаний</label></div>' +
+        '<div class="hist">' +
+          '<div class="hev"><b>Заявка с сайта</b><div class="meta">' + l.d + ' · ' + l.src + '</div></div>' +
+          '<div class="hev"><b>Звонок, не ответил</b><div class="meta">вчера · Маркетова Л.</div></div>' +
+          '<div class="hev"><b>Отправлено расписание</b><div class="meta">вчера · письмо</div></div>' +
+        '</div>'
+      : '<div class="hint2">История касаний, UTM-источники и напоминания приходят с модулем «Маркетинг». ' +
+        'Без него лид живёт статусом и комментарием — этого достаточно, пока заявок десятки в месяц.</div>');
+  v('scrim').classList.add('on');
+  v('mLead').classList.add('on');
+}
+function setSt(i, st){ LEADS[i].st = st; LEADS[i].days = 0; render(); toast('Статус: ' + ST[st].t); }
+function closeAll(){
+  v('scrim').classList.remove('on');
+  v('mLead').classList.remove('on');
+}
+
+var tt;
+function toast(m){
+  var t = v('toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3600);
+}
+
+render();
+</script>
+</body>
+</html>

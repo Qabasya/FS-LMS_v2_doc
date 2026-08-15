@@ -295,8 +295,11 @@
           <h5>Доступ в систему</h5>
           <div class="r"><span>Логин</span><code>k.abramov</code>
             <button class="copy" title="Скопировать" onclick="toast('Логин скопирован')">⧉</button></div>
-          <div class="r"><span>Пароль</span><code style="letter-spacing:2px">•••••••</code></div>
-          <button class="btn btn-s pwd-btn" onclick="openPwd()">Выдать временный пароль</button>
+          <div class="r"><span>Пароль</span><code id="pwdBox" style="letter-spacing:2px">•••••••</code>
+            <button class="copy" id="pwdCopy" style="display:none" title="Скопировать"
+              onclick="toast('Пароль скопирован')">⧉</button></div>
+          <button class="btn btn-s pwd-btn" id="pwdShow" onclick="showPwd()">Показать пароль</button>
+          <button class="btn btn-s pwd-btn" onclick="openPwd()">Выдать новый пароль</button>
         </div>
       </div>
 
@@ -399,6 +402,8 @@ var ENROLL = [
   {code:'ИНФ',  color:'var(--orange)', name:'ИНФ-2 · Информатика',          kind:'g', teacher:'Петров П. П.'}
 ];
 var ROLE = 'teacher', curEnc = 0;
+/* у совершеннолетнего обратимой копии пароля нет — показывать нечего (01-product §4.7) */
+var GROUP_ADULT = [false,false,false,false,false,true,false,false,false,false];
 function myEnc(){
   /* преподаватель видит направления, где ведёт сам; методист и администратор — все */
   return ENROLL.filter(function(e){ return ROLE !== 'teacher' || e.teacher === ME; });
@@ -567,6 +572,7 @@ function kpi(lab, big, sub, pct, cls){
 function color(p){ return p>=80 ? 'g' : (p>=60 ? '' : (p>=40 ? 'o' : 'r')); }
 
 function render(){
+  syncPwd();
   var c = calc();
   renderEnc();
 
@@ -760,6 +766,25 @@ function tab(i, el){
 function step(d){
   meIdx = (meIdx + d + GROUP.length) % GROUP.length;
   render(); toast('Ученик: ' + GROUP[meIdx] + ' (демо — данные те же)');
+}
+/* Показ пароля существует только при включённой настройке школы и только у несовершеннолетних
+   (01-product §4.7). У остальных кнопки нет — вместо неё выдача нового пароля. */
+var SHOW_PWD = true;
+function syncPwd(){
+  var ok = SHOW_PWD && !GROUP_ADULT[meIdx];
+  var b = document.getElementById('pwdShow');
+  if(b) b.style.display = ok ? '' : 'none';
+  var box = document.getElementById('pwdBox');
+  if(box && !ok){ box.textContent = '•••••••'; box.style.letterSpacing = '2px'; }
+  var c = document.getElementById('pwdCopy');
+  if(c && !ok) c.style.display = 'none';
+}
+function showPwd(){
+  document.getElementById('pwdBox').textContent = 'Kirill2026!';
+  document.getElementById('pwdBox').style.letterSpacing = '';
+  document.getElementById('pwdCopy').style.display = '';
+  document.getElementById('pwdShow').style.display = 'none';
+  toast('Просмотр пароля записан в журнал доступа: кто, чей и когда');
 }
 function openPwd(){ document.getElementById('scrim').classList.add('on'); document.getElementById('mPwd').classList.add('on'); }
 function closePwd(){ document.getElementById('scrim').classList.remove('on'); document.getElementById('mPwd').classList.remove('on'); }
