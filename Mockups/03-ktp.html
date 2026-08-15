@@ -432,7 +432,7 @@ function openPublish(){
     '<div><span>Не запланированы</span><b style="color:'+(none?'var(--red)':'inherit')+'">'+none+'</b></div>' +
     '<div><span>Свободных слотов</span><b>'+free+'</b></div>';
   document.getElementById('sumNote').innerHTML = none
-    ? '<span style="color:#c92a2a">На уровнях с кампусом незапланированные уроки — ошибка планирования: опубликовать можно, но для учеников они останутся закрыты.</span>'
+    ? '<span style="color:#c92a2a">На уровнях с кампусом незапланированные уроки — ошибка планирования: публикация недоступна, пока каждый урок не распределён или не открыт сразу (01-product §4.4).</span>'
     : 'Все уроки распределены.';
   document.getElementById('pubModal').classList.add('on');
   document.getElementById('scrim').classList.add('on');

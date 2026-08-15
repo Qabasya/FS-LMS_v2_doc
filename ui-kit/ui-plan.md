@@ -46,7 +46,7 @@
 | 01 | Конструктор курса (§4.1) | RichText, AutosaveBadge, StatusBadge, InlineBanner (копии), ConfirmModal | CourseTree, StepStrip, StepIcon |
 | 02 | Плеер (§4.2) | InlineBanner (режимы), AutosaveBadge, StatusBadge | PlayerShell, CourseTree (язычок), StepStrip, StepIcon, LongreadToc + ReadingProgress, TaskCardList |
 | 12 | Экзамен (§4.6) | AutosaveBadge (со временем), InlineBanner (обрыв связи), ConfirmModal (завершение) | ExamShell |
-| 03 | КТП и расписание (§4.3) | StatusBadge, ConfirmModal (сводка публикации), FormModal (занятие), AppToast | KtpCalendar + TopicsPanel, RegularityBar, Tip |
+| 03 | КТП и расписание (§4.3) | StatusBadge, ConfirmModal (сводка публикации), FormModal (занятие), TimeSelect, AppToast | KtpCalendar + TopicsPanel, RegularityBar, Tip |
 | 04 | Журнал (§4.4) | LinkRow/CellLink, AppToast, InlineBanner (плашка незаполненного) | JournalGrid, Tip, StepIcon |
 | 05 | Проверка (§4.5) | DataTable, CountBadge, StatusBadge, LinkRow, RichText (комментарий) | CriteriaScorer (+липкая панель заданий) |
 | 06 | Индивидуальные / Расписание (§4.10) | FormModal, TimeSelect, SegmentedControl (календарь/список), DataTable | WeekCalendar, Tip |
@@ -62,7 +62,7 @@
 | 19 | Лицевой счёт — кабинет (§4.7) | MoneyText, FormModal (оплата), InlineBanner (долг), SectionCard, LinkRow `is-off` (представитель) | BalanceCard, LedgerFeed |
 | 20 | Карточка группы (§4.14) | KpiTile, DataTable (состав), StatusBadge, ChipList, ConfirmModal (отчисление/перевод), FormModal (замены), MoneyText, InlineBanner (замена) | RegularityBar |
 | 21 | Сотрудники и роли (§4.15) | DataTable, KpiTile (нагрузка), ChipList (роли), ConfirmModal, FormModal, SearchInput, StatusBadge | — |
-| 22 | Ученики и представители (§4.16) | DataTable ×2, SearchInput, ChipList, StatusBadge, MoneyText, FormModal («Назначить родителя») | — |
+| 22 | Ученики и представители (§4.16) | DataTable ×2, SearchInput, ChipList, StatusBadge, MoneyText, FormModal («Назначить родителя») | JoinLinkPill |
 | 23 | Приём (§4.17) | KpiTile-фильтры, DataTable, FormModal (зачисление + приказ), StatusBadge, LinkRow | JoinLinkPill, PipelineSteps |
 | 24 | Финансы (§4.18) | KpiTile, SegmentedControl, DataTable, MoneyText, FormModal (платёж/скидка/возврат), ConfirmModal (сторно) | LedgerFeed |
 | 25 | Витрина (§4.8) | DataTable, SectionCard, ChecklistCard, FormModal (запуск набора), StatusBadge (вычисленные метки), MoneyText, RichText | — |
