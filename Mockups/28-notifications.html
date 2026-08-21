@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Уведомления — FS-LMS 2.0</title>
+<link rel="stylesheet" href="_shared.css">
+<script src="_tip.js"></script>
+<script src="_nav.js"></script>
+<style>
+  .body{flex:1;overflow:auto;padding:var(--sp-16) var(--sp-20) var(--user-h)}
+  .card{background:#fff;border:1px solid var(--gray2);border-radius:var(--r-12);box-shadow:var(--sh)}
+  .sec{padding:var(--sp-16) var(--sp-20);margin-bottom:14px}
+  .sec-h{display:flex;align-items:center;gap:var(--sp-12);margin-bottom:12px;flex-wrap:wrap}
+  .sec-h h3{margin:0;font-size:var(--fs-14)}
+  .sec-h .muted{font-size:var(--fs-12)}
+
+  .tabs{display:flex;gap:var(--sp-4);margin-bottom:var(--sp-16);border-bottom:1px solid var(--gray2);flex-wrap:wrap}
+  .tabs button{border:0;background:none;padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);color:var(--gray6);
+    border-bottom:2px solid transparent;margin-bottom:-1px}
+  .tabs button:hover{color:var(--gray9)}
+  .tabs button.on{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
+
+
+  .badge{display:inline-block;font-size:var(--fs-12);font-weight:600;padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4)}
+  .b-serv{background:var(--blue-l);color:#1864ab}
+  .b-promo{background:var(--violet-l);color:#5f3dc4}
+  .b-ok{background:var(--green-l);color:#2b8a3e}
+  .b-skip{background:var(--gray1);color:var(--gray6)}
+  .b-warn{background:var(--orange-l);color:#d9480f}
+
+  /* класс уведомления — две карточки выбора (только у владельца) */
+  .classes{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-12);margin-bottom:14px}
+  .cl{border:1px solid var(--gray2);border-radius:var(--r-8);padding:var(--sp-12) var(--sp-16);cursor:pointer;background:#fff}
+  .cl.on{border-color:var(--blue);background:var(--blue-l)}
+  .cl.on.promo{border-color:var(--violet);background:var(--violet-l)}
+  .cl b{display:block;font-size:var(--fs-14)}
+  .cl .sub{font-size:var(--fs-12);color:var(--gray6);margin-top:4px;line-height:1.45}
+  .cl.off{opacity:.5;cursor:not-allowed}
+
+  /* чипы получателей */
+  .rcps{display:flex;flex-wrap:wrap;gap:var(--sp-8);margin-bottom:10px;min-height:34px}
+  .chip{display:inline-flex;align-items:center;gap:var(--sp-8);background:var(--gray1);border-radius:var(--r-pill);
+    padding:var(--sp-4) var(--sp-8) var(--sp-4) var(--sp-12);font-size:var(--fs-12);color:var(--gray7)}
+  .chip b{font-weight:600}
+  .chip button{border:0;background:none;color:var(--gray5);font-size:var(--fs-14);line-height:1;padding:0 var(--sp-4);border-radius:50%}
+  .chip button:hover{background:var(--gray3);color:var(--gray9)}
+  .cnt{font-size:var(--fs-14);font-weight:600}
+  .cnt .split{font-weight:400;color:var(--gray6);font-size:var(--fs-12);margin-left:var(--sp-8)}
+
+  .fld{margin-bottom:12px}
+  .fld label{display:block;font-size:var(--fs-12);color:var(--gray6);margin-bottom:5px;font-weight:600}
+  .fld input,.fld select,.fld textarea{width:100%;border:1px solid var(--gray3);border-radius:var(--r);
+    padding:var(--sp-8) var(--sp-12);font-size:var(--fs-14);font-family:inherit}
+  .hint2{font-size:var(--fs-12);color:var(--gray6);margin-top:6px;line-height:1.45}
+  .infobox{background:var(--blue-l);border:1px solid #a5d8ff;color:#1864ab;border-radius:var(--r-8);
+    padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);margin-bottom:14px;line-height:1.5}
+  .warnbox{background:var(--orange-l);border:1px solid #ffd8a8;color:#d9480f;border-radius:var(--r-8);
+    padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);margin-bottom:14px;line-height:1.5}
+  .lockbox{background:var(--gray0);border:1px solid var(--gray2);color:var(--gray6);border-radius:var(--r-8);
+    padding:var(--sp-12) var(--sp-16);font-size:var(--fs-14);margin-bottom:14px;line-height:1.5}
+  .demo{display:flex;align-items:center;gap:var(--sp-8);font-size:var(--fs-12);color:var(--gray6)}
+
+  /* палитра переменных */
+  .vars{display:flex;flex-wrap:wrap;gap:var(--sp-6);margin-top:8px}
+  .vr{border:1px dashed var(--gray3);background:var(--gray0);border-radius:var(--r-4);padding:var(--sp-4) var(--sp-8);
+    font-size:var(--fs-12);color:var(--gray7);font-family:ui-monospace,Menlo,monospace}
+  .vr:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-l)}
+
+  /* предпросмотр — вид уведомления в колокольчике (шаг подтверждения) */
+  .bell{border:1px solid var(--gray2);border-radius:var(--r-12);padding:var(--sp-12) var(--sp-16);background:#fff}
+  .bell .top{display:flex;align-items:center;gap:var(--sp-8);font-size:var(--fs-12);color:var(--gray6);margin-bottom:8px}
+  .bell b{font-size:var(--fs-14);display:block;margin-bottom:4px}
+  .bell .txt{font-size:var(--fs-14);line-height:1.5;white-space:pre-wrap}
+  .bell .when{font-size:var(--fs-12);color:var(--gray5);margin-top:8px}
+
+  table.t{width:100%;border-collapse:collapse;font-size:var(--fs-14)}
+  table.t th{text-align:left;font-size:var(--fs-12);letter-spacing:.04em;text-transform:uppercase;color:var(--gray5);
+    font-weight:700;padding:var(--sp-8) var(--sp-12);border-bottom:1px solid var(--gray2);white-space:nowrap}
+  table.t td{padding:var(--sp-8) var(--sp-12);border-bottom:1px solid var(--gray1);vertical-align:middle}
+  table.t tbody tr:hover{background:var(--gray0)}
+  .dt{font-variant-numeric:tabular-nums;color:var(--gray7);white-space:nowrap}
+  .num{color:var(--gray5);font-size:var(--fs-12)}
+  .empty{color:var(--gray5);font-size:var(--fs-14);padding:var(--sp-20) 0;text-align:center}
+  .rowact{border:0;background:none;color:var(--gray5);font-size:var(--fs-16);line-height:1;
+    padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4)}
+  .rowact:hover{background:var(--gray2);color:var(--gray9)}
+
+  /* снимок получателей — раскрытие строки журнала */
+  .snap{background:var(--gray0);padding:var(--sp-12) var(--sp-16);border-radius:var(--r-8);margin:var(--sp-8) 0}
+  .snap .h{font-size:var(--fs-12);color:var(--gray6);margin-bottom:8px}
+  .snap .who{display:flex;flex-wrap:wrap;gap:var(--sp-6)}
+  .who span{background:#fff;border:1px solid var(--gray2);border-radius:var(--r-pill);
+    padding:var(--sp-4) var(--sp-12);font-size:var(--fs-12)}
+  .who span.skip{color:var(--gray5);border-style:dashed;text-decoration:line-through}
+
+  /* шаблоны */
+  .tpl{border:1px solid var(--gray2);border-radius:var(--r-8);padding:var(--sp-12) var(--sp-16);margin-bottom:10px}
+  .tpl .top{display:flex;align-items:center;gap:var(--sp-12);flex-wrap:wrap}
+  .tpl b{font-size:var(--fs-14)}
+  .tpl .met{margin-left:auto;font-size:var(--fs-12);color:var(--gray6)}
+  .tpl .txt{font-size:var(--fs-14);color:var(--gray7);margin-top:6px;line-height:1.5}
+
+  /* выбор получателей: группа целиком чекбоксом либо раскрыть и отметить точечно */
+  .grp{border:1px solid var(--gray2);border-radius:var(--r-8);margin-bottom:8px}
+  .grp.part{border-color:var(--blue)}
+  .grp .gh{display:flex;align-items:center;gap:var(--sp-8);padding:var(--sp-8) var(--sp-12)}
+  .grp .gh:hover{background:var(--gray0)}
+  .grp .gh .nm{flex:1;min-width:0;cursor:pointer}
+  .grp .gh b{font-size:var(--fs-14);display:block}
+  .grp .gh .sub{font-size:var(--fs-12);color:var(--gray6)}
+  .grp .gh .arw{border:0;background:none;color:var(--gray5);font-size:var(--fs-14);padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4)}
+  .grp .gh .arw:hover{background:var(--gray2);color:var(--gray9)}
+  .grp .gm{border-top:1px solid var(--gray1);padding:var(--sp-8) var(--sp-12) var(--sp-12)}
+  .grp .quick{display:flex;flex-wrap:wrap;gap:var(--sp-12);margin-bottom:8px}
+  .grp .quick button{border:0;background:none;color:var(--blue);font-size:var(--fs-12);padding:0}
+  .grp .quick button:hover{text-decoration:underline}
+  .mem{display:flex;gap:var(--sp-8);align-items:center;padding:var(--sp-4) var(--sp-6);border-radius:var(--r-4);
+    font-size:var(--fs-14);cursor:pointer}
+  .mem:hover{background:var(--gray0)}
+  .mem .r{color:var(--gray5);font-size:var(--fs-12);margin-left:auto;flex:none}
+  .mem.pa .who{padding-left:var(--sp-12);color:var(--gray7)}
+  .seg{border:1px solid var(--gray2);border-radius:var(--r-8);padding:var(--sp-8) var(--sp-12);margin-bottom:8px;
+    display:flex;gap:var(--sp-8);align-items:center;cursor:pointer}
+  .seg:hover{background:var(--gray0)}
+  .seg b{font-size:var(--fs-14);display:block}
+  .seg .sub{font-size:var(--fs-12);color:var(--gray6)}
+
+  @media (max-width:1150px){ .send{grid-template-columns:1fr} .classes{grid-template-columns:1fr} .prev{position:static} }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-top">
+      <div class="logo">ШБ</div>
+      <div style="flex:1"><b>Шаг в будущее</b><small>Управление</small></div>
+      <button class="collapse-btn" onclick="document.getElementById('side').classList.toggle('collapsed')">⟨</button>
+    </div>
+    <nav class="nav">
+      <h4>Люди</h4>
+      <a href="22-people.html"><i class="ic">◉</i><span>Ученики</span></a>
+      <a href="23-admission.html"><i class="ic">◔</i><span>Приём</span></a>
+      <a href="21-staff.html"><i class="ic">◇</i><span>Сотрудники и роли</span></a>
+      <a href="28-notifications.html" class="on"><i class="ic">✦</i><span>Уведомления</span></a>
+      <h4>Финансы</h4>
+      <a href="24-finance.html"><i class="ic">₽</i><span>Лицевые счета</span></a>
+    </nav>
+    <div class="side-user">
+      <div class="ava" id="userIni">ПА</div>
+      <div style="flex:1"><b style="font-size:var(--fs-14);display:block" id="userName">Приёмщикова А.</b>
+        <small style="font-size:var(--fs-12);color:var(--gray6)" id="userRole">Адм. учебной части</small></div>
+      <span style="color:var(--gray5)">⚙</span>
+    </div>
+  </aside>
+
+  <div class="app">
+    <header class="head">
+      <div>
+        <div class="crumbs">Управление · Люди</div>
+        <h1>Уведомления</h1>
+      </div>
+      <div class="sp"></div>
+      <label class="demo">роль <i>(демо)</i>
+        <select id="role" onchange="setRole(this.value)" style="padding:var(--sp-4) var(--sp-8);font-size:var(--fs-12)">
+          <option value="adm">Адм. учебной части</option>
+          <option value="fin">Финансовый администратор</option>
+          <option value="mkt">Маркетолог</option>
+          <option value="owner">Владелец</option>
+        </select></label>
+      <label class="demo"><input type="checkbox" id="mkmod" checked onchange="setMod(this.checked)"> модуль «Маркетинг» <i>(демо)</i></label>
+      <span style="color:var(--gray5)">🔔</span>
+    </header>
+
+    <div class="body">
+      <div class="tabs" id="tabs"></div>
+      <div id="pane"></div>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" onclick="closeAll()"></div>
+
+<!-- добавление получателей -->
+<div class="modal" id="mRcp">
+  <div class="mo-h">Кому отправить</div>
+  <div class="mo-b" id="rcpBody"></div>
+  <div class="mo-f"><span class="muted" id="rcpCount" style="margin-right:auto;font-size:var(--fs-12)"></span>
+    <button class="btn" onclick="closeAll()">Отмена</button>
+    <button class="btn btn-p" onclick="addSelected()" id="rcpOk">Добавить</button></div>
+</div>
+
+<!-- подтверждение массовой отправки -->
+<div class="modal" id="mSend">
+  <div class="mo-h">Проверьте перед отправкой</div>
+  <div class="mo-b" id="sendBody"></div>
+  <div class="mo-f"><button class="btn" onclick="closeAll()">Вернуться к редактированию</button>
+    <button class="btn btn-p" onclick="doSend()" id="sendOk">Отправить</button></div>
+</div>
+
+<!-- редактор шаблона -->
+<div class="modal" id="mTpl">
+  <div class="mo-h" id="tplTitle">Шаблон уведомления</div>
+  <div class="mo-b">
+    <div class="fld"><label>Название</label><input type="text" id="tplName" value="Отмена занятия"></div>
+    <div class="fld"><label>Тема</label><input type="text" id="tplSubj" value="Занятие отменено"></div>
+    <div class="fld"><label>Текст</label><textarea id="tplBody" rows="4"></textarea>
+      <div class="hint2">Переменные вставляются кликом — запоминать их наизусть не нужно:</div>
+      <div class="vars" id="tplVars"></div></div>
+  </div>
+  <div class="mo-f"><button class="btn" onclick="closeAll()">Отмена</button>
+    <button class="btn btn-p" onclick="saveTpl()">Сохранить шаблон</button></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   Адресные уведомления (03-design §4.22, 01-product §4.10.1).
+   Два класса различаются правовой природой, а не ролью отправителя:
+   служебные не требуют согласия и не отключаются, промо требуют рекламного
+   согласия, уважают настройки получателя и частотный колпак.
+   Канал — колокольчик и push; почтой адресные уведомления не дублируются.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+var TABS = [ {k:'send', t:'Отправка'}, {k:'tpl', t:'Шаблоны'}, {k:'log', t:'Журнал'} ];
+
+/* роль = набор прав: какой класс доступен и какие получатели видны */
+var ROLES = {
+  adm:   {n:'Приёмщикова А.', t:'Адм. учебной части',        ini:'ПА', service:true,  promo:false},
+  fin:   {n:'Считалова О.',   t:'Финансовый администратор',  ini:'СО', service:true,  promo:false},
+  mkt:   {n:'Маркетова Л.',   t:'Маркетолог',                ini:'МЛ', service:false, promo:true},
+  owner: {n:'Владельцев В.',  t:'Владелец',                  ini:'ВВ', service:true,  promo:true}
+};
+var role = 'adm', MOD = true, tab = 0, cls = 'service';
+
+var VARS = ['{{имя}}', '{{фамилия}}', '{{группа}}', '{{курс}}', '{{дата занятия}}', '{{сумма долга}}'];
+/* значения первого получателя — для предпросмотра: подстановка видна ДО отправки */
+var SAMPLE = {'{{имя}}':'Иван', '{{фамилия}}':'Петров', '{{группа}}':'МЕГЭ-1',
+              '{{курс}}':'ЕГЭ: информатика', '{{дата занятия}}':'24 августа', '{{сумма долга}}':'14 000'};
+
+var TPLS = [
+  {cls:'service', n:'Отмена занятия',        s:'Занятие отменено',
+   b:'{{имя}}, занятие {{дата занятия}} в группе {{группа}} отменено. О переносе сообщим отдельно.', by:'Приёмщикова А.', at:'12.08.2026'},
+  {cls:'service', n:'Перенос занятия',       s:'Занятие перенесено',
+   b:'{{имя}}, занятие группы {{группа}} перенесено на {{дата занятия}}. Расписание в кабинете уже обновлено.', by:'Приёмщикова А.', at:'12.08.2026'},
+  {cls:'service', n:'Сбор документов',       s:'Нужны документы',
+   b:'{{имя}}, до пятницы принесите документы для оформления договора. Список — в кабинете, раздел «Приём».', by:'Приёмщикова А.', at:'05.08.2026'},
+  {cls:'service', n:'Напоминание об оплате', s:'Задолженность по счёту',
+   b:'{{имя}}, на лицевом счёте задолженность {{сумма долга}} ₽. Оплатить можно в кабинете, в разделе «Лицевой счёт».', by:'Считалова О.', at:'18.08.2026'},
+  {cls:'promo',   n:'Давно не заходили',     s:'Возвращайтесь!',
+   b:'{{имя}}, мы скучали. Вы не открывали {{курс}} три дня — там уже ждёт новый урок, это всего 10 минут.', by:'Маркетова Л.', at:'19.08.2026'},
+  {cls:'promo',   n:'Скидка на следующий курс', s:'Скидка 20% до конца недели',
+   b:'{{имя}}, вы закончили {{курс}} — на следующий уровень действует скидка 20% до воскресенья.', by:'Маркетова Л.', at:'14.08.2026'},
+  {cls:'promo',   n:'Стартует новый набор',  s:'Открыт набор',
+   b:'{{имя}}, открыт набор на {{курс}}. Первое занятие {{дата занятия}}, мест немного.', by:'Маркетова Л.', at:'10.08.2026'}
+];
+
+/* Получатели: группы с поимённым составом. Выбрать можно группу целиком (чекбокс в шапке)
+   либо раскрыть её и отметить отдельных учеников и представителей — второй уровень нужен,
+   когда сообщение касается не всех: «трое не сдали документы», «родителям пятерых». */
+var GROUPS = [
+  {id:'g1', n:'МЕГЭ-1', sub:'ЕГЭ: информатика · вт, пт 17:00', open:false, m:[
+    {n:'Петров Иван',      r:'st', s:false},
+    {n:'Петрова Ольга',    r:'pa', of:'Петров И.',    s:false},
+    {n:'Сидорова Мария',   r:'st', s:false},
+    {n:'Сидорова Елена',   r:'pa', of:'Сидорова М.',  s:false},
+    {n:'Орлов Пётр',       r:'st', s:false},
+    {n:'Орлова Нина',      r:'pa', of:'Орлов П.',     s:false},
+    {n:'Зимина Алла',      r:'st', s:false},
+    {n:'Гусев Марк',       r:'st', s:false}
+  ]},
+  {id:'g2', n:'КЕГЭ-1', sub:'ЕГЭ: информатика · сб 10:00', open:false, m:[
+    {n:'Кузнецов Артём',   r:'st', s:false},
+    {n:'Кузнецова Ирина',  r:'pa', of:'Кузнецов А.',  s:false},
+    {n:'Лапин Илья',       r:'st', s:false},
+    {n:'Лапина Вера',      r:'pa', of:'Лапин И.',     s:false},
+    {n:'Ким Дарья',        r:'st', s:false}
+  ]},
+  {id:'g3', n:'Программисты-1', sub:'Python · взрослая группа, представителей нет', open:false, m:[
+    {n:'Волков Сергей',    r:'st', s:false},
+    {n:'Титова Анна',      r:'st', s:false},
+    {n:'Быков Роман',      r:'st', s:false}
+  ]}
+];
+var STAFF = [
+  {n:'Училков И. С.',    r:'преподаватель',            s:false},
+  {n:'Замещалов П. С.',  r:'преподаватель',            s:false},
+  {n:'Кэбс М.',          r:'методист · преподаватель', s:false},
+  {n:'Проверялкин Д.',   r:'проверяющий',              s:false}
+];
+var STAFF_OPEN = false;
+/* сегменты модуля «Маркетинг» — поимённо не раскрываются: состав вычисляется правилом
+   в момент отправки, снимок получателей фиксируется уже по факту (02-tech §14) */
+var SEGMENTS = [
+  {n:'Лиды без покупки',       sub:'модуль «Маркетинг» · 128 человек', cnt:128, s:false},
+  {n:'Выпускники курса',       sub:'ЕГЭ: информатика · 34 человека',   cnt:34,  s:false},
+  {n:'Не заходили 7 дней',     sub:'активные записи · 52 человека',    cnt:52,  s:false}
+];
+
+var RCP = [];                    /* выбранные источники текущей отправки */
+var subj = '', body = '', tplIdx = -1, tplEdit = -1;
+
+var LOG = [
+  {at:'20.08.2026 09:14', by:'Приёмщикова А.', cls:'service', s:'Занятие отменено',
+   who:['Петров Иван','Сидорова Мария','Кузнецов Артём','Петрова Ольга','Кузнецова Ирина'], skip:[], open:false},
+  {at:'19.08.2026 18:40', by:'Маркетова Л.',   cls:'promo',   s:'Возвращайтесь!',
+   who:['Орлов Пётр','Зимина Алла','Гусев Марк'], skip:['Ким Дарья — нет согласия','Лапин Илья — колпак недели'], open:false},
+  {at:'18.08.2026 11:02', by:'Считалова О.',   cls:'service', s:'Задолженность по счёту',
+   who:['Петрова Ольга','Кузнецова Ирина','Орлова Нина'], skip:[], open:false}
+];
+
+function R(){ return ROLES[role]; }
+function canPromo(){ return R().promo && MOD; }
+function canService(){ return R().service; }
+
+/* склонение числительных: «1 получатель · 2 получателя · 5 получателей».
+   В продукте это забота i18n (04-conventions §6.6), здесь — чтобы счётчики не резали глаз */
+function plural(n, one, few, many){
+  var m10 = n % 10, m100 = n % 100;
+  if(m10 === 1 && m100 !== 11) return one;
+  if(m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
+  return many;
+}
+function rcpN(n){ return n + ' ' + plural(n, 'получатель', 'получателя', 'получателей'); }
+function rcpDat(n){ return n + ' ' + plural(n, 'получателю', 'получателям', 'получателям'); }
+
+/* ── подсчёт получателей ── */
+function totals(){
+  var st = 0, pa = 0, sf = 0;
+  RCP.forEach(function(r){ st += r.st; pa += r.pa; sf += r.sf; });
+  return {st:st, pa:pa, sf:sf, all:st + pa + sf};
+}
+/* промо: часть получателей отсеется — нет рекламного согласия или сработал недельный колпак.
+   Это не ошибка отправки, а исключение из партии: отправитель видит цифру заранее (02-tech §14) */
+function skipped(){
+  if(cls !== 'promo') return 0;
+  return Math.round(totals().all * 0.18);
+}
+
+function subst(t){
+  var out = t;
+  VARS.forEach(function(v){ out = out.split(v).join(SAMPLE[v]); });
+  return out;
+}
+
+/* ── вкладки ── */
+function render(){
+  document.getElementById('userIni').textContent = R().ini;
+  document.getElementById('userName').textContent = R().n;
+  document.getElementById('userRole').textContent = R().t;
+  /* класс подстраивается под права: у кого нет служебного — открывается промо, и наоборот */
+  if(cls === 'service' && !canService()) cls = 'promo';
+  if(cls === 'promo' && !canPromo()) cls = canService() ? 'service' : 'promo';
+
+  document.getElementById('tabs').innerHTML = TABS.map(function(t, i){
+    return '<button class="' + (i === tab ? 'on' : '') + '" onclick="setTab(' + i + ')">' + t.t + '</button>';
+  }).join('');
+  document.getElementById('pane').innerHTML =
+    tab === 0 ? paneSend() : tab === 1 ? paneTpl() : paneLog();
+}
+function setTab(i){ tab = i; render(); }
+function setRole(v){
+  role = v; RCP = []; tplIdx = -1; subj = ''; body = ''; render();
+  toast(R().t + ': ' + (canService() ? 'служебные' : '') + (canService() && canPromo() ? ' и ' : '') +
+    (canPromo() ? 'вовлекающие и промо' : '') + ' уведомления');
+}
+function setMod(v){
+  MOD = v; RCP = []; render();
+  toast(v ? 'Модуль «Маркетинг» подключён: промо-класс доступен маркетологу'
+          : 'Без модуля «Маркетинг» промо-класса не существует — только служебные уведомления');
+}
+function setCls(c){
+  if(c === 'promo' && !canPromo()) return;
+  if(c === 'service' && !canService()) return;
+  cls = c; RCP = []; tplIdx = -1; subj = ''; body = ''; render();
+  toast(c === 'service' ? 'Служебный класс: согласие не требуется, получатель не может отключить'
+                        : 'Промо-класс: нужно рекламное согласие, действует частотный колпак');
+}
+
+/* ── вкладка «Отправка» ── */
+function paneSend(){
+  var t = totals(), sk = skipped();
+  var parts = [];
+  if(t.st) parts.push(t.st + ' ' + plural(t.st, 'ученик', 'ученика', 'учеников'));
+  if(t.pa) parts.push(t.pa + ' ' + plural(t.pa, 'представитель', 'представителя', 'представителей'));
+  if(t.sf) parts.push(t.sf + ' ' + plural(t.sf, 'сотрудник', 'сотрудника', 'сотрудников'));
+
+  var clsBlock = (canService() && canPromo())
+    ? '<div class="classes">' +
+        '<div class="cl' + (cls === 'service' ? ' on' : '') + '" onclick="setCls(\'service\')">' +
+          '<b>Служебное</b><span class="sub">Обучение и расчёты: отмена занятия, документы, оплата. ' +
+          'Согласия не требует, получатель не отключает.</span></div>' +
+        '<div class="cl promo' + (cls === 'promo' ? ' on' : '') + (canPromo() ? '' : ' off') + '" onclick="setCls(\'promo\')">' +
+          '<b>Вовлекающее и промо</b><span class="sub">Акции, новые курсы, «давно не заходили». ' +
+          'Только с рекламным согласием, с частотным колпаком.</span></div>' +
+      '</div>'
+    : '<div class="' + (cls === 'promo' ? 'infobox' : 'infobox') + '">Класс: <b>' +
+      (cls === 'promo' ? 'вовлекающее и промо' : 'служебное') + '</b> — по вашим правам. ' +
+      (cls === 'promo'
+        ? 'Отправляется только тем, кто дал рекламное согласие; действует частотный колпак.'
+        : 'Рекламировать служебным классом нельзя: для этого есть промо у маркетолога.') + '</div>';
+
+  return clsBlock +
+    /* получатели */
+    '<div class="card sec">' +
+      '<div class="sec-h"><h3>Получатели</h3>' +
+        '<span class="muted">' + (cls === 'promo' ? 'сегменты базы модуля «Маркетинг»' : 'из тех же списков, где вы и так работаете') + '</span>' +
+        '<div style="flex:1"></div>' +
+        '<button class="btn btn-s" onclick="openRcp()">+ Добавить</button></div>' +
+      (RCP.length
+        ? '<div class="rcps">' + RCP.map(function(r, i){
+            return '<span class="chip"><b>' + r.n + '</b>' +
+              (r.all ? ' · ' + r.all : '') +
+              '<button onclick="delRcp(' + i + ')">×</button></span>';
+          }).join('') + '</div>' +
+          '<div class="cnt">' + rcpN(t.all) +
+            (parts.length ? '<span class="split">' + parts.join(' · ') + '</span>' : '') + '</div>'
+        : '<div class="empty">Получатели не выбраны — начните с кнопки «Добавить»</div>') +
+    '</div>' +
+
+    /* текст */
+    '<div class="card sec">' +
+      '<div class="sec-h"><h3>Текст</h3><span class="muted">простой текст, без форматирования</span></div>' +
+      '<div class="fld"><label>Шаблон</label>' +
+        '<select onchange="pickTpl(this.value)">' +
+          '<option value="-1">Без шаблона — написать своё</option>' +
+          TPLS.map(function(x, i){
+            return x.cls === cls
+              ? '<option value="' + i + '"' + (i === tplIdx ? ' selected' : '') + '>' + x.n + '</option>' : '';
+          }).join('') +
+        '</select>' +
+        '<div class="hint2">Шаблон — отправная точка: подставленный текст можно поправить перед отправкой.</div></div>' +
+      '<div class="fld"><label>Тема</label>' +
+        '<input type="text" id="subj" value="' + subj.replace(/"/g, '&quot;') + '" oninput="subj=this.value"></div>' +
+      '<div class="fld"><label>Сообщение</label>' +
+        '<textarea id="body" rows="5" oninput="body=this.value">' + body + '</textarea>' +
+        '<div class="vars">' + VARS.map(function(v){
+          return '<button class="vr" onclick="insVar(\'' + v + '\')">' + v + '</button>'; }).join('') + '</div>' +
+        '<div class="hint2">Как это увидит получатель — на шаге подтверждения: кнопка «Отправить» сначала ' +
+          'показывает готовое уведомление с подставленными именами.</div></div>' +
+    '</div>' +
+
+    /* отправка */
+    '<div class="card sec">' +
+      (cls === 'promo' && t.all
+        ? '<div class="warnbox"><b>' + sk + ' из ' + t.all + ' не получат</b> — недельный колпак и отсутствие ' +
+          'рекламного согласия. Это видно до отправки, а не после: партия уйдёт ' + rcpDat(t.all - sk) + '.</div>'
+        : '') +
+      '<div class="lockbox">Канал — <b>колокольчик и push</b>. Почтой адресные уведомления не дублируются: ' +
+        'почта остаётся за письмами регистрации и доступов. Push уйдёт в рабочее окно школы (08:00–20:00) — ' +
+        'ночью телефон не разбудит, накопленное доставится утром.</div>' +
+      '<button class="btn btn-p" onclick="openSend()"' + (t.all && (subj || body) ? '' : ' disabled') + '>' +
+        (t.all ? 'Отправить ' + rcpDat(t.all - sk) : 'Отправить') + '</button>' +
+      (t.all && !(subj || body) ? '<span class="muted" style="margin-left:var(--sp-12)">Заполните тему или текст</span>' : '') +
+    '</div>';
+}
+function pickTpl(i){
+  tplIdx = +i;
+  if(tplIdx >= 0){ subj = TPLS[tplIdx].s; body = TPLS[tplIdx].b; }
+  else { subj = ''; body = ''; }
+  render();
+  if(tplIdx >= 0) toast('Шаблон «' + TPLS[tplIdx].n + '» подставлен — текст можно поправить');
+}
+function insVar(v){
+  var el = document.getElementById('body');
+  var p = el.selectionStart || body.length;
+  body = body.slice(0, p) + v + body.slice(p);
+  el.value = body; el.focus(); el.selectionStart = el.selectionEnd = p + v.length;
+}
+
+/* ── выбор получателей: два уровня в одной модалке ──
+   верхний — чекбокс группы целиком, нижний — раскрытие и точечная отметка
+   учеников и представителей. Второй уровень нужен, когда сообщение касается
+   не всей группы: «трое не сдали документы», «родителям пятерых». */
+function openRcp(){ renderRcp(); show('mRcp'); }
+
+function grpSel(g){ return g.m.filter(function(m){ return m.s; }).length; }
+function selTotals(){
+  var st = 0, pa = 0, sf = 0, seg = 0;
+  if(cls === 'service'){
+    GROUPS.forEach(function(g){ g.m.forEach(function(m){ if(m.s){ if(m.r === 'st') st++; else pa++; } }); });
+    STAFF.forEach(function(p){ if(p.s) sf++; });
+  } else {
+    SEGMENTS.forEach(function(s){ if(s.s) seg += s.cnt; });
+  }
+  return {st:st, pa:pa, sf:sf, seg:seg, all:st + pa + sf + seg};
+}
+
+function renderRcp(){
+  var html = '<div class="hint2" style="margin-bottom:10px">' +
+    (cls === 'promo'
+      ? 'Сегменты приносит модуль «Маркетинг»: поимённо они не раскрываются — состав вычисляется правилом в момент отправки.'
+      : 'Отметьте группу целиком или раскройте её и выберите отдельных учеников и представителей.') + '</div>';
+
+  if(cls === 'service'){
+    html += GROUPS.map(function(g, i){
+      var sel = grpSel(g), all = g.m.length;
+      var st = g.m.filter(function(m){ return m.r === 'st'; }).length;
+      var pa = all - st;
+      var head =
+        '<div class="gh">' +
+          '<input type="checkbox" onclick="toggleGrpAll(' + i + ')"' +
+            (sel === all ? ' checked' : '') + (sel && sel < all ? ' data-part="1"' : '') + '>' +
+          '<span class="nm" onclick="toggleGrpOpen(' + i + ')"><b>' + g.n +
+            (sel ? ' <span class="badge b-ok">' + sel + '</span>' : '') + '</b>' +
+            '<span class="sub">' + g.sub + ' · ' + st + ' ' + plural(st, 'ученик', 'ученика', 'учеников') +
+            (pa ? ' · ' + pa + ' ' + plural(pa, 'представитель', 'представителя', 'представителей') : '') + '</span></span>' +
+          '<button class="arw" onclick="toggleGrpOpen(' + i + ')">' + (g.open ? '▾' : '▸') + '</button>' +
+        '</div>';
+      var members = g.open
+        ? '<div class="gm">' +
+            '<div class="quick">Выбрать: ' +
+              '<button onclick="selSubset(' + i + ',\'all\')">всех</button>' +
+              '<button onclick="selSubset(' + i + ',\'st\')">только учеников</button>' +
+              (pa ? '<button onclick="selSubset(' + i + ',\'pa\')">только представителей</button>' : '') +
+              '<button onclick="selSubset(' + i + ',\'none\')">снять</button></div>' +
+            g.m.map(function(m, j){
+              return '<label class="mem ' + m.r + '"><input type="checkbox" onclick="toggleMem(' + i + ',' + j + ')"' +
+                (m.s ? ' checked' : '') + '>' +
+                '<span class="who">' + m.n + '</span>' +
+                '<span class="r">' + (m.r === 'st' ? 'ученик' : 'представитель · ' + m.of) + '</span></label>';
+            }).join('') +
+          '</div>'
+        : '';
+      return '<div class="grp' + (sel && sel < all ? ' part' : '') + '">' + head + members + '</div>';
+    }).join('');
+
+    /* сотрудники — тот же приём: блок целиком или отдельные люди */
+    var sfSel = STAFF.filter(function(p){ return p.s; }).length;
+    html += '<div class="grp' + (sfSel && sfSel < STAFF.length ? ' part' : '') + '">' +
+      '<div class="gh">' +
+        '<input type="checkbox" onclick="toggleStaffAll()"' + (sfSel === STAFF.length ? ' checked' : '') + '>' +
+        '<span class="nm" onclick="toggleStaffOpen()"><b>Сотрудники' +
+          (sfSel ? ' <span class="badge b-ok">' + sfSel + '</span>' : '') + '</b>' +
+          '<span class="sub">преподаватели и другие роли · ' + STAFF.length + ' человек</span></span>' +
+        '<button class="arw" onclick="toggleStaffOpen()">' + (STAFF_OPEN ? '▾' : '▸') + '</button></div>' +
+      (STAFF_OPEN ? '<div class="gm">' + STAFF.map(function(p, j){
+        return '<label class="mem"><input type="checkbox" onclick="toggleStaff(' + j + ')"' + (p.s ? ' checked' : '') + '>' +
+          '<span class="who">' + p.n + '</span><span class="r">' + p.r + '</span></label>'; }).join('') + '</div>' : '') +
+    '</div>';
+  } else {
+    html += SEGMENTS.map(function(s, i){
+      return '<label class="seg"><input type="checkbox" onclick="toggleSeg(' + i + ')"' + (s.s ? ' checked' : '') + '>' +
+        '<span><b>' + s.n + '</b><span class="sub">' + s.sub + '</span></span></label>';
+    }).join('');
+  }
+
+  document.getElementById('rcpBody').innerHTML = html;
+  var t = selTotals();
+  document.getElementById('rcpCount').textContent = t.all ? 'Выбрано: ' + rcpN(t.all) : 'Никто не выбран';
+  document.getElementById('rcpOk').disabled = !t.all;
+  document.getElementById('rcpOk').textContent = t.all ? 'Добавить ' + rcpN(t.all) : 'Добавить';
+  /* «частично выбрана» — стандартное третье состояние чекбокса, иначе группа врёт про свой охват */
+  Array.prototype.forEach.call(document.querySelectorAll('#rcpBody input[data-part]'), function(b){ b.indeterminate = true; });
+}
+
+function toggleGrpOpen(i){ GROUPS[i].open = !GROUPS[i].open; renderRcp(); }
+function toggleGrpAll(i){
+  var g = GROUPS[i], on = grpSel(g) !== g.m.length;
+  g.m.forEach(function(m){ m.s = on; });
+  renderRcp();
+}
+function toggleMem(i, j){ GROUPS[i].m[j].s = !GROUPS[i].m[j].s; renderRcp(); }
+function selSubset(i, kind){
+  GROUPS[i].m.forEach(function(m){
+    m.s = kind === 'all' ? true : kind === 'none' ? false : m.r === kind;
+  });
+  renderRcp();
+}
+function toggleStaffOpen(){ STAFF_OPEN = !STAFF_OPEN; renderRcp(); }
+function toggleStaffAll(){
+  var on = STAFF.filter(function(p){ return p.s; }).length !== STAFF.length;
+  STAFF.forEach(function(p){ p.s = on; });
+  renderRcp();
+}
+function toggleStaff(j){ STAFF[j].s = !STAFF[j].s; renderRcp(); }
+function toggleSeg(i){ SEGMENTS[i].s = !SEGMENTS[i].s; renderRcp(); }
+
+/* выбранное превращается в чипы: группа целиком — одним чипом, часть — чипом с числом */
+function addSelected(){
+  if(cls === 'service'){
+    GROUPS.forEach(function(g){
+      var sel = g.m.filter(function(m){ return m.s; });
+      if(!sel.length) return;
+      var st = sel.filter(function(m){ return m.r === 'st'; }).length;
+      var whole = sel.length === g.m.length;
+      RCP.push({n:(whole ? 'Группа ' + g.n : g.n + ' — выборочно'),
+                st:st, pa:sel.length - st, sf:0, all:sel.length});
+      g.m.forEach(function(m){ m.s = false; });
+      g.open = false;
+    });
+    var sf = STAFF.filter(function(p){ return p.s; });
+    if(sf.length){
+      RCP.push({n:(sf.length === STAFF.length ? 'Все сотрудники' : 'Сотрудники — выборочно'),
+                st:0, pa:0, sf:sf.length, all:sf.length});
+      STAFF.forEach(function(p){ p.s = false; });
+      STAFF_OPEN = false;
+    }
+  } else {
+    SEGMENTS.forEach(function(s){
+      if(!s.s) return;
+      RCP.push({n:'Сегмент: ' + s.n, st:s.cnt, pa:0, sf:0, all:s.cnt});
+      s.s = false;
+    });
+  }
+  closeAll(); render();
+  toast('Получатели добавлены: ' + rcpN(totals().all) + ' — уточнить список можно чипами');
+}
+function delRcp(i){ RCP.splice(i, 1); render(); }
+
+/* ── отправка ── */
+function openSend(){
+  var t = totals(), sk = skipped();
+  document.getElementById('sendBody').innerHTML =
+    '<div class="' + (cls === 'promo' ? 'warnbox' : 'infobox') + '">' +
+      '<b>' + rcpN(t.all - sk) + '</b>' + (sk ? ' · ' + sk + ' отсеяны колпаком и согласием' : '') +
+      '<div style="margin-top:6px">' + RCP.map(function(r){ return r.n; }).join(' · ') + '</div></div>' +
+
+    /* предпросмотр — то, что получатель увидит в колокольчике, с подставленными переменными */
+    '<div class="fld"><label>Так это увидит получатель</label>' +
+      '<div class="bell">' +
+        '<div class="top">🔔 <span>Уведомление · ' + (cls === 'promo' ? 'школа' : 'учебная часть') + '</span>' +
+          '<span class="badge ' + (cls === 'promo' ? 'b-promo' : 'b-serv') + '" style="margin-left:auto">' +
+          (cls === 'promo' ? 'промо' : 'служебное') + '</span></div>' +
+        '<b>' + subst(subj || '(без темы)') + '</b>' +
+        '<div class="txt">' + subst(body || '—') + '</div>' +
+        '<div class="when">только что</div>' +
+      '</div>' +
+      '<div class="hint2">Значения подставлены для первого получателя: <b>Петров Иван</b>. ' +
+        'Переменные обязаны превратиться в имена <i>до</i> отправки, а не после — поэтому подтверждение ' +
+        'показывает готовое уведомление, а не исходный текст с фигурными скобками.</div></div>' +
+
+    '<div class="hint2">Отправка попадёт в журнал вместе со <b>снимком получателей</b> — поимённым списком ' +
+      'на момент отправки. Состав группы потом изменится, а ответ на вопрос «кому это ушло» останется точным.</div>';
+  document.getElementById('sendOk').textContent = 'Отправить ' + rcpDat(t.all - sk);
+  show('mSend');
+}
+function doSend(){
+  var t = totals(), sk = skipped();
+  var names = ['Петров Иван','Сидорова Мария','Кузнецов Артём','Петрова Ольга','Кузнецова Ирина','Орлов Пётр'];
+  LOG.unshift({
+    at:'21.08.2026 12:30', by:R().n, cls:cls, s:subst(subj || '(без темы)'),
+    who:names.slice(0, Math.max(1, Math.min(6, t.all - sk))),
+    skip:sk ? ['Ким Дарья — нет согласия','Лапин Илья — колпак недели'] : [],
+    open:false
+  });
+  RCP = []; subj = ''; body = ''; tplIdx = -1;
+  closeAll(); tab = 2; render();
+  toast('Отправлено ' + rcpDat(t.all - sk) + ' · в колокольчик сразу, push — с началом рабочего окна');
+}
+
+/* ── вкладка «Шаблоны» ── */
+function paneTpl(){
+  var mine = TPLS.filter(function(x){ return x.cls === cls; });
+  return '<div class="card sec">' +
+    '<div class="sec-h"><h3>Шаблоны ' + (cls === 'promo' ? 'вовлекающих' : 'служебных') + ' уведомлений</h3>' +
+      '<span class="muted">свой класс: администратор не правит промо, маркетолог не видит служебных</span>' +
+      '<div style="flex:1"></div><button class="btn btn-s" onclick="openTpl(-1)">+ Шаблон</button></div>' +
+    (mine.length ? mine.map(function(x){
+      var i = TPLS.indexOf(x);
+      return '<div class="tpl"><div class="top"><b>' + x.n + '</b>' +
+        '<span class="badge ' + (x.cls === 'promo' ? 'b-promo' : 'b-serv') + '">' +
+          (x.cls === 'promo' ? 'промо' : 'служебное') + '</span>' +
+        '<span class="met">' + x.by + ' · ' + x.at + '</span>' +
+        '<button class="rowact" onclick="openTpl(' + i + ')">✎</button></div>' +
+        '<div class="txt">' + x.b + '</div></div>';
+    }).join('') : '<div class="empty">Шаблонов пока нет → создайте первый</div>') +
+    '<div class="hint2">Стартовый набор приходит с инстансом при развёртывании; школа правит его под себя.</div>' +
+  '</div>';
+}
+function openTpl(i){
+  tplEdit = i;
+  var x = i >= 0 ? TPLS[i] : {n:'', s:'', b:''};
+  document.getElementById('tplTitle').textContent = i >= 0 ? 'Шаблон: ' + x.n : 'Новый шаблон';
+  document.getElementById('tplName').value = x.n;
+  document.getElementById('tplSubj').value = x.s;
+  document.getElementById('tplBody').value = x.b;
+  document.getElementById('tplVars').innerHTML = VARS.map(function(v){
+    return '<button class="vr" onclick="insTplVar(\'' + v + '\')">' + v + '</button>'; }).join('');
+  show('mTpl');
+}
+function insTplVar(v){
+  var el = document.getElementById('tplBody');
+  var p = el.selectionStart || el.value.length;
+  el.value = el.value.slice(0, p) + v + el.value.slice(p);
+  el.focus(); el.selectionStart = el.selectionEnd = p + v.length;
+}
+function saveTpl(){
+  var n = document.getElementById('tplName').value || 'Без названия';
+  var s = document.getElementById('tplSubj').value;
+  var b = document.getElementById('tplBody').value;
+  if(tplEdit >= 0){ TPLS[tplEdit].n = n; TPLS[tplEdit].s = s; TPLS[tplEdit].b = b; }
+  else TPLS.push({cls:cls, n:n, s:s, b:b, by:R().n, at:'21.08.2026'});
+  closeAll(); render();
+  toast('Шаблон сохранён');
+}
+
+/* ── вкладка «Журнал» ── */
+function paneLog(){
+  var rows = LOG.map(function(x, i){
+    var head = '<tr onclick="toggleLog(' + i + ')" style="cursor:pointer">' +
+      '<td class="dt">' + x.at + '</td>' +
+      '<td>' + x.by + '</td>' +
+      '<td><span class="badge ' + (x.cls === 'promo' ? 'b-promo' : 'b-serv') + '">' +
+        (x.cls === 'promo' ? 'промо' : 'служебное') + '</span></td>' +
+      '<td>' + x.s + '</td>' +
+      '<td class="dt">' + x.who.length + (x.skip.length ? ' <span class="num">+' + x.skip.length + ' отсеяно</span>' : '') + '</td>' +
+      '<td class="rowact">' + (x.open ? '▾' : '▸') + '</td></tr>';
+    var snap = x.open
+      ? '<tr><td colspan="6"><div class="snap"><div class="h">Снимок получателей на момент отправки — ' +
+          'поимённо, а не критерием отбора</div><div class="who">' +
+          x.who.map(function(w){ return '<span>' + w + '</span>'; }).join('') +
+          x.skip.map(function(w){ return '<span class="skip">' + w + '</span>'; }).join('') +
+        '</div></div></td></tr>'
+      : '';
+    return head + snap;
+  }).join('');
+
+  return '<div class="card sec">' +
+    '<div class="sec-h"><h3>Отправленные уведомления</h3>' +
+      '<span class="muted">строка раскрывает снимок получателей</span></div>' +
+    '<table class="t"><thead><tr><th style="width:var(--col-160)">Когда</th><th style="width:var(--col-160)">Кто</th>' +
+      '<th style="width:var(--col-110)">Класс</th><th>Тема</th>' +
+      '<th style="width:var(--col-110)">Получателей</th><th style="width:40px"></th></tr></thead>' +
+      '<tbody>' + rows + '</tbody></table>' +
+    '<div class="hint2">Журнал доступен и в настройках системы, общей лентой с ролями, доступами и деньгами ' +
+      '(03-design §4.20). Отправка всегда журналируется: кто, какому числу людей и каким классом.</div>' +
+  '</div>';
+}
+function toggleLog(i){ LOG[i].open = !LOG[i].open; render(); }
+
+/* ── служебное ── */
+function show(id){ document.getElementById('scrim').classList.add('on'); document.getElementById(id).classList.add('on'); }
+function closeAll(){
+  document.getElementById('scrim').classList.remove('on');
+  ['mRcp','mSend','mTpl'].forEach(function(id){ document.getElementById(id).classList.remove('on'); });
+}
+var tt;
+function toast(m){
+  var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3600);
+}
+
+render();
+</script>
+</body>
+</html>
