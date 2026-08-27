@@ -81,7 +81,7 @@
 
 **Backend (dev):** pytest + pytest-asyncio + testcontainers (§20), polyfactory (фабрики тестовых данных), ruff (линт и формат), mypy, import-linter (§4.7), coverage.
 
-**Frontend (runtime):** react + react-dom, react-router (§11.2), @tanstack/react-query, @mantine/* (core, hooks, forms, dates, notifications), dayjs (требование Mantine dates), i18next + react-i18next (§1.2.3), tiptap (rich-text редактор конструктора и блоков).
+**Frontend (runtime):** react + react-dom, react-router (§11.2), @tanstack/react-query, @mantine/* (core, hooks, forms, dates, notifications), dayjs (требование Mantine dates), i18next + react-i18next (§1.2.3), tiptap (rich-text редактор конструктора и блоков) + @tiptap/extension-code-block-lowlight + lowlight (подсветка синтаксиса в блоках кода — 01-product §5.2, §5.4; официальное расширение TipTap, отдельного инструмента не заводим — 04-conventions §1.6).
 
 **Frontend (dev):** vite + typescript, sass-embedded (SCSS — 04-conventions §1.3), orval + msw (клиент и моки из OpenAPI — 04-conventions §1.4), eslint + typescript-eslint + eslint-plugin-boundaries (границы пакетов, §4.7), prettier, vitest, playwright (§20).
 
@@ -1039,7 +1039,7 @@ pnpm workspaces; без turborepo и прочей оркестрации — `ap
 - **Шифрование ЭДО**: поля — AES-GCM ключом инстанса (из secrets, не из БД); расшифровка — только в момент отображения уполномоченному, с записью в журнал доступа к ПД (`edo.pii_access_log`: кто, чьи данные, когда, контекст; доступ вендора — с особой пометкой, §7.3). Ротация ключа — процедура вендора (перешифрование фоновым job).
 - **Согласия** — версионированные: факт (кто, когда, IP) + версия текста; три вида — регистрационное (ядро), документальные (ЭДО), рекламное (Маркетинг; отзыв в один клик).
 - **Инъекции**: только параметризованные запросы (SQLAlchemy); сырой SQL запрещён конвенцией (§9.1).
-- **XSS**: Jinja2-автоэкранирование на public; rich-text контент методистов и учеников санитизируется на сервере при сохранении (белый список тегов — nh3): контент — главная XSS-поверхность LMS. Плюс CSP (self — файлы идут тем же origin через `/s3/`, §2.1), HSTS, X-Frame-Options.
+- **XSS**: Jinja2-автоэкранирование на public; rich-text контент методистов и учеников санитизируется на сервере при сохранении (белый список тегов — nh3): контент — главная XSS-поверхность LMS. Блок кода (`<pre><code class="language-*">`, TipTap CodeBlockLowlight — 01-product §5.2) — в том же белом списке, класс ограничен реестром допустимых языков, а не произвольной строкой: код внутри рендерится текстом (innerText), не HTML — исполняемого содержимого блок не добавляет. Плюс CSP (self — файлы идут тем же origin через `/s3/`, §2.1), HSTS, X-Frame-Options.
 - **CSRF**: поверхность минимальна by design — API авторизуется Bearer-токеном из памяти SPA; единственная cookie (refresh, §8) — httpOnly + SameSite=Strict, принимается одним эндпоинтом `/auth/refresh`.
 - **Файлы** (§13): валидация mime и размера, `Content-Disposition: attachment` для пользовательских загрузок, presigned-ссылки короткого срока; исполняемое не принимается.
 - **Зависимости**: lockfiles везде; `pip-audit` + `npm audit` в CI (§20); security-обновления — приоритетная очередь релизов (§17).
