@@ -16,6 +16,7 @@ var SCREENS = [
   ['Приём и заявки',        '23-admission.html'],
   ['Лицевые счета (админ)', '24-finance.html'],
   ['Сотрудники и роли',     '21-staff.html'],
+  ['Уведомления',           '28-notifications.html'],
   ['Урок по группе',        '08-lesson.html#pick'],
   ['Работа по группе',      '09-work.html#pick'],
   ['Проверка работ',        '05-review.html'],

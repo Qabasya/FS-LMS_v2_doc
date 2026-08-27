@@ -68,6 +68,7 @@
 | 25 | Витрина (§4.8) | DataTable, SectionCard, ChecklistCard, FormModal (запуск набора), StatusBadge (вычисленные метки), MoneyText, RichText | — |
 | 26 | Настройки обучения (§4.19) | SettingRow, DataTable (справочники), FormModal, ConfirmModal (закрытие периода со сводкой), StatusBadge | — |
 | 27 | Настройки системы (§4.20) | SettingRow, SectionCard, DataTable (редакции, коды), ConfirmModal (публикация редакции), StatusBadge | — |
+| 28 | Уведомления (§4.22) | SendNotificationModal (+ ConfirmModal с предпросмотром), Tabs, DataTable (шаблоны, журнал), ChipList (получатели), StatusBadge, MassActionsBar (входы из списков) | — |
 
 Публичная часть (лендинг, каталог, статьи) — **не React**: серверный Jinja2 (02-tech §11.1), в этот план не входит.
 
@@ -88,6 +89,7 @@
 | MoneyText | 6 | все финансовые места |
 | SearchInput, PickScreen, CountBadge, AutosaveBadge, RichText | 3–5 | RichText тяжёлый (TipTap) — начать раньше, чем кажется нужным |
 | MassActionsBar, TimeSelect, SettingRow, ChecklistCard, StatRow, InlineBanner | 1–3 | по мере экранов |
+| SendNotificationModal | 1 экран + 5 контекстных входов | делать вместе с экраном «Уведомления» (волна 2) — из списков он вызывается той же формой |
 
 **Предметные (§8.5) → экраны:**
 
@@ -160,7 +162,8 @@
 | 2.9 | HomeBlocks | 10 Главная сотрудника, 11 Главная ученика |
 | 2.10 | ExamShell | 12 Экзамен |
 | 2.11 | PipelineSteps (короткий конвейер, без ЭДО/«Школы») | 23 Приём, 22 Люди, 21 Сотрудники |
-| 2.12 | — | 16 Календарь, 17 Результаты, 27 Настройки системы (базово) |
+| 2.12 | SendNotificationModal, MassActionsBar | **Уведомления** (§4.22): отправка, шаблоны, журнал + контекстные входы из 20/21/22/24 и главной |
+| 2.13 | — | 16 Календарь, 17 Результаты, 27 Настройки системы (базово) |
 
 **DoD волны:** продаваемый У1 — все экраны У1 живут на реальном API; кабинет ученика работает с телефона.
 
