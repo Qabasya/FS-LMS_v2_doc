@@ -58,8 +58,10 @@
   .step .box{width:52px;height:52px;margin:0 auto;border-radius:var(--r-12);display:grid;place-items:center;position:relative;color:#fff}
   .step .n{position:absolute;top:3px;left:6px;font-size:var(--fs-12);opacity:.8;font-weight:700}
   .step.on .box{outline:3px solid var(--blue);outline-offset:2px}
-  .step .cap{display:block;margin-top:6px;font-size:var(--fs-12);color:var(--gray7);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .step.on .cap{color:var(--blue);font-weight:600}
+  /* подпись под иконкой — только метка типа работы (ПР/СР/ДЗ); у прочих шагов пустая, но место держит */
+  .step .cap{display:block;margin-top:var(--sp-6);font-size:var(--fs-12);color:var(--gray6);font-weight:600;
+    min-height:var(--fs-16);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .step.on .cap{color:var(--blue)}
   .step .flag{position:absolute;top:-4px;right:4px;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;
     font-size:var(--fs-12);font-weight:700;display:grid;place-items:center;border:2px solid #fff}
   .t-text{background:var(--blue)} .t-video{background:var(--violet)} .t-task{background:var(--green)}
@@ -67,6 +69,25 @@
   .add{width:52px;height:52px;margin:0 auto;border:2px dashed var(--gray3);border-radius:var(--r-12);display:grid;place-items:center;
     color:var(--gray6);font-size:var(--fs-22);background:#fff}
   .add:hover{border-color:var(--blue);color:var(--blue)}
+
+  /* Материалы лекции */
+  .mats{margin-top:var(--sp-16);background:#fff;border:1px solid var(--gray2);border-radius:var(--r);padding:var(--sp-16)}
+  .mats-h{font-size:var(--fs-16);font-weight:600;margin-bottom:var(--sp-12)}
+  .drop{border:1px dashed var(--gray3);border-radius:var(--r-8);padding:var(--sp-20);text-align:center;
+    color:var(--gray6);font-size:var(--fs-14);cursor:pointer;background:var(--gray0)}
+  .drop:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-l)}
+  .drop u{text-underline-offset:2px}
+  .drop-note{display:block;margin-top:var(--sp-4);font-size:var(--fs-12);color:var(--gray5)}
+  .files{margin-top:var(--sp-12);display:flex;flex-direction:column;gap:var(--sp-6)}
+  .file{display:flex;align-items:center;gap:var(--sp-12);padding:var(--sp-8) var(--sp-12);
+    border:1px solid var(--gray2);border-radius:var(--r-6);font-size:var(--fs-14);background:#fff}
+  .file .grip{color:var(--gray5);cursor:grab;font-size:var(--fs-14)}
+  .file .ext{width:var(--sq);height:var(--sq);border-radius:var(--sq-r);display:grid;place-items:center;
+    font-size:var(--fs-12);font-weight:700;color:#fff;flex:none}
+  .file .fname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .file .fsize{color:var(--gray6);font-size:var(--fs-12)}
+  .file .del{border:0;background:none;color:var(--gray5);cursor:pointer;font-size:var(--fs-14);padding:0 var(--sp-4)}
+  .file .del:hover{color:var(--red)}
 
   .step-bar{display:flex;align-items:center;gap:var(--sp-12);margin:var(--sp-16) 0 0;padding:var(--sp-12);background:#fff;border:1px solid var(--gray2);border-radius:var(--r)}
   .chip{display:inline-flex;gap:var(--sp-8);align-items:center;background:var(--gray1);border-radius:var(--r-6);padding:var(--sp-6) var(--sp-12);font-size:var(--fs-14);font-weight:600;color:var(--gray7)}
@@ -182,7 +203,7 @@
 
           <div class="step-bar">
             <span class="chip" id="stepChip">Шаг 1 · Лекция</span>
-            <input type="text" id="stepName" value="Позиционные системы счисления" oninput="autosave()">
+            <input type="text" id="stepName" value="Позиционные системы счисления" placeholder="Тема шага" oninput="autosave()">
             <label class="sw"><input type="checkbox" checked> Обязательный</label>
             <button class="btn btn-s" onclick="act('Шаг продублирован')">⧉ Дублировать</button>
             <button class="btn btn-s" onclick="act('Шаг скрыт — прогресс сохранён')">✕</button>
@@ -195,11 +216,20 @@
               <button title="Зачёркнутый"><s>S</s></button><button title="Список">≡</button>
               <button title="Цитата">❝</button><button title="Ссылка">🔗</button>
             </div>
-            <h3>Позиционные системы счисления</h3>
             <p>Выделите этот текст мышью — над выделением появится панель форматирования, как в Дзене. Постоянной панели-«простыни» нет: чистый лист, пишете текст, форматирование под рукой.</p>
             <p>Поддерживаются хоткеи и markdown на лету: <kbd>##</kbd> превращает строку в заголовок, <kbd>-</kbd> начинает список, <kbd>&gt;</kbd> — цитату.</p>
             <p class="ph">Пустая строка — нажмите «/» для вставки изображения, таблицы, формулы или файла…</p>
             <div class="hint">💡 <span>Один и тот же редактор — в лекциях, условиях задач, описаниях карточек и статьях блога.</span></div>
+          </div>
+
+          <!-- Материалы лекции — отдельный блок под редактором (03-design §4.1) -->
+          <div class="mats" id="mats">
+            <div class="mats-h">Материалы</div>
+            <div class="drop" onclick="act('Открыт выбор файлов на компьютере')">
+              Перетащите файлы или <u>выберите на компьютере</u>
+              <span class="drop-note">PDF, презентации, документы, таблицы, текст, архивы, изображения</span>
+            </div>
+            <div class="files" id="files"></div>
           </div>
         </div>
       </div>
@@ -223,18 +253,25 @@
 var LIMIT = 20;
 var lessons = [
   {sec:'1. Введение', num:'1.1', name:'Системы счисления', pending:0, hidden:false, steps:[
-    ['text','Лекция'],['video','Видео'],['task','Задача'],['task','Задача'],['task','Задача'],
-    ['task','Задача'],['task','Задача'],['work','Практика'],['text','Разбор'],['task','Задача'],
-    ['task','Задача'],['exam','Проверочная']], copied:[]},
+    ['text','Позиционные системы счисления'],['video','Разбор на примерах'],
+    ['task','Перевод в двоичную систему'],['task','Обратный перевод'],['task','Шестнадцатеричная запись'],
+    ['task','Сложение в двоичной'],['task','Сравнение записей'],
+    ['work','Практическая работа №1','ПР'],['text','Разбор типичных ошибок'],
+    ['task','Перевод дробей'],['task','Смешанные основания'],
+    ['exam','Проверочная работа','КР']], copied:[]},
   {sec:'1. Введение', num:'1.2', name:'Кодирование информации', pending:5, hidden:false, steps:[
-    ['text','Лекция'],['video','Видео'],['task','Задача'],['task','Задача'],['task','Задача'],
-    ['work','Практика'],['exam','Проверочная']], copied:[2,3,4,5,6]},
+    ['text','Кодирование текста'],['video','Таблицы кодировок'],
+    ['task','Объём сообщения'],['task','Кодировка UTF-8'],['task','Вес одного символа'],
+    ['work','Самостоятельная работа','СР'],['exam','Проверочная работа','КР']], copied:[2,3,4,5,6]},
   {sec:'1. Введение', num:'1.3', name:'Логика', pending:0, hidden:true, steps:[
-    ['text','Лекция'],['task','Задача'],['task','Задача'],['work','Практика']], copied:[]},
+    ['text','Логические операции'],['task','Таблицы истинности'],['task','Упрощение выражений'],
+    ['work','Домашняя работа','ДЗ']], copied:[]},
   {sec:'2. Алгоритмизация', num:'2.1', name:'Основы алгоритмов', pending:0, hidden:false, steps:[
-    ['text','Лекция'],['live','Трансляция'],['task','Задача'],['task','Задача'],['work','Практика'],['exam','Экзамен']], copied:[]},
+    ['text','Что такое алгоритм'],['live','Разбор в прямом эфире'],
+    ['task','Свойства алгоритма'],['task','Блок-схемы'],
+    ['work','Практическая работа №2','ПР'],['exam','Итоговый экзамен','Экзамен']], copied:[]},
   {sec:'2. Алгоритмизация', num:'2.2', name:'Циклы', pending:0, hidden:false, steps:[
-    ['text','Лекция'],['task','Задача'],['task','Задача'],['task','Задача'],['work','Практика']], copied:[]}
+    ['text','Теория темы'],['task','Задача из банка'],['task','Задача из банка'],['task','Задача из банка'],['work','Практическая работа','ПР']], copied:[]}
 ];
 var cur = 0, curStep = 0;
 var EYE = '<span class="hidden-eye" title="Урок скрыт от учеников"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17.9 17.9A10.1 10.1 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.1-5.9M9.9 4.2A9.1 9.1 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.2 3.2m-6.7-1.1a3 3 0 1 1-4.2-4.2"/><line x1="1" y1="1" x2="23" y2="23"/></svg></span>';
@@ -257,13 +294,15 @@ function renderSteps(){
   var l = lessons[cur], html = '';
   l.steps.forEach(function(s,i){
     var flagged = l.copied.indexOf(i) >= 0;
-    html += '<button class="step '+(i===curStep?'on':'')+'" onclick="pickStep('+i+')" title="'+stepName(s[0])+'">' +
+    // подпись под иконкой только у работ и экзаменов — метка типа работы (ПР/СР/ДЗ), 03-design §4.1
+    var label = s[2] || '';
+    html += '<button class="step '+(i===curStep?'on':'')+'" onclick="pickStep('+i+')" title="'+stepName(s[0])+' · '+s[1]+'">' +
       '<span class="box" style="background:'+stepColor(s[0])+'"><span class="n">'+(i+1)+'</span>' +
       stepIcon(s[0], 26, true)+'</span>' +
       (flagged?'<span class="flag">!</span>':'') +
-      '<span class="cap" title="'+s[1]+'">'+s[1]+'</span></button>';
+      '<span class="cap">'+label+'</span></button>';
   });
-  html += '<button class="step" onclick="openTypes(event)"><span class="add">+</span><span class="cap">Добавить</span></button>';
+  html += '<button class="step" onclick="openTypes(event)" title="Добавить шаг"><span class="add">+</span><span class="cap"></span></button>';
   document.getElementById('stepsRow').innerHTML = html;
 
   var n = l.steps.length, lim = document.getElementById('limitNote');
@@ -283,25 +322,59 @@ function renderSteps(){
   st.textContent = l.hidden ? 'Скрыт' : (l.pending ? 'Требует правки' : 'Готов');
   st.className = 'badge ' + (l.hidden ? 'b-draft' : (l.pending ? 'b-warn' : 'b-ok'));
 }
-function pick(i){ cur = i; curStep = 0; renderTree(); renderSteps(); }
+function pick(i){ cur = i; curStep = 0; renderTree(); renderSteps(); renderStepBar(); renderMats(); }
 function pickStep(i){
   var l = lessons[cur], k = l.copied.indexOf(i);
   if(k >= 0){ l.copied.splice(k,1); l.pending--; toast('Отметка «контент не обновлён» снята'); autosave(); renderTree(); }
-  curStep = i; renderSteps();
+  curStep = i; renderSteps(); renderStepBar(); renderMats();
+}
+
+/* Материалы — только у шага «Лекция» (01-product §5.2) */
+var EXT_COLOR = {pdf:'var(--red)', pptx:'var(--orange)', docx:'var(--blue)',
+                 xlsx:'var(--green)', txt:'var(--gray6)', zip:'var(--violet)'};
+var mats = [
+  {name:'Конспект урока.pdf',            ext:'pdf',  size:'1,2 МБ'},
+  {name:'Презентация занятия.pptx',      ext:'pptx', size:'4,8 МБ'},
+  {name:'Таблица систем счисления.xlsx', ext:'xlsx', size:'38 КБ'}
+];
+function renderMats(){
+  var isLecture = lessons[cur].steps[curStep][0] === 'text';
+  document.getElementById('mats').style.display = isLecture ? '' : 'none';
+  if(!isLecture) return;
+  var html = '';
+  mats.forEach(function(f, i){
+    html += '<div class="file">' +
+      '<span class="grip" title="Перетащите, чтобы изменить порядок">⠿</span>' +
+      '<span class="ext" style="background:'+(EXT_COLOR[f.ext]||'var(--gray6)')+'">'+f.ext.slice(0,3).toUpperCase()+'</span>' +
+      '<span class="fname">'+f.name+'</span>' +
+      '<span class="fsize">'+f.size+'</span>' +
+      '<button class="del" title="Удалить" onclick="delMat('+i+')">✕</button></div>';
+  });
+  document.getElementById('files').innerHTML = html;
+}
+function delMat(i){ mats.splice(i,1); renderMats(); autosave(); toast('Файл удалён из материалов шага'); }
+
+/* Панель активного шага: чип типа и тема шага */
+function renderStepBar(){
+  var st = lessons[cur].steps[curStep];
+  document.getElementById('stepChip').textContent = 'Шаг ' + (curStep+1) + ' · ' + stepName(st[0]);
+  document.getElementById('stepName').value = st[1];
 }
 function markAllDone(){ var l = lessons[cur]; l.copied = []; l.pending = 0; renderTree(); renderSteps(); autosave();
   toast('Все шаги отмечены готовыми'); }
 function toggleHidden(){
   var l = lessons[cur]; l.hidden = !l.hidden;
   document.getElementById('lessonMenu').classList.remove('open');
-  renderTree(); renderSteps(); autosave();
+  renderTree(); renderSteps(); renderStepBar(); renderMats(); autosave();
   toast(l.hidden ? 'Урок скрыт от учеников — данные и прогресс сохранены' : 'Урок снова виден ученикам');
 }
 function addStep(type,name){
   var l = lessons[cur];
   document.getElementById('typePop').classList.remove('open');
   if(l.steps.length >= LIMIT){ toast('Достигнут предел: 20 шагов в уроке'); return; }
-  l.steps.push([type,name]); curStep = l.steps.length-1; renderTree(); renderSteps(); autosave();
+  var LBL = {work:'ПР', exam:'КР'};
+  l.steps.push(LBL[type] ? [type,name,LBL[type]] : [type,name]);
+  curStep = l.steps.length-1; renderTree(); renderSteps(); renderStepBar(); renderMats(); autosave();
 }
 function openTypes(e){
   e.stopPropagation();
@@ -349,7 +422,7 @@ document.addEventListener('selectionchange', function(){
   el.style.background = stepColor(t);
   el.innerHTML = stepIcon(t, 16, true);
 });
-renderTree(); renderSteps();
+renderTree(); renderSteps(); renderStepBar(); renderMats();
 </script>
 </body>
 </html>

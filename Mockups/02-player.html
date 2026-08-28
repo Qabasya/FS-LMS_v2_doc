@@ -32,8 +32,7 @@
   .tree{position:absolute;left:0;top:0;bottom:0;width:360px;background:#fff;border-right:1px solid var(--gray2);
     transform:translateX(-100%);transition:transform .18s ease;z-index:30;display:flex;flex-direction:column}
   .tree.open{transform:none;box-shadow:12px 0 32px rgba(0,0,0,.10)}
-  /* приоткрытие: наведение на язычок выдвигает панель на 40px — видно, что за ней есть содержимое */
-  .tree:not(.open):has(.tab:hover){transform:translateX(calc(-100% + 40px))}
+  /* промежуточных состояний нет: панель либо открыта, либо закрыта (03-design §4.2) */
   .tree-inner{flex:1;overflow-y:auto;padding:var(--sp-16)}
   .tree h4{font-size:var(--fs-14);margin:0 var(--sp-8) var(--sp-12);
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -45,11 +44,29 @@
   .tree .les.on{background:var(--blue-l);color:var(--blue);font-weight:600}
   .tree .les.lock{color:var(--gray5)}
 
-  /* язычок прикреплён к правому краю панели и уезжает вместе с ней */
-  .tab{position:absolute;right:-30px;top:50%;transform:translateY(-50%);width:30px;height:72px;
+  /* язычок прикреплён к правому краю панели вверху, у самой шапки, и уезжает вместе с ней */
+  .tab{position:absolute;right:-30px;top:var(--sp-16);width:30px;height:72px;
     background:#fff;border:1px solid var(--gray2);border-left:0;border-radius:0 var(--r-8) var(--r-8) 0;
     display:grid;place-items:center;color:var(--gray6);font-size:var(--fs-14);box-shadow:2px 0 8px rgba(0,0,0,.06)}
   .tab:hover{background:var(--gray0);color:var(--gray9)}
+
+  /* название урока в шапке — контекст, а не заголовок страницы */
+  .head-lesson{font-size:var(--fs-16);font-weight:600;color:var(--gray9)}
+  /* заголовок страницы шага */
+  .step-head{margin:var(--sp-16) 0 var(--sp-20)}
+  .step-lesson{font-size:var(--fs-12);color:var(--gray6);margin-bottom:var(--sp-4)}
+  .step-head h1{font-size:var(--fs-26);margin:0}
+  /* материалы лекции */
+  .mats-h{font-size:var(--fs-16);font-weight:600;margin-bottom:var(--sp-12)}
+  .file{display:flex;align-items:center;gap:var(--sp-12);width:100%;text-align:left;cursor:pointer;
+    padding:var(--sp-8) var(--sp-12);border:1px solid var(--gray2);border-radius:var(--r-6);
+    background:#fff;font-size:var(--fs-14);margin-bottom:var(--sp-6)}
+  .file:hover{border-color:var(--blue);background:var(--blue-l)}
+  .file .ext{width:var(--sq);height:var(--sq);border-radius:var(--sq-r);display:grid;place-items:center;
+    font-size:var(--fs-12);font-weight:700;color:#fff;flex:none}
+  .file .fname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .file .fsize{color:var(--gray6);font-size:var(--fs-12)}
+  .file .dl{color:var(--gray6);font-size:var(--fs-16)}
 
   .canvas{flex:1;overflow:auto;position:relative}
   .readbar{position:sticky;top:0;height:3px;z-index:15}
@@ -124,7 +141,7 @@
     <button class="back">↩ Вернуться</button>
     <div>
       <div class="crumbs">Мои курсы · Информатика ЕГЭ · Введение</div>
-      <h1>Урок 1.1 — Системы счисления</h1>
+      <div class="head-lesson">Урок 1.1 — Системы счисления</div>
     </div>
     <div class="sp"></div>
     <div class="prog"><span id="progText">2 из 6</span><span class="bar"><i id="progBar" style="width:33%"></i></span></div>
@@ -163,6 +180,11 @@
             <div class="mid" id="stepMeta">Шаг 1 из 6</div>
             <button class="btn btn-p" id="nextBtn" onclick="go(1)">Далее ›</button>
           </div>
+          <!-- Заголовок страницы шага: урок мелким сверху, H1 — тема шага (03-design §4.2) -->
+          <div class="step-head">
+            <div class="step-lesson">Урок 1.1 · Системы счисления</div>
+            <h1 id="stepTitle">Позиционные системы счисления</h1>
+          </div>
           <div id="content"></div>
         </div>
         <aside class="toc" id="toc">
@@ -179,12 +201,13 @@
 <script>
 var mode = 'student';
 var steps = [
-  {type:'text',  cap:'Лекция',      name:'Позиционные системы счисления', done:true},
-  {type:'video', cap:'Видео',       name:'Разбор на примерах',            done:true},
-  {type:'task',  cap:'Задача',      name:'Перевод в двоичную систему',    required:true, done:false},
-  {type:'task',  cap:'Задача',      name:'Обратный перевод',              done:false},
-  {type:'work',  cap:'Практика',    name:'Практическая работа',           done:false},
-  {type:'exam',  cap:'Проверочная', name:'Проверочная работа',            done:false}
+  /* cap — метка типа работы из справочника (work_types.label); у прочих шагов пусто, 03-design §4.2 */
+  {type:'text',  cap:'',    name:'Позиционные системы счисления', done:true},
+  {type:'video', cap:'',    name:'Разбор на примерах',            done:true},
+  {type:'task',  cap:'',    name:'Перевод в двоичную систему',    required:true, done:false},
+  {type:'task',  cap:'',    name:'Обратный перевод',              done:false},
+  {type:'work',  cap:'ПР',  name:'Практическая работа №1',        done:false, prefix:'1.1. П-2'},
+  {type:'exam',  cap:'КР',  name:'Проверочная работа',            done:false}
 ];
 var cur = 0;
 
@@ -225,14 +248,14 @@ function render(){
   var render_fn = {text:lecture, video:video, task:task, work:work, exam:exam}[s.type];
   document.getElementById('content').innerHTML = render_fn();
   renderSteps();
+  document.getElementById('stepTitle').textContent = s.name;
   if(s.type==='text') buildToc();
   if(s.type==='work') markFilled(1);
   document.getElementById('canvas').scrollTo({top:0});
 }
 
 function lecture(){
-  return '<div class="card"><span class="kind">Текст</span>' +
-    '<h2>Позиционные системы счисления</h2>' +
+  return '<div class="card">' +
     '<p class="lead">Лонгрид не ограничен по высоте: длинный материал читается сплошным текстом, справа собирается оглавление по заголовкам — липкое, с подсветкой текущего раздела. Сверху идёт полоска прогресса чтения.</p>' +
     '<h3 id="h1">Что такое основание системы</h3>' +
     '<p>В позиционной системе значение цифры зависит от её места в записи числа. Основание показывает, сколько различных цифр используется: в десятичной системе их десять, в двоичной — две, в шестнадцатеричной — шестнадцать.</p>' +
@@ -246,19 +269,39 @@ function lecture(){
     '<h3 id="h4">Шестнадцатеричная система</h3>' +
     '<p>Здесь после девятки идут буквы от A до F. Шестнадцатеричная запись компактна и удобна для представления байтов: один байт — ровно две шестнадцатеричные цифры.</p>' +
     '<h3 id="h5">Что запомнить</h3>' +
-    '<p>Основание задаёт количество цифр; позиция задаёт вес; перевод туда — умножение на степени, обратно — деление с остатком. Всё остальное — практика.</p></div>';
+    '<p>Основание задаёт количество цифр; позиция задаёт вес; перевод туда — умножение на степени, обратно — деление с остатком. Всё остальное — практика.</p></div>' +
+    materials();
+}
+
+/* Материалы лекции — блок в самом низу шага (03-design §4.2). Нет файлов — нет блока. */
+var MATS = [
+  {name:'Конспект урока.pdf',            ext:'pdf',  size:'1,2 МБ'},
+  {name:'Презентация занятия.pptx',      ext:'pptx', size:'4,8 МБ'},
+  {name:'Таблица систем счисления.xlsx', ext:'xlsx', size:'38 КБ'}
+];
+var EXT_COLOR = {pdf:'var(--red)', pptx:'var(--orange)', docx:'var(--blue)',
+                 xlsx:'var(--green)', txt:'var(--gray6)', zip:'var(--violet)'};
+function materials(){
+  if(!MATS.length) return '';
+  var rows = '';
+  MATS.forEach(function(f){
+    rows += '<button class="file" onclick="toast(\'Файл скачивается\')">' +
+      '<span class="ext" style="background:'+(EXT_COLOR[f.ext]||'var(--gray6)')+'">'+f.ext.slice(0,3).toUpperCase()+'</span>' +
+      '<span class="fname">'+f.name+'</span>' +
+      '<span class="fsize">'+f.size+'</span>' +
+      '<span class="dl" title="Скачать">↓</span></button>';
+  });
+  return '<div class="card mats"><div class="mats-h">Материалы</div>'+rows+'</div>';
 }
 function video(){
-  return '<div class="card"><span class="kind" style="background:var(--violet-l);color:var(--violet)">Видео</span>' +
-    '<h2>Разбор на примерах</h2>' +
+  return '<div class="card">' +
     '<div style="aspect-ratio:16/9;background:var(--gray9);border-radius:var(--r-8);display:grid;place-items:center;color:#fff;font-size:var(--fs-32)">▶</div>' +
     '<p style="margin-top:16px" class="lead">Шаг засчитывается по факту открытия — сети и видеохостинги ненадёжны, требовать досмотра нельзя (01-product §5.2).</p></div>';
 }
 function task(){
   var s = steps[cur];
-  return '<div class="card"><span class="kind" style="background:var(--green-l);color:#2b8a3e">Задача</span>' +
-    (s.required?'<span class="kind" style="background:var(--gray1);color:var(--gray7);margin-left:6px">Обязательный шаг</span>':'') +
-    '<h2>'+s.name+'</h2>' +
+  return '<div class="card">' +
+    (s.required?'<span class="kind" style="background:var(--gray1);color:var(--gray7)">Обязательный шаг</span>':'') +
     '<p>Переведите число <b>10</b> из десятичной системы в двоичную. Ответ запишите без пробелов.</p>' +
     '<div class="answer"><input id="ans" placeholder="Введите ответ…">' +
     '<button class="btn btn-p" onclick="check()">Ответить</button>' +
@@ -267,18 +310,22 @@ function task(){
     '<div class="reveal" id="rev">Эталонный ответ: <b>1010</b>. В режиме педагога поле ввода рабочее — можно проверить, как принимается ответ.</div>' +
     '<div class="tries">Попытка 1 из 3 · ' + (mode==='preview' ? 'предпросмотр — ответ не сохраняется' : 'ответ сохраняется автоматически') + '</div></div>';
 }
+/* Номер задания: задан префикс работы — «1.1. П-2-3», нет — «Задание 3» (01-product §5.3) */
+function qLabel(i){
+  var p = steps[cur].prefix;
+  return (p ? p + '-' + i : 'Задание ' + i) + ' из 6';
+}
 function work(){
   var qs = '';
   for(var i = 1; i <= 6; i++){
     qs += '<div class="card qcard" id="q'+i+'">' +
-      '<div class="qnum">Задание '+i+' из 6</div>' +
+      '<div class="qnum">'+qLabel(i)+'</div>' +
       '<p>Условие задания '+i+': вычислите значение выражения и запишите ответ числом.</p>' +
       '<div class="answer"><input class="wans" data-i="'+i+'" oninput="markFilled('+i+')" placeholder="Ответ…"></div>' +
       '<div class="qfoot"><span class="saved" id="sv'+i+'">Сохранено ✓</span></div>' +
     '</div>';
   }
-  return '<div class="card"><span class="kind" style="background:var(--orange-l);color:#d9480f">Работа</span>' +
-      '<h2>Практическая работа</h2>' +
+  return '<div class="card">' +
       '<span class="deadline">⏱ Сдать до 14 сентября, 23:59</span>' +
       '<p class="lead" style="margin:0">Все задания открыты сразу, отвечать можно в любом порядке. Ответы сохраняются сами; работа не блокирует навигацию по курсу — в отличие от экзамена.</p></div>' +
     qs +
@@ -287,8 +334,6 @@ function work(){
 }
 function exam(){
   return '<div class="card" style="text-align:center;padding:var(--sp-40) var(--sp-32)">' +
-    '<span class="kind" style="background:var(--red-l);color:#c92a2a">Экзамен</span>' +
-    '<h2>Проверочная работа</h2>' +
     '<p class="lead" style="max-width:520px;margin:0 auto var(--sp-20)">Экзамен открывается на отдельной полноэкранной странице: одна попытка, жёсткий таймер с момента старта, навигация по курсу заблокирована — сервер её тоже не отдаёт. Ответы сохраняются автоматически: при обрыве связи вы продолжите с того же места.</p>' +
     '<p class="muted">Время на выполнение: 45 минут · 12 заданий</p>' +
     '<button class="btn btn-p" style="padding:var(--sp-12) var(--sp-24);font-size:var(--fs-16)" onclick="toast(\'Переход на страницу экзамена\')">Начать экзамен</button></div>';
