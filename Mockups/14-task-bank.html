@@ -33,8 +33,11 @@
   .t.on{background:var(--blue-l)}
   .t input[type=checkbox]{margin-top:var(--sp-4)}
   .t .body{flex:1;min-width:0;cursor:pointer;color:inherit;text-decoration:none;display:block}
+  .t .ttl{font-size:var(--fs-14);font-weight:600;color:var(--gray9);display:block}
+  .t .ttl:hover{color:var(--blue)}
   .t .q{font-size:var(--fs-14);line-height:1.5;color:var(--gray9);display:block}
   .t .q:hover{color:var(--blue)}
+  .t .q.sub{color:var(--gray6);font-weight:400;margin-top:2px}
   .t .meta{display:flex;gap:var(--sp-8);flex-wrap:wrap;align-items:center;margin-top:var(--sp-6)}
   .tag{font-size:var(--fs-12);padding:var(--sp-4) var(--sp-8);border-radius:var(--r-4);background:var(--gray1);color:var(--gray6)}
   .tag.man{background:var(--violet-l);color:#5f3dc4}
@@ -97,7 +100,7 @@
     </header>
 
     <div class="filters">
-      <input class="search" type="text" placeholder="Поиск по условию и темам" oninput="setQ(this.value)">
+      <input class="search" type="text" placeholder="Поиск по названию, условию и темам" oninput="setQ(this.value)">
       <select onchange="setF('subject', this.value)">
         <option value="">Все предметы</option><option>Математика</option><option>Информатика</option>
       </select>
@@ -111,7 +114,7 @@
         <option value="2">средние</option><option value="3">сложные</option>
       </select>
       <select id="egeNum" onchange="setF('ege', this.value)" style="display:none">
-        <option value="">Любой номер ЕГЭ</option>
+        <option value="">Любая позиция экзамена</option>
         <option value="1">№ 1</option><option value="7">№ 7</option><option value="13">№ 13</option>
       </select>
       <select onchange="setF('author', this.value)">
@@ -138,25 +141,25 @@
 /* Задача живёт только здесь (01-product §5.4): в работы и шаги уходит ссылкой.
    Поэтому у каждой видно, где она используется — правка отразится везде. */
 var TASKS = [
-  {q:'Найдите значение выражения: 2⁵ · 2⁻³', subj:'Математика', kind:'auto', ans:'короткий ответ',
+  {title:'1.3. П-2-1', q:'Найдите значение выражения: 2⁵ · 2⁻³', subj:'Математика', kind:'auto', ans:'короткий ответ',
    tags:['степени','вычисления'], diff:1, ege:7, used:{w:3, s:2}, author:'Методова М.', date:'02.08'},
-  {q:'Решите уравнение: 3x − 7 = 14. В ответ запишите значение x.', subj:'Математика', kind:'auto', ans:'число',
+  {title:'', q:'Решите уравнение: 3x − 7 = 14. В ответ запишите значение x.', subj:'Математика', kind:'auto', ans:'число',
    tags:['уравнения'], diff:1, ege:1, used:{w:5, s:4}, author:'Методова М.', date:'02.08'},
-  {q:'Какое из чисел является иррациональным?', subj:'Математика', kind:'auto', ans:'выбор одного',
+  {title:'', q:'Какое из чисел является иррациональным?', subj:'Математика', kind:'auto', ans:'выбор одного',
    tags:['числа'], diff:1, ege:0, used:{w:2, s:1}, author:'Училков И.', date:'28.07'},
-  {q:'Решите систему уравнений и опишите ход решения: x + y = 7, x·y = 12', subj:'Математика', kind:'manual', ans:'развёрнутый',
+  {title:'Системы — ход решения', q:'Решите систему уравнений и опишите ход решения: x + y = 7, x·y = 12', subj:'Математика', kind:'manual', ans:'развёрнутый',
    tags:['системы','ход решения'], diff:2, ege:13, used:{w:4, s:1}, author:'Методова М.', date:'05.08'},
-  {q:'Катер прошёл 21 км по течению и 15 км против течения за одно и то же время…', subj:'Математика', kind:'manual', ans:'развёрнутый',
+  {title:'', q:'Катер прошёл 21 км по течению и 15 км против течения за одно и то же время…', subj:'Математика', kind:'manual', ans:'развёрнутый',
    tags:['текстовые задачи','движение'], diff:3, ege:0, used:{w:1, s:0}, author:'Методова М.', date:'09.08'},
-  {q:'Найдите площадь треугольника со сторонами 6 и 8 и углом 30° между ними', subj:'Математика', kind:'auto', ans:'число',
+  {title:'1.2.33', q:'Найдите площадь треугольника со сторонами 6 и 8 и углом 30° между ними', subj:'Математика', kind:'auto', ans:'число',
    tags:['планиметрия'], diff:2, ege:0, used:{w:2, s:2}, author:'Училков И.', date:'30.07'},
-  {q:'Напишите функцию, возвращающую список простых чисел до N', subj:'Информатика', kind:'manual', ans:'код',
+  {title:'', q:'Напишите функцию, возвращающую список простых чисел до N', subj:'Информатика', kind:'manual', ans:'код',
    tags:['алгоритмы','python'], diff:3, ege:0, used:{w:2, s:1}, author:'Петрова А.', date:'01.08'},
-  {q:'Переведите число 1010₂ в десятичную систему', subj:'Информатика', kind:'auto', ans:'число',
+  {title:'1.3. П-2-2', q:'Переведите число 1010₂ в десятичную систему', subj:'Информатика', kind:'auto', ans:'число',
    tags:['системы счисления'], diff:1, ege:0, used:{w:6, s:5}, author:'Петрова А.', date:'25.07'},
-  {q:'Условие ещё не дописано — черновик после быстрого создания из работы', subj:'Математика', kind:'auto', ans:'короткий ответ',
+  {title:'', q:'Условие ещё не дописано — черновик после быстрого создания из работы', subj:'Математика', kind:'auto', ans:'короткий ответ',
    tags:['без темы'], diff:1, ege:0, used:{w:1, s:0}, author:'Методова М.', date:'сегодня', draft:true},
-  {q:'Вероятность события A равна 0,3. Найдите вероятность противоположного события', subj:'Математика', kind:'auto', ans:'число',
+  {title:'', q:'Вероятность события A равна 0,3. Найдите вероятность противоположного события', subj:'Математика', kind:'auto', ans:'число',
    tags:['вероятность'], diff:1, ege:4, used:{w:0, s:0}, author:'Методова М.', date:'11.08'}
 ];
 var F = {subject:'', kind:'', diff:'', ege:'', status:'', author:''}, Q = '', sel = [];
@@ -173,7 +176,7 @@ function visible(){
     if(F.ege && String(t.ege) !== F.ege) return false;
     if(F.status === 'draft' && !t.draft) return false;
     if(F.status !== 'draft' && F.status !== 'all' && t.draft) return false;
-    if(Q && (t.q + ' ' + t.tags.join(' ')).toLowerCase().indexOf(Q) < 0) return false;
+    if(Q && (t.title + ' ' + t.q + ' ' + t.tags.join(' ')).toLowerCase().indexOf(Q) < 0) return false;
     return true;
   });
 }
@@ -209,7 +212,7 @@ function render(){
     return '<div class="t '+(on?'on':'')+'">' +
       '<input type="checkbox" '+(on?'checked':'')+' onchange="toggle('+i+')">' +
       '<a class="body" href="15-task-editor.html">' +
-        '<span class="q">'+t.q+'</span>' +
+        (t.title ? '<span class="ttl">'+t.title+'</span><span class="q sub">'+t.q+'</span>' : '<span class="q">'+t.q+'</span>') +
         '<span class="meta">' +
           '<span class="tag '+(t.kind==='manual'?'man':'auto')+'">'+(t.kind==='manual'?'ручная проверка':'автопроверка')+'</span>' +
           '<span class="tag">'+t.ans+'</span>' +

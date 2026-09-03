@@ -88,6 +88,10 @@
     padding:var(--sp-8) var(--sp-12);font-size:var(--fs-12);margin-top:var(--sp-8);display:none}
   .near.on{display:block}
   .demo{display:flex;align-items:center;gap:var(--sp-6);font-size:var(--fs-12);color:var(--gray6)}
+  .dupe{background:var(--orange-l);border:1px solid #ffd8a8;color:#d9480f;border-radius:var(--r-8);
+    padding:var(--sp-10) var(--sp-12);font-size:var(--fs-12);margin-bottom:var(--sp-12);display:none;gap:var(--sp-10);align-items:center}
+  .dupe.on{display:flex}
+  .dupe .sp{flex:1}
   @media (max-width:1150px){ .work{flex-direction:column} .props{width:auto;border-left:0;border-top:1px solid var(--gray2)} }
 </style>
 </head>
@@ -122,17 +126,19 @@
     <header class="head">
       <div>
         <div class="crumbs">Обучение · Банк задач</div>
-        <h1>Задача · Системы уравнений</h1>
+        <h1 id="hTitle">Задача · Системы уравнений</h1>
       </div>
       <span class="badge b-info" id="usedBadge">используется в 5 местах</span>
       <div class="sp"></div>
+      <label class="demo"><input type="checkbox" id="isNew" onchange="toggleNew()"> новая задача <i>(демо)</i></label>
       <a class="btn" href="14-task-bank.html" style="text-decoration:none">К банку</a>
-      <button class="btn" onclick="toast('Сохранено копией — ссылки в других работах остались на исходной задаче')">Сохранить копией</button>
+      <button class="btn" id="copyBtn" onclick="toast('Сохранено копией — ссылки в других работах остались на исходной задаче')">Сохранить копией</button>
       <button class="btn btn-p" onclick="save()">Сохранить</button>
     </header>
 
     <div class="work">
       <div class="main">
+        <div class="dupe" id="dupe"></div>
         <div class="card">
           <div class="sec-h"><h3>Условие</h3>
             <div style="flex:1"></div>
@@ -146,7 +152,7 @@
               <button onclick="toast('Вставка таблицы')">Таблица</button>
               <button onclick="toast('Вставка кода')">Код</button>
             </div>
-            <div class="editor" contenteditable="true">Решите систему уравнений и опишите ход решения: x + y = 7, x·y = 12</div>
+            <div class="editor" contenteditable="true" id="cond" oninput="onCondInput(this)">Решите систему уравнений и опишите ход решения: x + y = 7, x·y = 12</div>
             <div class="files">
               <div class="file"><span class="ext">PNG</span><span>chart-1.png · 240 КБ</span></div>
               <button class="btn btn-s" onclick="toast('Файл прикреплён к условию')">+ Файл к условию</button>
@@ -181,6 +187,11 @@
 
       <div class="props">
         <div class="fld">
+          <label>Название</label>
+          <input type="text" id="titleInput" placeholder="напр. «1.2.33» — своя нумерация методиста" value="Системы — ход решения" oninput="setTaskTitle(this.value)">
+          <div class="hint">Свободный текст, без формата и уникальности (01-product §5.4) — своя схема методиста, не системный номер. Пусто — задача узнаётся по превью условия, как сейчас в шапке.</div>
+        </div>
+        <div class="fld">
           <label>Предмет</label>
           <select><option>Математика</option><option>Информатика</option><option>Физика</option></select>
           <div class="hint">Определяет, кто из методистов может править задачу.</div>
@@ -197,9 +208,9 @@
           <div class="hint">Шкала вендорская и одинаковая во всех школах — по ней работают подбор задач и статистика.</div>
         </div>
         <div class="fld">
-          <label>Номер ЕГЭ <span class="muted">· модуль</span></label>
+          <label>Позиция экзамена <span class="muted">· модуль</span></label>
           <select><option>не привязана</option><option selected>№ 13</option><option>№ 14</option></select>
-          <div class="hint">Даёт разрез «статистика ученика по номерам заданий».</div>
+          <div class="hint">Задача связана со строкой справочника позиций, а не с числом — переномерация по новой спецификации ЕГЭ не трогает задачи (02-tech §5.3.1). Даёт разрез «статистика ученика по позициям экзамена».</div>
         </div>
 
         <div class="group">
@@ -277,6 +288,49 @@ var TREE = [
 ];
 var picked = ['Системы уравнений', 'Ход решения'];
 var pickQ = '';
+
+/* Название задачи (01-product §5.4, 02-tech §5.3.1) — свободный текст, определяет шапку;
+   пусто — используется превью условия, как раньше. */
+var taskTitle = 'Системы — ход решения';
+function condPreview(){
+  var txt = document.getElementById('cond') ? document.getElementById('cond').textContent.trim() : '';
+  return txt.length > 40 ? txt.slice(0, 40) + '…' : txt;
+}
+function updateHeader(){
+  document.getElementById('hTitle').textContent = 'Задача · ' + (taskTitle || condPreview() || 'без названия');
+}
+function setTaskTitle(v){ taskTitle = v; updateHeader(); }
+function onCondInput(el){ if(!taskTitle) updateHeader(); dismissDupe(); }
+
+/* «Новая задача» (демо) — переключает экран между правкой существующей и созданием:
+   проверка на дубли (ниже) имеет смысл только при создании. */
+function toggleNew(){
+  var on = document.getElementById('isNew').checked;
+  document.getElementById('usedBadge').style.display = on ? 'none' : '';
+  document.getElementById('copyBtn').style.display = on ? 'none' : '';
+  document.querySelectorAll('.group')[0].style.display = on ? 'none' : '';
+  dismissDupe();
+  toast(on ? 'Пустая карточка новой задачи — как в конвейере конструктора работы' : 'Правка существующей задачи');
+}
+
+/* Дедупликация при ручном создании — мягкая проверка по школе целиком, по паре условие+ответ,
+   в момент сохранения (01-product §5.4, 02-tech §5.3.1, принято 31.08.2026). Здесь — по условию,
+   т.к. блок эталона зависит от типа и в демо не сериализуется в общий формат. */
+var BANK_ELSEWHERE = [
+  {cond:'Постройте таблицу истинности логического выражения', subj:'ЕГЭ Информатика'},
+  {cond:'Определите, сколько раз выполнится тело цикла', subj:'Информатика'}
+];
+function findDuplicate(){
+  var cond = condPreview().replace(/…$/, '').trim().toLowerCase();
+  if(!cond) return null;
+  for(var i = 0; i < BANK_ELSEWHERE.length; i++){
+    if(BANK_ELSEWHERE[i].cond.trim().toLowerCase().indexOf(cond) === 0 || cond.indexOf(BANK_ELSEWHERE[i].cond.trim().toLowerCase()) === 0){
+      return BANK_ELSEWHERE[i];
+    }
+  }
+  return null;
+}
+function dismissDupe(){ document.getElementById('dupe').className = 'dupe'; }
 
 function renderTerms(){
   document.getElementById('terms').innerHTML = picked.length
@@ -431,12 +485,30 @@ function render(){
   document.getElementById('answerBox').innerHTML = b;
 }
 
-function save(){ toast('Задача сохранена — изменения применились во всех 5 местах, где она используется'); }
+function save(force){
+  if(document.getElementById('isNew').checked && !force){
+    var dupe = findDuplicate();
+    if(dupe){
+      document.getElementById('dupe').className = 'dupe on';
+      document.getElementById('dupe').innerHTML =
+        '⚠ Похожая задача уже есть (предмет: '+dupe.subj+'): «'+dupe.cond+'»' +
+        '<span class="sp"></span>' +
+        '<button class="btn btn-s" onclick="toast(\'Открыта найденная задача\')">Открыть найденную</button>' +
+        '<button class="btn btn-s" onclick="save(true)">Всё равно создать</button>';
+      return;
+    }
+  }
+  dismissDupe();
+  toast(document.getElementById('isNew').checked
+    ? 'Задача сохранена в банк и доступна для использования в работах'
+    : 'Задача сохранена — изменения применились во всех 5 местах, где она используется');
+}
 var tt;
 function toast(m){ var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
   clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 3600); }
 render();
 renderTerms();
+updateHeader();
 </script>
 </body>
 </html>
