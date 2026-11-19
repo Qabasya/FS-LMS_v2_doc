@@ -60,7 +60,7 @@ fs-lms/
 
 Добавляются `alembic.ini`, `migrations/`, `app/db.py` (движок и сессия), `app/kernel/users/models.py`.
 
-**Таблица `kernel.users`** — только структура, по 02-tech §5: `id uuid PK` (UUIDv7, генерирует приложение), `login text UNIQUE`, `email`, `phone`, `last_name`, `first_name`, `middle_name`, `password_hash text?`, `password_enc bytea?`, `status`, `created_at`, `updated_at`. Логики входа и хэширования в этом шаге нет — они в спеке 002.
+**Таблица `kernel.users`** — только структура, по 02-tech §5: `id uuid PK` (UUIDv7, генерирует приложение), `login text UNIQUE`, `email`, `phone`, `last_name`, `first_name`, `middle_name`, `password_hash text?`, `status`, `created_at`, `updated_at`. Постоянной обратимой копии пароля в схеме нет. Логики входа и хэширования в этом шаге нет — они в спеке 002; при её проработке учитываются сохранение прежних учётных данных при миграции, TOTP и сессии устройств по 02-tech §8.
 
 **Результат:** `alembic upgrade head` создаёт схему `kernel` и таблицу; `alembic downgrade base` откатывает чисто. Тест поднимает БД, накатывает миграции, вставляет строку.
 

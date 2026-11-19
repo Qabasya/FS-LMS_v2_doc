@@ -283,14 +283,14 @@ services:
     restart: unless-stopped
 
   api:
-    image: ghcr.io/<owner>/fs-lms/backend:${IMAGE_TAG:-latest}
+    image: ghcr.io/<owner>/fs-lms/backend:${IMAGE_TAG:?IMAGE_TAG обязателен}
     env_file: .env
     depends_on:
       db: { condition: service_healthy }
     restart: unless-stopped
 
   web:
-    image: ghcr.io/<owner>/fs-lms/frontend:${IMAGE_TAG:-latest}
+    image: ghcr.io/<owner>/fs-lms/frontend:${IMAGE_TAG:?IMAGE_TAG обязателен}
     ports: ["80:80"]            # nginx: статика + proxy /api → api:8000
     depends_on: [api]
     restart: unless-stopped
